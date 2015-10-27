@@ -8,6 +8,7 @@ our $VERSION = '0.0.1';
 sub new {
 
     my $class = shift;
+    my $opts = shift;
 
     bless {
         context => [],
@@ -19,7 +20,9 @@ sub new {
         last_match_line => undef,
         last_check_status => undef,
         debug_mod => 0,
-        output => shift(),
+        output => undef,
+        match_l => 40,
+        $opts,
     }, __PACKAGE__;
 
 }
