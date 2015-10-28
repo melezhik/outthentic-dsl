@@ -251,7 +251,7 @@ sub generate_asserts {
             }
        }else{ # `plain string' line
 
-            s{#.*}[], s{\s+$}[], s{^\s+}[] for $l;
+            s{\s+#.*}[], s{\s+$}[], s{^\s+}[] for $l;
             $self->handle_plain($l);
 
         }
