@@ -1,7 +1,7 @@
 package Outthentic::DSL;
 
-
 use strict;
+require Test::More;
 
 our $VERSION = '0.0.1';
 
@@ -88,8 +88,9 @@ sub check_line {
             my $ln = $c->[0]; my $next_i = $c->[1];
             if ( index($ln,$pattern) != -1){
                 $status = 1;
-                push @context_new, $context[$next_i];
+                $self->{last_match_line} = $ln;
             }
+            push @context_new, $context[$next_i] if $self->{block_mode};
         }
     }elsif($check_type eq 'regexp'){
         for my $c (@context_local){
@@ -101,15 +102,18 @@ sub check_line {
             if (scalar @foo){
                 push @captures, [@foo];
                 $status = 1;
-                push @context_new, $context[$next_i];
+                push @context_new, $c if $self->{within_mode};
+                $self->{last_match_line} = $ln;
             }
+            push @context_new, $context[$next_i] if $self->{block_mode};
+
         }
     }else {
         die "unknown check_type: $check_type";
     }
 
     Test::More::ok($status,$message);
-
+    $self->{last_check_status} = $status;
 
     if ( $self->{debug_mod} >= 2 ){
         my $k=0;
@@ -124,11 +128,14 @@ sub check_line {
 
     $self->{captures} = [ @captures ];
 
-    if ($self->{block_mode}){
+    # update context
+    if ( $self->{block_mode} ){
+        $self->{context_local} = [@context_new];
+    } elsif ( $self->{within_mode} and $status ){
         $self->{context_local} = [@context_new];
     }
 
-    return
+    return $status;
 
 }
 
@@ -182,7 +189,7 @@ sub generate_asserts {
         }
 
         # validate unterminated multiline chunks
-        if ($l=~/^\s*(regexp|code|generator):\s*.*/){
+        if ($l=~/^\s*(regexp|code|generator|within):\s*.*/){
             die "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
         }
 
@@ -216,6 +223,11 @@ sub generate_asserts {
             my $re=$1;
             $self->handle_regexp($re);
 
+        }elsif($l=~/^\s*within:\s*(.*)/){
+
+            my $re=$1;
+            handle_within($re);
+
         }elsif(defined($chunk_type)){ # multiline 
 
             if ($l=~s/\\\s*$//) {
@@ -244,6 +256,8 @@ sub generate_asserts {
 
         }
     }
+
+    die "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
 
 }
 
@@ -290,24 +304,87 @@ sub handle_regexp {
     my $self = shift;
     my $re = shift;
     
-    my $message = $self->{block_mode} ? "stdout matches the | $re" : "stdout matches the $re";
-    $self->check_line($re, 'regexp', $message);
+    my $m;
+
+    if ($self->{within_mode}){
+        $self->{within_mode} = 0; 
+        if ($self->{last_check_status}){
+            my $lml =  $self->_short_string($self->{last_match_line});
+            $m = "'$lml' match /$re/";
+        } else {
+            $m = "output match /$re/";
+        }
+    } else {
+        $m = "output @{[$self->{block_mode} ? 'block' : '' ]} match /$re/";
+    }
+
+
+    $self->check_line($re, 'regexp', $m);
+
     Test::More::diag("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
 
+}
+
+sub handle_within {
+
+    my $self = shift;
+    my $re = shift;
+
+    my $m;
+
+    if ($self->{within_mode}){
+        if ($self->{last_check_status}){
+            my $lml =  $self->_short_string($self->{last_match_line});
+            $m = "'$lml' match /$re/";
+        } else {
+            $m = "output match /$re/";
+        }
+    }else{
+        $m = "output match /$re/";
+    }
+
+    $self->{within_mode} = 1;
+
+    $self->check_line($re, 'regexp', $m);
+
+    Test::More::diag "handle_within OK. $re" if $self->{debug_mod} >= 3;
+    
 }
 
 sub handle_plain {
 
     my $self = shift;
     my $l = shift;
+    my $m;
+    my $lshort =  $self->_short_string($l);
 
-    my $shortened = substr( $l, 0, $self->{match_l} );
+    if ($self->{within_mode}){
+        $self->{within_mode} = 0; 
+        if ($self->{last_check_status}){
+            my $lml =  $self->_short_string($self->{last_match_line});
+            $m = "'$lml' match '$lshort'";
+        } else{
+            $m = "output match '$lshort'";
+        }
+    }else{
+        $m = "output @{[$self->{block_mode} ? 'block' : '' ]} match '$lshort'";
+    }
 
-    my $message = $self->{block_mode} ? "stdout has | $shortened ... " : "stdout has $shortened ... ";
 
-    $self->check_line($l, 'default', $message);
+    $self->check_line($l, 'default', $m);
 
     Test::More::diag("handle_plain OK. $l") if $self->{debug_mod} >= 3;
+}
+
+
+sub _short_string {
+
+    my $self = shift;
+    my $str = shift;
+    my $sstr = substr( $str, 0, $self->{match_l} );
+
+    return $sstr;
+
 }
 
 1;
