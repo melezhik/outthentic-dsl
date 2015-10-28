@@ -226,7 +226,7 @@ sub generate_asserts {
         }elsif($l=~/^\s*within:\s*(.*)/){
 
             my $re=$1;
-            handle_within($re);
+            $self->handle_within($re);
 
         }elsif(defined($chunk_type)){ # multiline 
 
@@ -308,6 +308,7 @@ sub handle_regexp {
 
     if ($self->{within_mode}){
         $self->{within_mode} = 0; 
+        $self->{context_local} = $self->{context};
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match /$re/";
@@ -359,7 +360,8 @@ sub handle_plain {
     my $lshort =  $self->_short_string($l);
 
     if ($self->{within_mode}){
-        $self->{within_mode} = 0; 
+        $self->{within_mode} = 0;
+        $self->{context_local} = $self->{context}; 
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match '$lshort'";

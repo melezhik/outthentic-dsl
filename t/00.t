@@ -5,7 +5,7 @@ use warnings;
 use Test::More tests => 2;
 
 BEGIN { use_ok('Outthentic::DSL') };
-my $dsl = Outthentic::DSL->new('hello');
+my $dsl = Outthentic::DSL->new({ output => 'hello'});
 
 isa_ok($dsl,'Outthentic::DSL');
 
