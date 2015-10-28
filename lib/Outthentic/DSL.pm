@@ -3,7 +3,7 @@ package Outthentic::DSL;
 use strict;
 require Test::More;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.0.2';
 
 sub new {
 
@@ -356,6 +356,7 @@ sub handle_plain {
 
     my $self = shift;
     my $l = shift;
+
     my $m;
     my $lshort =  $self->_short_string($l);
 
@@ -385,7 +386,8 @@ sub _short_string {
     my $str = shift;
     my $sstr = substr( $str, 0, $self->{match_l} );
 
-    return $sstr;
+    
+    return $sstr < $str ? "$str ..." : $str; 
 
 }
 
