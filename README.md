@@ -105,7 +105,6 @@ See ["captures"](#captures) section for full explanation of a captures mechanism
 
 Comments and blank lines don't impact validation process but one could use them to improve code readability.
 
-
 * **comments**
 
 Comment lines start with \`#' symbol, comments chunks are ignored by parser:
@@ -298,7 +297,9 @@ Here is more complicated example:
 When generate and execute check expessions parser operates in a _single line mode_ :
 
 * check expressions are treated as single line strings 
-* stdout is validated by given check expression in line by line way:
+* stdout is validated by given check expression in line by line way
+
+For example:
 
     # check list
     # consists of 
@@ -379,7 +380,6 @@ Then captured data might be accessed for example by code generator to define som
 - \`captures()' function is used to access captured data array, 
 
 - it returns an array reference holding all chunks captured during _latest regular expression check_.
-
 
 Here some more examples:
 
