@@ -4,9 +4,9 @@ Outthentic DSL
 
 # Outthentic DSL
 
-* DSL provides some meta language to validate _arbitrary_ plain text. 
+* DSL provides some meta language to validate _arbitrary_ plain text.
 
-* One should create a so called \`check files' - DSL scripts to describe validation process. 
+* One should create a so called \`check files' - DSL scripts to describe validation process.
 
 * Outthentic DSL is both imperative and declarative language.
 
@@ -16,7 +16,7 @@ some output into stdout.
 
 # Check files
 
-Check file is a regular file in text plain format. The content of check file is a DSL script. 
+Check file is a regular file in text plain format. The content of check file is a DSL script.
 
 # Parser
 
@@ -24,17 +24,17 @@ Check file is a regular file in text plain format. The content of check file is 
 
 * parses check file line by line
 * creates and then _executes_ outthentic entry represented by parsed line(s)
-* execution of entry results in one of three :
+* execution of entry results in one of three things:
     * validation stdout against check expression - if entry is check expression one
-    * generating new outhentic entries - if entry is generator one 
-    * execution of perl code - if entry is perl expression one 
+    * generating new outhentic entries - if entry is generator one
+    * execution of perl code - if entry is perl expression one
 
 # Outthentic entries
 
 Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
 
-* check expressions: 
-    * plain strings 
+* check expressions:
+    * plain strings
     * regular expressions
     * text blocks
     * within expressions
@@ -59,8 +59,8 @@ Check expressions defines _what lines stdout should have_:
 
 
     # validator output
-    OK - ouput matches "HELLO"
-    OK - ouput matches /\d\d\d\d-\d\d-\d\d/
+    OK - output matches "HELLO"
+    OK - output matches /\d\d\d\d-\d\d-\d\d/
 
 
 
@@ -117,8 +117,8 @@ Comment lines start with \`#' symbol, comments chunks are ignored by parser:
 
 Blank lines are ignored as well:
 
-    # every story has a begining 
-    The beginning of story
+    # every story has the beginning
+    The beginning of a story
     # then 2 blank lines
 
 
@@ -186,7 +186,7 @@ Parser will remain in a \`text block' mode till the end of check file, which is 
 
 # Perl expressions
 
-Perl expressions are just a pieces of perl code to _get evaled_ during pasing process. This is how it works:
+Perl expressions are just a pieces of perl code to _get evaled_ during parsing process. This is how it works:
 
     # perl expression between two check expressions
     Once upon a time
@@ -194,7 +194,7 @@ Perl expressions are just a pieces of perl code to _get evaled_ during pasing pr
     Lived a boy called Outthentic
 
 
-Internaly once check file gets parsed this piece of DSL code is "turned" into regular perl code:
+Internally once check file gets parsed this piece of DSL code is "turned" into regular perl code:
 
     ok($status,"stdout matches Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
@@ -205,7 +205,7 @@ So, all perl expressions in DSL code will be replaced by perl eval {code} expres
 Example with 'print "Lived a boy called Outthentic"' is quite useless, here some more realistic examples:
 
 
-    # use of Test::More functions 
+    # use of Test::More functions
     # to modify validation workflow:
 
     # skip tests
@@ -235,7 +235,7 @@ Example with 'print "Lived a boy called Outthentic"' is quite useless, here some
 Perl expressions could be effectively used with [\`captures'](#captures):
 
     regexp: my name is (\w+) and my age is (\d+)
-    code: cmp_ok(capture()->[1],'>',20,capture()->[0].' is adult one'); 
+    code: cmp_ok(capture()->[1],'>',20,capture()->[0].' is adult one');
 
 * Perl expressions are executed by perl eval function in context of `package main`, please be aware of that.
 
@@ -253,7 +253,7 @@ Perl expressions could be effectively used with [\`captures'](#captures):
 
 * An array items are passed back to parser, so parser generate news outthentic entities and execute them.
 
-* Generators expressions start with \`:generator' marker. 
+* Generators expressions start with \`:generator' marker.
 
 Here is simple example:
 
@@ -278,7 +278,7 @@ Here is simple example:
 
 Here is more complicated example:
 
-    # this generator generates 
+    # this generator generates
     # comment lines
     # and plain string check expressions:
 
@@ -294,15 +294,15 @@ Here is more complicated example:
 
 # multiline expressions
 
-When generate and execute check expessions parser operates in a _single line mode_ :
+When generate and execute check expressions parser operates in a _single line mode_ :
 
-* check expressions are treated as single line strings 
+* check expressions are treated as single line strings
 * stdout is validated by given check expression in line by line way
 
 For example:
 
     # check list
-    # consists of 
+    # consists of
     # single line entries
 
     Multiline
@@ -312,18 +312,18 @@ For example:
 
     # stdout
     Multiline \n string \n here
-   
+ 
  
     # validation output
     OK output matches "Multiline"
     OK output matches "string"
     OK output matches "here"
-    NOT_OK output matches "Multiline \n string \n here" 
+    NOT_OK output matches "Multiline \n string \n here"
 
 
 Use text blocks if you want to achieve multiline checks.
 
-However when writing perl expressions or generators one could use multilines strings. 
+However when writing perl expressions or generators one could use multilines strings.
 
 \`\' delimiters breaks a single line text on a multi lines:
 
@@ -377,7 +377,7 @@ Then captured data might be accessed for example by code generator to define som
 
 
 
-- \`captures()' function is used to access captured data array, 
+- \`captures()' function is used to access captured data array,
 
 - it returns an array reference holding all chunks captured during _latest regular expression check_.
 
