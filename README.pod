@@ -542,13 +542,13 @@ Then captured data might be accessed for example by code generator to define som
 
 =over
 
-=item -
+=item *
 
 `captures()' function is used to access captured data array,
 
 
 
-=item -
+=item *
 
 it returns an array reference holding all chunks captured during I<latest regular expression check>.
 

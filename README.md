@@ -377,9 +377,9 @@ Then captured data might be accessed for example by code generator to define som
 
 
 
-- \`captures()' function is used to access captured data array,
+* \`captures()' function is used to access captured data array,
 
-- it returns an array reference holding all chunks captured during _latest regular expression check_.
+* it returns an array reference holding all chunks captured during _latest regular expression check_.
 
 Here some more examples:
 
