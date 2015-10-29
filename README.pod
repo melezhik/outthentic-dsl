@@ -54,14 +54,17 @@ Check file is a regular file in text plain format. The content of check file is 
 parses check file line by line
 
 
+
 =item *
 
 creates and then I<executes> outthentic entry represented by parsed line(s)
 
 
+
 =item *
 
 execution of entry results in one of three things:
+
 =over
 
 =item *
@@ -69,14 +72,17 @@ execution of entry results in one of three things:
 validation stdout against check expression - if entry is check expression one
 
 
+
 =item *
 
 generating new outhentic entries - if entry is generator one
 
 
+
 =item *
 
 execution of perl code - if entry is perl expression one
+
 
 
 =back
@@ -95,6 +101,7 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
 =item *
 
 check expressions:
+
 =over
 
 =item *
@@ -126,9 +133,11 @@ within expressions
 comments
 
 
+
 =item *
 
 blank lines
+
 
 
 =item *
@@ -136,9 +145,11 @@ blank lines
 perl expressions
 
 
+
 =item *
 
 generators
+
 
 
 =back

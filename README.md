@@ -23,24 +23,34 @@ Check file is a regular file in text plain format. The content of check file is 
 \`Parser' is the program which:
 
 * parses check file line by line
+
 * creates and then _executes_ outthentic entry represented by parsed line(s)
+
 * execution of entry results in one of three things:
-    ** validation stdout against check expression - if entry is check expression one
-    ** generating new outhentic entries - if entry is generator one
-    ** execution of perl code - if entry is perl expression one
+
+    * validation stdout against check expression - if entry is check expression one
+
+    * generating new outhentic entries - if entry is generator one
+
+    * execution of perl code - if entry is perl expression one
 
 # Outthentic entries
 
 Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
 
 * check expressions:
-    ** plain strings
-    ** regular expressions
-    ** text blocks
-    ** within expressions
+
+    * plain strings
+    * regular expressions
+    * text blocks
+    * within expressions
+
 * comments
+
 * blank lines
+
 * perl expressions
+
 * generators
 
 # Check expressions
