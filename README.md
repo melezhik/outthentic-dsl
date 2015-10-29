@@ -10,8 +10,8 @@ Outthentic DSL
 
 * Outthentic DSL is both imperative and declarative language.
 
-* It's convenient to refer to the text validate by as \`stdout', thinking about a program generating and yielding
-an output to the STDOUT which then gets validated by.
+* It's convenient to refer to the text validate by as \`stdout', thinking that one program generates and yields
+some output into stdout.
 
 
 # Check files
@@ -22,12 +22,12 @@ Check file is a regular file in text plain format. The content of check file is 
 
 \`Parser' is the program which:
 
-* parses processes check file line by line
+* parses check file line by line
 * creates and then _executes_ outthentic entry represented by parsed line(s)
 * execution of entry results in one of three :
-    * validation stdout against check expression - if entry is check expression
-    * generating new outhentic entries - if entry is generator entry
-    * execution of perl code - if entry is perl expression
+    * validation stdout against check expression - if entry is check expression one
+    * generating new outhentic entries - if entry is generator one 
+    * execution of perl code - if entry is perl expression one 
 
 # Outthentic entries
 
@@ -45,7 +45,7 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
 
 # Check expressions
 
-* Check expressions defines _what lines stdout should have_
+Check expressions defines _what lines stdout should have_:
 
     # stdout
     HELLO
@@ -58,17 +58,17 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-    # check output
-    HELLO matches
-    regexp: \d\d\d\d-\d\d-\d\d matches
+    # validator output
+    OK - ouput matches "HELLO"
+    OK - ouput matches /\d\d\d\d-\d\d-\d\d/
 
 
 
-* There are two type of check expressions - plain strings and regular expressions.
+There are two type of check expressions - [plain strings](#plain-strings) and [regular expressions](#regular-expressions).
 
-* It is convenient to talk about _check list_ as of all check expressions in a given check file.
+It is convenient to talk about _check list_ as of all check expressions in a given check file.
 
-## plain string
+# plain string
 
         I am ok
         HELLO Outthentic
@@ -77,7 +77,7 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
 The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
 
 
-## regular expression
+# regular expressions
 
 Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
 
@@ -88,7 +88,7 @@ Similarly to plain strings matching, you may require that stdout has lines match
 Regular expressions should start with \`regexp:' marker.
  
 
-## captures
+# captures
 
 Parser does not care about _how many times_ a given check expression is found in stdout.
 
