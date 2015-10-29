@@ -396,21 +396,5 @@ sub _short_string {
 
 __END__
 
-=head1 SYNOPSIS
-
-Outthentic DSL
-
-=head1 Documentation
-
-Please follow github pages  - https://github.com/melezhik/outthentic-dsl
-
-=head1 AUTHOR
-
-Aleksei Melezhik
-
-=head1 COPYRIGHT
-
-Copyright 2015 Alexey Melezhik.
-
-This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
-
+=for mark-to-pod
+=for mark-to-pod
