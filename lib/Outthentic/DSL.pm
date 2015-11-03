@@ -11,8 +11,8 @@ sub new {
     my $opts = shift;
 
     bless {
-        context => [],
-        context_local => [],
+        output_context => [],
+        search_context => [],
         context_populated => 0,
         captures => [],
         within_mode => 0,
@@ -35,17 +35,17 @@ sub populate_context {
 
     my $i = 0;
 
-    my @context = ();
+    my @output_context = ();
 
     for my $l ( split /\n/, $self->{output} ){
         chomp $l;
         $i++;
         $l=":blank_line" unless $l=~/\S/;
-        push @context, [$l, $i];
+        push @output_context, [$l, $i];
     }
 
-    $self->{context} = [@context];
-    $self->{context_local} = [@context];
+    $self->{output_context} = [@output_context];
+    $self->{search_context} = [@output_context];
 
     Test::More::diag("context populated") if $self->{debug_mod} >= 2;
 
@@ -79,21 +79,21 @@ sub check_line {
 
     Test::More::diag("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
-    my @context         = @{$self->{context}};
-    my @context_local   = @{$self->{context_local}};
+    my @output_context         = @{$self->{output_context}};
+    my @search_context   = @{$self->{search_context}};
     my @context_new     = ();
 
     if ($check_type eq 'default'){
-        for my $c (@context_local){
+        for my $c (@search_context){
             my $ln = $c->[0]; my $next_i = $c->[1];
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
             }
-            push @context_new, $context[$next_i] if $self->{block_mode};
+            push @context_new, $output_context[$next_i] if $self->{block_mode};
         }
     }elsif($check_type eq 'regexp'){
-        for my $c (@context_local){
+        for my $c (@search_context){
             my $re = qr/$pattern/;
             my $ln = $c->[0]; my $next_i = $c->[1];
 
@@ -105,7 +105,7 @@ sub check_line {
                 push @context_new, $c if $self->{within_mode};
                 $self->{last_match_line} = $ln;
             }
-            push @context_new, $context[$next_i] if $self->{block_mode};
+            push @context_new, $output_context[$next_i] if $self->{block_mode};
 
         }
     }else {
@@ -130,9 +130,11 @@ sub check_line {
 
     # update context
     if ( $self->{block_mode} ){
-        $self->{context_local} = [@context_new];
+        $self->{search_context} = [@context_new];
     } elsif ( $self->{within_mode} and $status ){
-        $self->{context_local} = [@context_new];
+        $self->{search_context} = [@context_new];
+    }elsif ( $self->{within_mode} and ! $status ){
+        $self->{search_context} = []; # empty context if within expression has not passed 
     }
 
     return $status;
@@ -181,7 +183,7 @@ sub generate_asserts {
             $self->{block_mode} = 0;
 
             # restore local context
-            $self->{context_local} = $self->{context};
+            $self->{search_context} = $self->{output_context};
 
             Test::More::diag("end text block") if $self->{debug_mod} >= 2;
 
@@ -308,7 +310,7 @@ sub handle_regexp {
 
     if ($self->{within_mode}){
         $self->{within_mode} = 0; 
-        $self->{context_local} = $self->{context};
+        $self->{search_context} = $self->{output_context};
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match /$re/";
@@ -363,7 +365,7 @@ sub handle_plain {
 
     if ($self->{within_mode}){
         $self->{within_mode} = 0;
-        $self->{context_local} = $self->{context}; 
+        $self->{search_context} = $self->{output_context}; 
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match '$lshort'";

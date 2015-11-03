@@ -2,6 +2,7 @@
 
 * documentation: description of `within:' feature
 * small fixes at `ok' asserts messages 
+* refactoring
 
 0.0.2 2015-10-29
 
