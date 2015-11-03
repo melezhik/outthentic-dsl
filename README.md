@@ -195,7 +195,6 @@ Parser will remain in a \`text block' mode till the end of check file, which is 
 
             we are in `text block` mode
 
-
 # Perl expressions
 
 Perl expressions are just a pieces of perl code to _get evaled_ during parsing process. This is how it works:
@@ -253,53 +252,6 @@ Perl expressions could be effectively used with [\`captures'](#captures):
 
 * Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to get know more about perl eval.
 
-# Within expressions
-
-Within expression acts like regular expression but narrow search context to last matching line:
-
-
-    # one of 3 colors:
-    within: color: (red|green|blue)
-
-    # if within expression is successfully passed
-    # new search context is last matching line  
-
-In other words when \`:within\ marker is used parser tries to validate stdout against regular expression following after :within marker and 
-if validation is successful new search context is defined:
-
-
-    # one of 3 colors:
-    within: color: (red|green|blue)
-
-    # I really need a red color
-    red
-
-The code above does follows:
-
-* try to find `color:' followed by \`red' or `\green' or \`blue' word 
-* if previous check is successful new context is ""narrowed to matching line
-* thus next plain string checks expression means - try to find \`red' in line matching the \`color: (red|green|blue)'
-
-Here more examples:
-
-    # try to find a date string in following format
-    within: date: (\d\d\d\d)-\d\d-\d\d
-
-    # we only need a dates older then 2000
-    code: cmp_ok(capture->[0],'>',2000,'date is older then 2000');
-
-
-Within expressions could be sequential, which effectively means using \'&&' logical operators for within expressions:
-
-
-    # try to find a date string in following format
-    within: date: \d\d\d\d-\d\d-\d\d
-
-    # and try to find year of 2000 in a date string
-    within: 2000-\d\d-\d\d
-
-    # and try to find month 04 in a date string
-    within: \d\d\d\d-04-\d\d
 
 # Generators
 
@@ -476,6 +428,53 @@ You also may use \`capture()' function to get a _first element_ of captures arra
     regexp: (\d+)
     code: cmp_ok( capture()->[0],'>',10,"first number is greater than 10" );
 
+# Within expressions
+
+Within expression acts like regular expression but narrows search context to last matching line:
+
+
+    # one of 3 colors:
+    within: color: (red|green|blue)
+
+    # if within expression is successfully passed
+    # new search context is last matching line  
+
+In other words when \`:within' marker is used parser tries to validate stdout against regular expression following after :within marker and 
+if validation is successful new search context is defined:
+
+
+    # one of 3 colors:
+    within: color: (red|green|blue)
+
+    # I really need a red color
+    red
+
+The code above does follows:
+
+* try to find `color:' followed by \`red' or `\green' or \`blue' word 
+* if previous check is successful new context is ""narrowed to matching line
+* thus next plain string checks expression means - try to find \`red' in line matching the \`color: (red|green|blue)'
+
+Here more examples:
+
+    # try to find a date string in following format
+    within: date: (\d\d\d\d)-\d\d-\d\d
+
+    # we only need a dates older then 2000
+    code: cmp_ok(capture->[0],'>',2000,'date is older then 2000');
+
+
+Within expressions could be sequential, which effectively means using \'&&' logical operators for within expressions:
+
+
+    # try to find a date string in following format
+    within: date: \d\d\d\d-\d\d-\d\d
+
+    # and try to find year of 2000 in a date string
+    within: 2000-\d\d-\d\d
+
+    # and try to find month 04 in a date string
+    within: \d\d\d\d-04-\d\d
 
 # AUTHOR
 
