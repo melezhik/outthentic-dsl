@@ -1,9 +1,29 @@
 package Outthentic::DSL;
 
 use strict;
+
 require Test::More;
 
 our $VERSION = '0.0.3';
+
+our @CHECK_LIST;
+
+sub check_list {
+
+    shift;
+
+    [ @CHECK_LIST ];
+}
+
+sub add_check_item {
+
+    shift;
+    my $item = shift;
+    push @CHECK_LIST, $item;
+        
+}
+
+
 
 sub new {
 
@@ -112,7 +132,9 @@ sub check_line {
         die "unknown check_type: $check_type";
     }
 
-    Test::More::ok($status,$message);
+
+    $self->add_check_item({ status => $status , message => $message });
+
     $self->{last_check_status} = $status;
 
     if ( $self->{debug_mod} >= 2 ){
@@ -523,6 +545,7 @@ text blocks
 =item *
 
 within expressions
+: validator expressions
 
 
 =back
@@ -729,44 +752,14 @@ Perl expressions are just a pieces of perl code to I<get evaled> during parsing 
 
 Internally once check file gets parsed this piece of DSL code is "turned" into regular perl code:
 
-    ok($status,"stdout matches Once upon a time");
+    execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
-    ok($status,"stdout matches Lived a boy called Outthentic");
+    execute_check_expression("Lived a boy called Outthentic");
 
-So, all perl expressions in DSL code will be replaced by perl eval {code} expressions.
-
-Example with 'print "Lived a boy called Outthentic"' is quite useless, here some more realistic examples:
-
-    # use of Test::More functions
-    # to modify validation workflow:
-    
-    # skip tests
-    
-    code: skip('next 3 checks are skipped',3) # skip three next checks forever
-    color: red
-    color: blue
-    color: green
-    
-    number:one
-    number:two
-    number:three
-    
-    # skip tests conditionally
-    
-    color: red
-    color: blue
-    color: green
-    
-    code: skip('numbers checks are skipped',3)  if $ENV{'skip_numbers'} # skip three next checks if skip_numbers set
-    
-    number:one
-    number:two
-    number:three
-
-Perl expressions could be effectively used with L<`captures'|#captures>:
+One of the use case for perl expressions is to store L<`captures'|#captures> data:
 
     regexp: my name is (\w+) and my age is (\d+)
-    code: cmp_ok(capture()->[1],'>',20,capture()->[0].' is adult one');
+    code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
 
 =over
 
@@ -783,6 +776,74 @@ Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/fun
 
 
 =back
+
+
+=head1 Validator expressions
+
+=over
+
+=item *
+
+Validator expressions like perl expressions are just a piece of perl code. 
+
+
+
+=item *
+
+Validator expressions start with `validator:' marker
+
+
+
+=item *
+
+Validator code gets executed and value returned by the code is treated as validation status.
+
+
+
+=item *
+
+Validator should return array reference. First element of array is validation status and second one is helpfull message which
+will be shown when status is appeared in TAP output.
+
+
+
+=back
+
+For example:
+
+    # this is always true
+    validator: [ 10>1 , 'ten is bigger then one' ]
+    
+    # and this is not
+    validator: [ 1>10, 'one is bigger then ten'  ]
+
+=over
+
+=item -
+
+Validators become very efficient when gets combined with L<`captures expressions'|#captures>
+
+
+=back
+
+This is a simple example:
+
+    # stdout
+    # it's my family ages.
+    alex    38
+    julia   25
+    jan     2
+    
+    
+    # let's capture name and age chunks
+    regexp: /(\w+)\s+(\d+)/
+    
+    validator:                          \
+    my $total=0;                        \
+    for my $c (@{captures()}) {         \
+        $total+=$c->[0];                \
+    }                                   \
+    $total == 72
 
 
 =head1 Generators
@@ -904,7 +965,7 @@ For example:
 
 Use text blocks if you want to achieve multiline checks.
 
-However when writing perl expressions or generators one could use multilines strings.
+However when writing perl expressions, validators or generators one could use multilines strings.
 
 `\' delimiters breaks a single line text on a multi lines:
 
@@ -976,12 +1037,13 @@ Here some more examples:
     # and check if it is greater then 10
     
     regexp: (\d+)
-    code:                               \
+    
+    validator:                          \
     my $total=0;                        \
     for my $c (@{captures()}) {         \
         $total+=$c->[0];                \
     }                                   \
-    cmp_ok( $total,'>',10,"total amount is greater than 10" );
+    [ $total,'>',10, "total amount is greater than 10" ]
     
     
     # check if stdout contains lines
@@ -989,12 +1051,14 @@ Here some more examples:
     # and then check if first date found is yesterday
     
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
-    code:                               \
+    
+    validator:                          \
     use DateTime;                       \
     my $c = captures()->[0];            \
     my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); \
     my $yesterday = DateTime->now->subtract( days =>  1 );                        \
-    cmp_ok( DateTime->compare($dt, $yesterday),'==',0,"first day found is - $dt and this is a yesterday" );
+    
+    [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
 
 You also may use `capture()' function to get a I<first element> of captures array:
 
@@ -1002,7 +1066,7 @@ You also may use `capture()' function to get a I<first element> of captures arra
     # a first number should be greater then ten
     
     regexp: (\d+)
-    code: cmp_ok( capture()->[0],'>',10,"first number is greater than 10" );
+    validator: [ ( capture()->[0] >  10 ), " first number is greater than 10 " ];
 
 
 =head1 Within expressions

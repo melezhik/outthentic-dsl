@@ -1,5 +1,6 @@
 0.0.3
 
+* check statuses returned by check_list method
 * documentation: description of `within:' feature
 * small fixes at `ok' asserts messages 
 * refactoring
