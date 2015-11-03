@@ -629,7 +629,7 @@ The code above does follows:
 
 =item *
 
-try to find C<color:' followed by \>red' or C<\green' or \>blue' word 
+try to find C<color:' followed by \>red' or `green' or `blue' word 
 
 
 =item *
@@ -652,7 +652,7 @@ Here more examples:
     # we only need a dates older then 2000
     code: cmp_ok(capture->[0],'>',2000,'date is older then 2000');
 
-Within expressions could be sequential, which effectively means using \'&&' logical operators for within expressions:
+Within expressions could be sequential, which effectively means using `&&' logical operators for within expressions:
 
     # try to find a date string in following format
     within: date: \d\d\d\d-\d\d-\d\d
