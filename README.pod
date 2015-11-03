@@ -199,7 +199,7 @@ Similarly to plain strings matching, you may require that stdout has lines match
 Regular expressions should start with `regexp:' marker.
 
 
-=head1 captures
+=head1 one or many?
 
 Parser does not care about I<how many times> a given check expression is found in stdout.
 
@@ -584,12 +584,12 @@ I<After> this regular expression check gets executed captured data will stored i
 
 Then captured data might be accessed for example by code generator to define some extra checks:
 
-    code:                               \
+    validator:                          \
     my $total=0;                        \
     for my $c (@{captures()}) {         \
         $total+=$c->[0];                \
     }                                   \
-    cmp_ok( $total,'==',72,"total age of my family" );
+    [ ($total == 72 ), "total age of my family" ];
 
 =over
 
@@ -620,7 +620,7 @@ Here some more examples:
     for my $c (@{captures()}) {         \
         $total+=$c->[0];                \
     }                                   \
-    [ $total,'>',10, "total amount is greater than 10" ]
+    [ ( $total > 10 ) "total amount is greater than 10" ]
     
     
     # check if stdout contains lines
@@ -692,7 +692,7 @@ Here more examples:
     within: date: (\d\d\d\d)-\d\d-\d\d
     
     # we only need a dates older then 2000
-    code: cmp_ok(capture->[0],'>',2000,'date is older then 2000');
+    validator: [ ( capture->[0] > 2000 ),'date is older then 2000' ];
 
 Within expressions could be sequential, which effectively means using `&&' logical operators for within expressions:
 
