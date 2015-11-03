@@ -629,7 +629,7 @@ The code above does follows:
 
 =item *
 
-try to find C<color:' followed by \>red' or `green' or `blue' word 
+try to find `color:' followed by `red' or `green' or `blue' word 
 
 
 =item *

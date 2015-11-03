@@ -451,7 +451,7 @@ if validation is successful new search context is defined:
 
 The code above does follows:
 
-* try to find `color:' followed by \`red' or \`green' or \`blue' word 
+* try to find \`color:' followed by \`red' or \`green' or \`blue' word 
 * if previous check is successful new context is ""narrowed to matching line
 * thus next plain string checks expression means - try to find \`red' in line matching the \`color: (red|green|blue)'
 
