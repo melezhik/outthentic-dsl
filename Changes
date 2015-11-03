@@ -1,9 +1,14 @@
+0.0.3
+
+* documentation: description of `within:' feature
+* small fixes at `ok' asserts messages 
+
 0.0.2 2015-10-29
 
-    - documentation created
-    - various small fixes
+* documentation created
+* various small fixes
 
 0.0.1 2015-10-28
 
-    - first cpan release
+* first cpan release
 

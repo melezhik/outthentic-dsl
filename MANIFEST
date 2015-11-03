@@ -1,3 +1,4 @@
+Changes
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -12,4 +13,6 @@ Makefile.PL
 MANIFEST			This list of files
 META.yml
 README.md
+README.pod
 t/00.t
+updatepod.bash
