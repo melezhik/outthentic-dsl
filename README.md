@@ -451,7 +451,7 @@ if validation is successful new search context is defined:
 
 The code above does follows:
 
-* try to find `color:' followed by \`red' or `\green' or \`blue' word 
+* try to find `color:' followed by \`red' or \`green' or \`blue' word 
 * if previous check is successful new context is ""narrowed to matching line
 * thus next plain string checks expression means - try to find \`red' in line matching the \`color: (red|green|blue)'
 
@@ -464,7 +464,7 @@ Here more examples:
     code: cmp_ok(capture->[0],'>',2000,'date is older then 2000');
 
 
-Within expressions could be sequential, which effectively means using \'&&' logical operators for within expressions:
+Within expressions could be sequential, which effectively means using \`&&' logical operators for within expressions:
 
 
     # try to find a date string in following format
