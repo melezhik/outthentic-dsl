@@ -6,13 +6,13 @@ Language to validate text output.
 
 ## Outthentic DSL 
 
-Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' is used for this term. 
+* Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' is used for this term. 
 
-Outthentic DSL is both imperative and declarative language.
+* Outthentic DSL is both imperative and declarative language.
 
 ## Check files
 
-A plain text files containing program code written on DSL to describe text validation process.
+A plain text files containing program code written on DSL to describe text [validation process](#validation-process).
 
 ## Code
 
