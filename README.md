@@ -41,8 +41,6 @@ Parser is the program which:
 
 
 
-
-
 ## Validation process
 
 Validation process consists of: 
@@ -296,7 +294,7 @@ For example:
     validator: [ 1>10, 'one is bigger then ten'  ]
 
 
-- Validators become very efficient when gets combined with [\`captures expressions'](#captures)
+* Validators become very efficient when gets combined with [\`captures expressions'](#captures)
 
 This is a simple example:
 
@@ -316,14 +314,14 @@ This is a simple example:
     for my $c (@{captures()}) {         \
         $total+=$c->[0];                \
     }                                   \
-    $total == 72
+    [ ( $total == 72 ), "total age" ] 
 
 
-# Generator expressions
+# Generators
 
 * Generators is the way to _generate new outthentic entries on the fly_.
 
-* Generators like perl expressions are just a piece of perl code.
+* Generator expressions like perl expressions are just a piece of perl code.
 
 * The only requirement for generator code - it should return _reference to array of strings_.
 

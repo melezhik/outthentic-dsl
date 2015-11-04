@@ -892,7 +892,7 @@ For example:
 
 =over
 
-=item -
+=item *
 
 Validators become very efficient when gets combined with L<`captures expressions'|#captures>
 
@@ -916,10 +916,10 @@ This is a simple example:
     for my $c (@{captures()}) {         \
         $total+=$c->[0];                \
     }                                   \
-    $total == 72
+    [ ( $total == 72 ), "total age" ] 
 
 
-=head1 Generator expressions
+=head1 Generators
 
 =over
 
@@ -931,7 +931,7 @@ Generators is the way to I<generate new outthentic entries on the fly>.
 
 =item *
 
-Generators like perl expressions are just a piece of perl code.
+Generator expressions like perl expressions are just a piece of perl code.
 
 
 
