@@ -3,7 +3,7 @@
 
 =head1 SYNOPSIS
 
-Outthentic DSL
+Langiage to validate text output.
 
 
 =head1 Outthentic DSL
@@ -125,6 +125,13 @@ generating validation status and helping message, which could be retrieved later
 
 
 
+=item *
+
+a certain I<presentation> of validation statuses and messages depend on L<client|#clients> I<using> outthentic DSL and
+not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+
+
+
 =back
 
 
@@ -198,25 +205,29 @@ generator expressions
 
 =head1 Check expressions
 
-Check expressions defines I<lines stdout should match>. Here are examples:
+Check expressions defines I<lines stdout should match>. Here is a simple example:
 
     # stdout
+    
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
     
     
     # check list
+    
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
     
     
     # validation output
     
+    +--------+------------------------------+
     | status | message                      |
     +--------+------------------------------+
     | OK     | matches "HELLO"              |
     | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
+    +--------+------------------------------+
 
 There are two basic types of check expressions - L<plain strings|#plain-strings> and L<regular expressions|#regular-expressions>.
 
