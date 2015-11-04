@@ -16,7 +16,7 @@ A plain text files containing program code written on DSL to describe text valid
 
 ## Code
 
-Content of check file. Should be progam code written on DSL.
+Content of check file. Should be program code written on DSL.
 
 ## Stdout
 
@@ -56,7 +56,7 @@ Validation process consists of:
 * calculating validation status and generating helping message which could be retrieved later
 
 * a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
-not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+not defined at this scope. In this documentation a simple table form is chosen for the sake of readability. 
 
 
 ## DSL API
@@ -77,7 +77,7 @@ Outthentic provides program api for parser:
 
 ## Outthentic client
 
-Client is a external program using DSL API. There are two existed otthentic clients:
+Client is a external program using DSL API. There are two existed outthentic clients:
 
 * [swat](https://github.com/melezhik/swat)
 * [outthentic](https://github.com/melezhik/outthentic)
@@ -85,7 +85,7 @@ Client is a external program using DSL API. There are two existed otthentic clie
 
 # Outthentic entities
 
-Outhentic DSL comprises following basic entities:
+Outthentic DSL comprises following basic entities:
 
 * Check expressions:
 
@@ -134,7 +134,7 @@ There are two basic types of check expressions - [plain strings](#plain-strings)
 
 It is convenient to talk about _check list_ as of all check expressions in a given check file.
 
-# Plain String Expressions 
+# Plain string expressions 
 
         I am ok
         HELLO Outthentic
@@ -143,7 +143,7 @@ It is convenient to talk about _check list_ as of all check expressions in a giv
 The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
 
 
-# Regular Expressions
+# Regular expressions
 
 Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
 
@@ -284,7 +284,7 @@ One of the use case for perl expressions is to store [\`captures'](#captures) da
 
 * Validator code gets executed and value returned by the code is treated as validation status.
 
-* Validator should return array reference. First element of array is validation status and second one is helpfull message which
+* Validator should return array reference. First element of array is validation status and second one is helpful message which
 will be shown when status is appeared in TAP output.
 
 For example:

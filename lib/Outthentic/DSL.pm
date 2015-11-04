@@ -446,7 +446,7 @@ A plain text files containing program code written on DSL to describe text valid
 
 =head2 Code
 
-Content of check file. Should be progam code written on DSL.
+Content of check file. Should be program code written on DSL.
 
 
 =head2 Stdout
@@ -540,7 +540,7 @@ calculating validation status and generating helping message which could be retr
 =item *
 
 a certain I<presentation> of validation statuses and messages depend on L<client|#clients> I<using> outthentic DSL and
-not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+not defined at this scope. In this documentation a simple table form is chosen for the sake of readability. 
 
 
 
@@ -566,7 +566,7 @@ Outthentic provides program api for parser:
 
 =head2 Outthentic client
 
-Client is a external program using DSL API. There are two existed otthentic clients:
+Client is a external program using DSL API. There are two existed outthentic clients:
 
 =over
 
@@ -585,7 +585,7 @@ L<outthentic|https://github.com/melezhik/outthentic>
 
 =head1 Outthentic entities
 
-Outhentic DSL comprises following basic entities:
+Outthentic DSL comprises following basic entities:
 
 =over
 
@@ -644,7 +644,7 @@ Perl expressions
 
 =item *
 
-Generator Expressions
+Generator expressions
 
 
 
@@ -682,7 +682,7 @@ There are two basic types of check expressions - L<plain strings|#plain-strings>
 It is convenient to talk about I<check list> as of all check expressions in a given check file.
 
 
-=head1 Plain String Expressions 
+=head1 Plain string expressions 
 
         I am ok
         HELLO Outthentic
@@ -690,7 +690,7 @@ It is convenient to talk about I<check list> as of all check expressions in a gi
 The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
 
 
-=head1 Regular Expressions
+=head1 Regular expressions
 
 Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
 
@@ -881,7 +881,7 @@ Validator code gets executed and value returned by the code is treated as valida
 
 =item *
 
-Validator should return array reference. First element of array is validation status and second one is helpfull message which
+Validator should return array reference. First element of array is validation status and second one is helpful message which
 will be shown when status is appeared in TAP output.
 
 
