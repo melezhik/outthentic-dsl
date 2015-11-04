@@ -429,136 +429,99 @@ __END__
 Langiage to validate text output.
 
 
-=head1 Outthentic DSL
+=head1 Glossary
 
 =over
 
 =item *
 
-DSL provides some meta language to validate I<arbitrary> plain text.
+I<Outthentic DSL> 
 
 
+=back
 
-=item *
-
-One should create a so called `check files' - DSL scripts to describe validation process.
-
-
-
-=item *
+Is a language to validate I<arbitrary> plain text. Very often a short form `DSL' will be used to refer to this term. 
 
 Outthentic DSL is both imperative and declarative language.
 
-
+=over
 
 =item *
 
-It's convenient to refer to the text validate by as `stdout', thinking that one program generates and yields
-some output into stdout.
-
+I<Check files>
 
 
 =back
 
-
-=head1 Check files
-
-Check file is a regular file in text plain format. The content of check file is a DSL script.
-
-
-=head1 Parser
-
-`Parser' is the program which:
+One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
 
 =over
 
 =item *
 
-parses check file line by line
+I<Code>
+Content of check file. Should be progam code written on DSL.
 
 
 
 =item *
 
-creates and then I<executes> outthentic entry represented by parsed line(s)
+I<Stdout>
 
 
 
-=item *
+=back
 
-execution of entry results in one of three things:
+It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
 
 =over
 
 =item *
 
-L<validation|#validation> stdout against check expression - if entry is check expression one
-
-
-
-=item *
-
-generating new outthentic entries - if entry is generator one
-
-
-
-=item *
-
-execution of perl code - if entry is perl expression one
-
+I<Parser>
 
 
 =back
 
+Parser is the program which:
+
+    * parses check file line by line
+    
+    * creates and then _executes_ outthentic entry represented by parsed line(s)
+    
+    * execution of entry results in one of three things:
+    
+        * [validation](#validation) stdout against check expression - if entry is check expression one
+    
+        * generating new outthentic entries - if entry is generator one
+    
+        * execution of perl code - if entry is perl expression one
+
+=over
+
+=item *
+
+I<Validation process>
 
 
 =back
-
-
-=head1 Validation 
 
 Validation process consists of: 
 
-=over
-
-=item *
-
-checking if stdout matches check expression or
-
-
-
-=item *
-
-in case of L<validator expression|#validators> :
-
-=over
-
-=item *
-
-executing validator code and checking if returned value is true 
+    * checking if stdout matches check expression or
+     
+    
+    * in case of [validator expression](#validators) :
+    
+        * executing validator code and checking if returned value is true 
+    
+    * generating validation status and helping message, which could be retrieved later
+    
+    * a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
+      not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
 
 
-=back
-
-
-
-=item *
-
-generating validation status and helping message, which could be retrieved later
-
-
-
-=item *
-
-a certain I<presentation> of validation statuses and messages depend on L<client|#clients> I<using> outthentic DSL and
-not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
-
-
-
-=back
-
-
-=head1 Outthentic entries
+=head1 Outthentic entities
 
 Outhentic DSL comprises following basic entities:
 

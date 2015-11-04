@@ -2,56 +2,59 @@
 
 Langiage to validate text output.
 
-# Outthentic DSL
+# Glossary
 
-* DSL provides some meta language to validate _arbitrary_ plain text.
+* *Outthentic DSL* 
 
-* One should create a so called \`check files' - DSL scripts to describe validation process.
+Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' will be used to refer to this term. 
 
-* Outthentic DSL is both imperative and declarative language.
+Outthentic DSL is both imperative and declarative language.
 
-* It's convenient to refer to the text validate by as \`stdout', thinking that one program generates and yields
-some output into stdout.
+* *Check files*
 
+One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
 
-# Check files
+* *Code*
+Content of check file. Should be progam code written on DSL.
 
-Check file is a regular file in text plain format. The content of check file is a DSL script.
+* *Stdout*
 
-# Parser
+It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
 
-\`Parser' is the program which:
+* *Parser*
 
-* parses check file line by line
+Parser is the program which:
 
-* creates and then _executes_ outthentic entry represented by parsed line(s)
+    * parses check file line by line
 
-* execution of entry results in one of three things:
+    * creates and then _executes_ outthentic entry represented by parsed line(s)
 
-    * [validation](#validation) stdout against check expression - if entry is check expression one
+    * execution of entry results in one of three things:
 
-    * generating new outthentic entries - if entry is generator one
+        * [validation](#validation) stdout against check expression - if entry is check expression one
 
-    * execution of perl code - if entry is perl expression one
+        * generating new outthentic entries - if entry is generator one
 
-# Validation 
+        * execution of perl code - if entry is perl expression one
+
+* *Validation process*
 
 Validation process consists of: 
 
-* checking if stdout matches check expression or
+    * checking if stdout matches check expression or
  
 
-* in case of [validator expression](#validators) :
+    * in case of [validator expression](#validators) :
 
-     * executing validator code and checking if returned value is true 
+        * executing validator code and checking if returned value is true 
 
-* generating validation status and helping message, which could be retrieved later
+    * generating validation status and helping message, which could be retrieved later
 
-* a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
-not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+    * a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
+      not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
 
  
-# Outthentic entries
+# Outthentic entities
 
 Outhentic DSL comprises following basic entities:
 
