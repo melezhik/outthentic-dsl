@@ -80,7 +80,7 @@ Outthentic provides program api for parser:
 Client is a external program using DSL API. There are two existed otthentic clients:
 
 * [swat](https://github.com/melezhik/swat)
-* [outthentic](https://github.com/melezhik/outthentic))
+* [outthentic](https://github.com/melezhik/outthentic)
 
 
 # Outthentic entities
