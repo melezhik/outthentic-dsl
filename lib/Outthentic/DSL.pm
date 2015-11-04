@@ -730,14 +730,8 @@ See L<"captures"|#captures> section for full explanation of a captures mechanism
 
 Comments and blank lines don't impact validation process but one could use them to improve code readability.
 
-=over
 
-=item *
-
-B<Comments>
-
-
-=back
+=head2 Comments
 
 Comment lines start with `#' symbol, comments chunks are ignored by parser:
 
@@ -745,14 +739,8 @@ Comment lines start with `#' symbol, comments chunks are ignored by parser:
     The beginning of story
     Hello World # or could be added to existed expression to the right, like here
 
-=over
 
-=item *
-
-B<Blank lines>
-
-
-=back
+=head2 Blank lines
 
 Blank lines are ignored as well:
 
@@ -776,14 +764,8 @@ But you B<can't ignore> blank lines in a `text block matching' context ( see `te
         :blank_line
     end:
 
-=over
 
-=item *
-
-B<text blocks>
-
-
-=back
+=head2 Text blocks
 
 Sometimes it is very helpful to match a stdout against a `block of strings' goes consequentially, like here:
 
@@ -937,7 +919,7 @@ This is a simple example:
     $total == 72
 
 
-=head1 Generators
+=head1 Generator expressions
 
 =over
 
