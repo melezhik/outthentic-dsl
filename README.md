@@ -101,7 +101,7 @@ Outhentic DSL comprises following basic entities:
 
 * Perl expressions
 
-* Generator Expressions
+* Generator expressions
 
 # Check expressions
 
