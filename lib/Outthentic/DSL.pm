@@ -515,6 +515,39 @@ execution of perl code - if entry is perl expression one
 =back
 
 
+=head1 Validation 
+
+Validation process consists of: 
+
+=over
+
+=item *
+
+checking if stdout matches check expression or 
+
+
+=item *
+
+in case of L<validator|#validators>:
+=over
+
+=item *
+
+executing validator code and checking if returned value is true 
+
+
+=back
+
+
+
+=item *
+
+generating validation status and helping message
+
+
+=back
+
+
 =head1 Outthentic entries
 
 Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
@@ -545,7 +578,11 @@ text blocks
 =item *
 
 within expressions
-: validator expressions
+
+
+=item *
+
+validator expressions
 
 
 =back
@@ -778,7 +815,7 @@ Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/fun
 =back
 
 
-=head1 Validator expressions
+=head1 Validators
 
 =over
 

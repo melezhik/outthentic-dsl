@@ -34,6 +34,15 @@ Check file is a regular file in text plain format. The content of check file is 
 
     * execution of perl code - if entry is perl expression one
 
+# Validation 
+
+Validation process consists of: 
+
+* checking if stdout matches check expression or 
+* in case of [validator](#validators):
+     * executing validator code and checking if returned value is true 
+* generating validation status and helping message
+ 
 # Outthentic entries
 
 Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
@@ -44,7 +53,7 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
     * regular expressions
     * text blocks
     * within expressions
-    : validator expressions
+    * validator expressions
 
 * comments
 
@@ -221,7 +230,7 @@ One of the use case for perl expressions is to store [\`captures'](#captures) da
 
 * Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to get know more about perl eval.
 
-# Validator expressions
+# Validators
 
 * Validator expressions like perl expressions are just a piece of perl code. 
 
