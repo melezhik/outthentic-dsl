@@ -53,10 +53,9 @@ Validation process consists of:
 
 * calculating validation status and generating helping message which could be retrieved later
 
-* a final _presentation_ of validation status / message depend on certain [client](#clients) _using_ outthentic DSL and
-not defined at this scope. For the sake of readability a simple table form ( which is fake one ) is used in this document. 
+* a final _presentation_ of validation result (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
-## DSL API
+## Parser API
 
 Outthentic provides program api for parser:
 
