@@ -4,25 +4,25 @@ Language to validate text output.
 
 # Glossary
 
-* **Outthentic DSL** 
+## Outthentic DSL 
 
-Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' will be used to refer to this term. 
+Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' is used for this term. 
 
 Outthentic DSL is both imperative and declarative language.
 
-* **Check files**
+## Check files
 
 One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
 
-* **Code**
+## Code
 
 Content of check file. Should be progam code written on DSL.
 
-* **Stdout**
+## Stdout
 
 It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
 
-* **Parser**
+## Parser
 
 Parser is the program which:
 
@@ -38,10 +38,9 @@ Parser is the program which:
 
     * execution of perl code - if entry is perl expression one
 
-* **Validation process**
+## Validation process
 
 Validation process consists of: 
-
 
 * checking if stdout matches check expression or
  
@@ -69,13 +68,13 @@ Outhentic DSL comprises following basic entities:
 
 * Comments
 
-* Blank Lines
+* Blank lines
 
-* Perl Expressions
+* Perl expressions
 
 * Generator Expressions
 
-# Check Expressions
+# Check expressions
 
 Check expressions defines _lines stdout should match_. Here is a simple example:
 
@@ -126,7 +125,7 @@ Similarly to plain strings matching, you may require that stdout has lines match
 Regular expressions should start with \`regexp:' marker.
  
 
-# One or Many?
+# One or many?
 
 Parser does not care about _how many times_ a given check expression is found in stdout.
 
