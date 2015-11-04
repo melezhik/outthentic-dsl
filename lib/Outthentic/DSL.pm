@@ -523,12 +523,14 @@ Validation process consists of:
 
 =item *
 
-checking if stdout matches check expression or 
+checking if stdout matches check expression or
+
 
 
 =item *
 
-in case of L<validator|#validators>:
+in case of L<validator|#validators> :
+
 =over
 
 =item *
@@ -543,6 +545,7 @@ executing validator code and checking if returned value is true
 =item *
 
 generating validation status and helping message
+
 
 
 =back

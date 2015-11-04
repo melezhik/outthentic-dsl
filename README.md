@@ -38,9 +38,13 @@ Check file is a regular file in text plain format. The content of check file is 
 
 Validation process consists of: 
 
-* checking if stdout matches check expression or 
-* in case of [validator](#validators):
+* checking if stdout matches check expression or
+ 
+
+* in case of [validator](#validators) :
+
      * executing validator code and checking if returned value is true 
+
 * generating validation status and helping message
  
 # Outthentic entries
