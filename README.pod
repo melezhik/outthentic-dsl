@@ -69,13 +69,13 @@ execution of entry results in one of three things:
 
 =item *
 
-validation stdout against check expression - if entry is check expression one
+L<validation|#validation> stdout against check expression - if entry is check expression one
 
 
 
 =item *
 
-generating new outhentic entries - if entry is generator one
+generating new outthentic entries - if entry is generator one
 
 
 
@@ -212,7 +212,7 @@ Check expressions defines I<what lines stdout should have>:
     OK - output matches "HELLO"
     OK - output matches /\d\d\d\d-\d\d-\d\d/
 
-There are two type of check expressions - L<plain strings|#plain-strings> and L<regular expressions|#regular-expressions>.
+There are two basic types of check expressions - L<plain strings|#plain-strings> and L<regular expressions|#regular-expressions>.
 
 It is convenient to talk about I<check list> as of all check expressions in a given check file.
 

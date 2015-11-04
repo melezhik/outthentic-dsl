@@ -28,9 +28,9 @@ Check file is a regular file in text plain format. The content of check file is 
 
 * execution of entry results in one of three things:
 
-    * validation stdout against check expression - if entry is check expression one
+    * [validation](#validation) stdout against check expression - if entry is check expression one
 
-    * generating new outhentic entries - if entry is generator one
+    * generating new outthentic entries - if entry is generator one
 
     * execution of perl code - if entry is perl expression one
 
@@ -84,7 +84,7 @@ Check expressions defines _what lines stdout should have_:
 
 
 
-There are two type of check expressions - [plain strings](#plain-strings) and [regular expressions](#regular-expressions).
+There are two basic types of check expressions - [plain strings](#plain-strings) and [regular expressions](#regular-expressions).
 
 It is convenient to talk about _check list_ as of all check expressions in a given check file.
 
