@@ -577,7 +577,7 @@ L<swat|https://github.com/melezhik/swat>
 
 =item *
 
-L<outthentic|https://github.com/melezhik/outthentic>)
+L<outthentic|https://github.com/melezhik/outthentic>
 
 
 =back
