@@ -426,7 +426,7 @@ __END__
 
 =head1 SYNOPSIS
 
-Langiage to validate text output.
+Language to validate text output.
 
 
 =head1 Glossary
