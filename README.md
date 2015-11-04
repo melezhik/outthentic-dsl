@@ -79,7 +79,7 @@ Client is a external program using DSL API. Existed outthentic clients:
 * [swat](https://github.com/melezhik/swat)
 * [outthentic](https://github.com/melezhik/outthentic)
 
-More clients wanted (: , please write me if you have one!
+More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
 # Outthentic entities
 
