@@ -1,6 +1,6 @@
 # SYNOPSIS
 
-Outthentic DSL
+Langiage to validate text output.
 
 # Outthentic DSL
 
@@ -46,6 +46,10 @@ Validation process consists of:
      * executing validator code and checking if returned value is true 
 
 * generating validation status and helping message, which could be retrieved later
+
+* a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
+not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+
  
 # Outthentic entries
 
@@ -69,26 +73,29 @@ Outhentic DSL comprises following basic entities:
 
 # Check expressions
 
-Check expressions defines _lines stdout should match_. Here are examples:
+Check expressions defines _lines stdout should match_. Here is a simple example:
 
     # stdout
+
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
 
 
     # check list
+
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
 
 
     # validation output
 
+    +--------+------------------------------+
     | status | message                      |
     +--------+------------------------------+
     | OK     | matches "HELLO"              |
     | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
-
+    +--------+------------------------------+
 
 
 There are two basic types of check expressions - [plain strings](#plain-strings) and [regular expressions](#regular-expressions).
