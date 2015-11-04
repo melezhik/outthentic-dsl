@@ -387,10 +387,11 @@ For example:
     regexp: Multiline \n string \n here
 
     # stdout
-    Multiline \n string \n here
+    Multiline
+    string
+    here
  
- 
-    # validation output
+     # validation output
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -398,7 +399,7 @@ For example:
     | OK     | matches "Multiline"                   |
     | OK     | matches "string"                      |
     | OK     | matches "here"                        |
-    | FAIL   | matches "Multiline \n string \n here" |
+    | FAIL   | matches /Multiline \n string \n here/ |
     +--------+---------------------------------------+
 
 
