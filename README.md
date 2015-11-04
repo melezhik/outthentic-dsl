@@ -4,49 +4,50 @@ Language to validate text output.
 
 # Glossary
 
-* *Outthentic DSL* 
+* **Outthentic DSL** 
 
 Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' will be used to refer to this term. 
 
 Outthentic DSL is both imperative and declarative language.
 
-* *Check files*
+* **Check files**
 
 One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
 
-* *Code*
+* **Code**
+
 Content of check file. Should be progam code written on DSL.
 
-* *Stdout*
+* **Stdout**
 
 It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
 
-* *Parser*
+* **Parser**
 
 Parser is the program which:
 
-    * parses check file line by line
+* parses check file line by line
 
-    * creates and then _executes_ outthentic entry represented by parsed line(s)
+* creates and then _executes_ outthentic entry represented by parsed line(s)
 
-    * execution of entry results in one of three things:
+* execution of entry results in one of three things:
 
-        * [validation](#validation) stdout against check expression - if entry is check expression one
+    * [validation](#validation) stdout against check expression - if entry is check expression one
 
-        * generating new outthentic entries - if entry is generator one
+    * generating new outthentic entries - if entry is generator one
 
-        * execution of perl code - if entry is perl expression one
+    * execution of perl code - if entry is perl expression one
 
-* *Validation process*
+* **Validation process**
 
 Validation process consists of: 
 
-    * checking if stdout matches check expression or
+
+* checking if stdout matches check expression or
  
+* in case of [validator expression](#validators) :
 
-    * in case of [validator expression](#validators) :
-
-        * executing validator code and checking if returned value is true 
+    * executing validator code and checking if returned value is true 
 
     * generating validation status and helping message, which could be retrieved later
 
@@ -58,7 +59,7 @@ Validation process consists of:
 
 Outhentic DSL comprises following basic entities:
 
-* check expressions:
+* Check expressions:
 
     * plain strings
     * regular expressions
@@ -66,15 +67,15 @@ Outhentic DSL comprises following basic entities:
     * within expressions
     * validator expressions
 
-* comments
+* Comments
 
-* blank lines
+* Blank Lines
 
-* perl expressions
+* Perl Expressions
 
-* generator expressions
+* Generator Expressions
 
-# Check expressions
+# Check Expressions
 
 Check expressions defines _lines stdout should match_. Here is a simple example:
 
@@ -105,7 +106,7 @@ There are two basic types of check expressions - [plain strings](#plain-strings)
 
 It is convenient to talk about _check list_ as of all check expressions in a given check file.
 
-# plain string
+# Plain String Expressions 
 
         I am ok
         HELLO Outthentic
@@ -114,7 +115,7 @@ It is convenient to talk about _check list_ as of all check expressions in a giv
 The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
 
 
-# regular expressions
+# Regular Expressions
 
 Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
 
@@ -125,7 +126,7 @@ Similarly to plain strings matching, you may require that stdout has lines match
 Regular expressions should start with \`regexp:' marker.
  
 
-# one or many?
+# One or Many?
 
 Parser does not care about _how many times_ a given check expression is found in stdout.
 
@@ -142,7 +143,7 @@ See ["captures"](#captures) section for full explanation of a captures mechanism
 
 Comments and blank lines don't impact validation process but one could use them to improve code readability.
 
-* **comments**
+* **Comments**
 
 Comment lines start with \`#' symbol, comments chunks are ignored by parser:
 
@@ -150,7 +151,7 @@ Comment lines start with \`#' symbol, comments chunks are ignored by parser:
     The beginning of story
     Hello World # or could be added to existed expression to the right, like here
 
-* **blank lines**
+* **Blank lines**
 
 Blank lines are ignored as well:
 
