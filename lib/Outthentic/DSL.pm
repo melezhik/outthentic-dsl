@@ -1015,7 +1015,7 @@ Here is more complicated example:
     bar value
 
 
-=head1 multiline expressions
+=head1 Multiline expressions
 
 When generate and execute check expressions parser operates in a I<single line mode> :
 
@@ -1220,12 +1220,12 @@ Within expressions could be sequential, which effectively means using `&&' logic
     within: \d\d\d\d-04-\d\d
 
 
-=head1 AUTHOR
+=head1 Author
 
 L<Aleksei Melezhik|mailto:melezhik@gmail.com>
 
 
-=head1 Home Page
+=head1 Home page
 
 https://github.com/melezhik/outthentic-dsl
 

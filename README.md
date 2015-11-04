@@ -370,7 +370,7 @@ Here is more complicated example:
     bar value
 
 
-# multiline expressions
+# Multiline expressions
 
 When generate and execute check expressions parser operates in a _single line mode_ :
 
@@ -545,11 +545,11 @@ Within expressions could be sequential, which effectively means using \`&&' logi
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
 
-# AUTHOR
+# Author
 
 [Aleksei Melezhik](mailto:melezhik@gmail.com)
 
-# Home Page
+# Home page
 
 https://github.com/melezhik/outthentic-dsl
 
