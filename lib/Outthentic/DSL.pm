@@ -529,7 +529,7 @@ checking if stdout matches check expression or
 
 =item *
 
-in case of L<validator|#validators> :
+in case of L<validator expression|#validators> :
 
 =over
 
@@ -544,7 +544,7 @@ executing validator code and checking if returned value is true
 
 =item *
 
-generating validation status and helping message
+generating validation status and helping message, which could be retrieved later
 
 
 
@@ -553,7 +553,7 @@ generating validation status and helping message
 
 =head1 Outthentic entries
 
-Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
+Outhentic DSL comprises following basic entities:
 
 =over
 
@@ -612,7 +612,7 @@ perl expressions
 
 =item *
 
-generators
+generator expressions
 
 
 
@@ -621,7 +621,7 @@ generators
 
 =head1 Check expressions
 
-Check expressions defines I<what lines stdout should have>:
+Check expressions defines I<lines stdout should match>. Here are examples:
 
     # stdout
     HELLO
@@ -634,9 +634,12 @@ Check expressions defines I<what lines stdout should have>:
     regexp: \d\d\d\d-\d\d-\d\d
     
     
-    # validator output
-    OK - output matches "HELLO"
-    OK - output matches /\d\d\d\d-\d\d-\d\d/
+    # validation output
+    
+    | status | message                      |
+    +--------+------------------------------+
+    | OK     | matches "HELLO"              |
+    | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
 
 There are two basic types of check expressions - L<plain strings|#plain-strings> and L<regular expressions|#regular-expressions>.
 

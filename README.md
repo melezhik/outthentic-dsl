@@ -41,15 +41,15 @@ Validation process consists of:
 * checking if stdout matches check expression or
  
 
-* in case of [validator](#validators) :
+* in case of [validator expression](#validators) :
 
      * executing validator code and checking if returned value is true 
 
-* generating validation status and helping message
+* generating validation status and helping message, which could be retrieved later
  
 # Outthentic entries
 
-Outhentic DSL comprises following basic entities, listed at pretty arbitrary order:
+Outhentic DSL comprises following basic entities:
 
 * check expressions:
 
@@ -65,11 +65,11 @@ Outhentic DSL comprises following basic entities, listed at pretty arbitrary ord
 
 * perl expressions
 
-* generators
+* generator expressions
 
 # Check expressions
 
-Check expressions defines _what lines stdout should have_:
+Check expressions defines _lines stdout should match_. Here are examples:
 
     # stdout
     HELLO
@@ -82,9 +82,12 @@ Check expressions defines _what lines stdout should have_:
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-    # validator output
-    OK - output matches "HELLO"
-    OK - output matches /\d\d\d\d-\d\d-\d\d/
+    # validation output
+
+    | status | message                      |
+    +--------+------------------------------+
+    | OK     | matches "HELLO"              |
+    | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
 
 
 
