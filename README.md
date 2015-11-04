@@ -171,7 +171,7 @@ See ["captures"](#captures) section for full explanation of a captures mechanism
 
 Comments and blank lines don't impact validation process but one could use them to improve code readability.
 
-* **Comments**
+## Comments
 
 Comment lines start with \`#' symbol, comments chunks are ignored by parser:
 
@@ -179,7 +179,7 @@ Comment lines start with \`#' symbol, comments chunks are ignored by parser:
     The beginning of story
     Hello World # or could be added to existed expression to the right, like here
 
-* **Blank lines**
+## Blank lines
 
 Blank lines are ignored as well:
 
@@ -203,7 +203,7 @@ But you **can't ignore** blank lines in a \`text block matching' context ( see \
         :blank_line
     end:
 
-* **text blocks**
+## Text blocks
 
 Sometimes it is very helpful to match a stdout against a \`block of strings' goes consequentially, like here:
 
@@ -319,7 +319,7 @@ This is a simple example:
     $total == 72
 
 
-# Generators
+# Generator expressions
 
 * Generators is the way to _generate new outthentic entries on the fly_.
 
