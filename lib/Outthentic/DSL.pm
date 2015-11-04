@@ -441,7 +441,7 @@ Outthentic DSL is both imperative and declarative language.
 
 =head2 Check files
 
-One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
+A plain text files containing program code written on DSL to describe text validation process.
 
 
 =head2 Code
@@ -451,7 +451,8 @@ Content of check file. Should be progam code written on DSL.
 
 =head2 Stdout
 
-It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
+It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout
+which is then validated.
 
 
 =head2 Parser
@@ -468,31 +469,31 @@ parses check file line by line
 
 =item *
 
-creates and then I<executes> outthentic entry represented by parsed line(s)
+creates and then I<executes> outthentic entries represented by parsed lines
 
 
 
 =item *
 
-execution of entry results in one of three things:
+execution of each entry results in one of three things:
 
 =over
 
 =item *
 
-L<validation|#validation> stdout against check expression - if entry is check expression one
+performing L<validation|#validation> process if entry is check expression one
 
 
 
 =item *
 
-generating new outthentic entries - if entry is generator one
+generating new outthentic entries if entry is generator one
 
 
 
 =item *
 
-execution of perl code - if entry is perl expression one
+execution of perl code if entry is perl expression one
 
 
 
@@ -511,7 +512,7 @@ Validation process consists of:
 
 =item *
 
-checking if stdout matches check expression or
+checking if stdout matches the check expression or
 
 
 
@@ -526,22 +527,57 @@ in case of L<validator expression|#validators> :
 executing validator code and checking if returned value is true 
 
 
+=back
+
+
 
 =item *
 
-generating validation status and helping message, which could be retrieved later
+calculating validation status and generating helping message which could be retrieved later
 
 
 
 =item *
 
 a certain I<presentation> of validation statuses and messages depend on L<client|#clients> I<using> outthentic DSL and
-  not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
 
 
 
 =back
 
+
+=head2 DSL API
+
+Outthentic provides program api for parser:
+
+    use Test::More qw{no_plan};
+    
+    use Outthentic::DSL;
+    
+    my $outh = Outthentic::DSL->new( { output => 'stdout output here' , } );
+    $outh->validate('path/to/check/file','stdout string');
+    
+    
+    for my $chk_item ( @{dsl()->check_list}){
+        ok($chk_item->{status}, $chk_item->{message})
+    }
+
+
+=head2 Outthentic client
+
+Client is a external program using DSL API. There are two existed otthentic clients:
+
+=over
+
+=item *
+
+L<swat|https://github.com/melezhik/swat>
+
+
+=item *
+
+L<outthentic|https://github.com/melezhik/outthentic>)
 
 
 =back

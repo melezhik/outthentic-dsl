@@ -12,7 +12,7 @@ Outthentic DSL is both imperative and declarative language.
 
 ## Check files
 
-One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
+A plain text files containing program code written on DSL to describe text validation process.
 
 ## Code
 
@@ -20,7 +20,8 @@ Content of check file. Should be progam code written on DSL.
 
 ## Stdout
 
-It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
+It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout
+which is then validated.
 
 ## Parser
 
@@ -28,32 +29,60 @@ Parser is the program which:
 
 * parses check file line by line
 
-* creates and then _executes_ outthentic entry represented by parsed line(s)
+* creates and then _executes_ outthentic entries represented by parsed lines
 
-* execution of entry results in one of three things:
+* execution of each entry results in one of three things:
 
-    * [validation](#validation) stdout against check expression - if entry is check expression one
+    * performing [validation](#validation) process if entry is check expression one
 
-    * generating new outthentic entries - if entry is generator one
+    * generating new outthentic entries if entry is generator one
 
-    * execution of perl code - if entry is perl expression one
+    * execution of perl code if entry is perl expression one
+
+
+
+
 
 ## Validation process
 
 Validation process consists of: 
 
-* checking if stdout matches check expression or
+* checking if stdout matches the check expression or
  
 * in case of [validator expression](#validators) :
 
     * executing validator code and checking if returned value is true 
 
-    * generating validation status and helping message, which could be retrieved later
+* calculating validation status and generating helping message which could be retrieved later
 
-    * a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
-      not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
+* a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
+not defined at this scope. In this documentation a simple table form is choosen for the sake of readabilty. 
 
- 
+
+## DSL API
+
+Outthentic provides program api for parser:
+
+    use Test::More qw{no_plan};
+
+    use Outthentic::DSL;
+
+    my $outh = Outthentic::DSL->new( { output => 'stdout output here' , } );
+    $outh->validate('path/to/check/file','stdout string');
+
+
+    for my $chk_item ( @{dsl()->check_list}){
+        ok($chk_item->{status}, $chk_item->{message})
+    }
+
+## Outthentic client
+
+Client is a external program using DSL API. There are two existed otthentic clients:
+
+* [swat](https://github.com/melezhik/swat)
+* [outthentic](https://github.com/melezhik/outthentic))
+
+
 # Outthentic entities
 
 Outhentic DSL comprises following basic entities:
