@@ -1,6 +1,6 @@
 # SYNOPSIS
 
-Langiage to validate text output.
+Language to validate text output.
 
 # Glossary
 
