@@ -53,9 +53,8 @@ Validation process consists of:
 
 * calculating validation status and generating helping message which could be retrieved later
 
-* a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
-not defined at this scope. In this documentation a simple table form is chosen for the sake of readability. 
-
+* a final _presentation_ of validation status / message depend on certain [client](#clients) _using_ outthentic DSL and
+not defined at this scope. For the sake of readability a simple table form ( which is fake one ) is used in this document. 
 
 ## DSL API
 
@@ -75,11 +74,12 @@ Outthentic provides program api for parser:
 
 ## Outthentic client
 
-Client is a external program using DSL API. There are two existed outthentic clients:
+Client is a external program using DSL API. Existed outthentic clients:
 
 * [swat](https://github.com/melezhik/swat)
 * [outthentic](https://github.com/melezhik/outthentic)
 
+More clients wanted (: , please write me if you have one!
 
 # Outthentic entities
 
@@ -391,10 +391,15 @@ For example:
  
  
     # validation output
-    OK output matches "Multiline"
-    OK output matches "string"
-    OK output matches "here"
-    NOT_OK output matches "Multiline \n string \n here"
+
+    +--------+---------------------------------------+
+    | status | message                               |
+    +--------+---------------------------------------+
+    | OK     | matches "Multiline"                   |
+    | OK     | matches "string"                      |
+    | OK     | matches "here"                        |
+    | FAIL   | matches "Multiline \n string \n here" |
+    +--------+---------------------------------------+
 
 
 Use text blocks if you want to achieve multiline checks.
