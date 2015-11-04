@@ -431,60 +431,30 @@ Language to validate text output.
 
 =head1 Glossary
 
-=over
 
-=item *
+=head2 Outthentic DSL 
 
-B<Outthentic DSL> 
-
-
-=back
-
-Is a language to validate I<arbitrary> plain text. Very often a short form `DSL' will be used to refer to this term. 
+Is a language to validate I<arbitrary> plain text. Very often a short form `DSL' is used for this term. 
 
 Outthentic DSL is both imperative and declarative language.
 
-=over
 
-=item *
-
-B<Check files>
-
-
-=back
+=head2 Check files
 
 One should create a so called check files - a plain text files containing program code written on DSL to describe validation process.
 
-=over
 
-=item *
-
-B<Code>
-
-
-=back
+=head2 Code
 
 Content of check file. Should be progam code written on DSL.
 
-=over
 
-=item *
-
-B<Stdout>
-
-
-=back
+=head2 Stdout
 
 It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout.
 
-=over
 
-=item *
-
-B<Parser>
-
-
-=back
+=head2 Parser
 
 Parser is the program which:
 
@@ -530,13 +500,10 @@ execution of perl code - if entry is perl expression one
 
 
 
-=item *
-
-B<Validation process>
-
-
-
 =back
+
+
+=head2 Validation process
 
 Validation process consists of: 
 
@@ -629,13 +596,13 @@ Comments
 
 =item *
 
-Blank Lines
+Blank lines
 
 
 
 =item *
 
-Perl Expressions
+Perl expressions
 
 
 
@@ -648,7 +615,7 @@ Generator Expressions
 =back
 
 
-=head1 Check Expressions
+=head1 Check expressions
 
 Check expressions defines I<lines stdout should match>. Here is a simple example:
 
@@ -698,7 +665,7 @@ Similarly to plain strings matching, you may require that stdout has lines match
 Regular expressions should start with `regexp:' marker.
 
 
-=head1 One or Many?
+=head1 One or many?
 
 Parser does not care about I<how many times> a given check expression is found in stdout.
 
