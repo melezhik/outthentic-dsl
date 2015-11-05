@@ -57,11 +57,9 @@ Validation process consists of:
 
 * calculating validation status and generating helping message which could be retrieved later
 
-* a certain _presentation_ of validation statuses and messages depend on [client](#clients) _using_ outthentic DSL and
-not defined at this scope. In this documentation a simple table form is chosen for the sake of readability. 
+* a final _presentation_ of validation result (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
-
-## DSL API
+## Parser API
 
 Outthentic provides program api for parser:
 
@@ -79,11 +77,12 @@ Outthentic provides program api for parser:
 
 ## Outthentic client
 
-Client is a external program using DSL API. There are two existed outthentic clients:
+Client is a external program using DSL API. Existed outthentic clients:
 
 * [swat](https://github.com/melezhik/swat)
 * [outthentic](https://github.com/melezhik/outthentic)
 
+More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
 # Outthentic entities
 
@@ -391,14 +390,20 @@ For example:
     regexp: Multiline \n string \n here
 
     # stdout
-    Multiline \n string \n here
+    Multiline
+    string
+    here
  
- 
-    # validation output
-    OK output matches "Multiline"
-    OK output matches "string"
-    OK output matches "here"
-    NOT_OK output matches "Multiline \n string \n here"
+     # validation output
+
+    +--------+---------------------------------------+
+    | status | message                               |
+    +--------+---------------------------------------+
+    | OK     | matches "Multiline"                   |
+    | OK     | matches "string"                      |
+    | OK     | matches "here"                        |
+    | FAIL   | matches /Multiline \n string \n here/ |
+    +--------+---------------------------------------+
 
 
 Use text blocks if you want to achieve multiline checks.
