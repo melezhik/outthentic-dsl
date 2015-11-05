@@ -75,25 +75,40 @@ Outthentic provides program api for parser:
         ok($chk_item->{status}, $chk_item->{message})
     }
 
-Methods list
+Method list
 
-* new
+### new
 
-this is constructor, create Outthentic::DSL instance. Optional parameters is passed as hashref:
+This is constructor, create Outthentic::DSL instance. 
 
-    * match_l - truncate matching strings to {match_l} bytes;  default value is \`30'
+Obligatory parameters is:
 
-* validate
+* stdout string 
 
-run parser and initiate validation process, obligatory parameters are:
+Optional parameters is passed as hashref:
+
+* match_l - truncate matching strings to {match_l} bytes
+
+Default value is `40'
+
+* debug_mod - enable debug mode
+
+Set to \`1,2,3' if you want to see some debug information in output, default value is \`0'.
+
+Increasing debug value means more low level information appeared in console.
+
+
+### validate
+
+Runs parser for check file and and initiates validation process against stdout.
+
+Obligatory parameter is:
 
     * path to check file
-    * stdout string 
 
 * check_list  
 
-returns validation results as arrayref containing { status, message } hashrefs 
-
+Returns validation results as arrayref containing { status, message } hashrefs.
 
 ## Outthentic client
 

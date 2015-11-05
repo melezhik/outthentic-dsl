@@ -28,7 +28,8 @@ sub add_check_item {
 sub new {
 
     my $class = shift;
-    my $opts = shift;
+    my $output = shift;
+    my $opts = shift || {};
 
     bless {
         output_context => [],
@@ -40,9 +41,9 @@ sub new {
         last_match_line => undef,
         last_check_status => undef,
         debug_mod => 0,
-        output => undef,
+        output => $output,
         match_l => 40,
-        $opts,
+        %{$opts},
     }, __PACKAGE__;
 
 }
@@ -163,7 +164,7 @@ sub check_line {
 
 }
 
-sub generate_asserts {
+sub validate {
 
     my $self = shift;
 
@@ -556,7 +557,7 @@ calculating validation status and generating helping message which could be retr
 
 =item *
 
-a final I<presentation> of validation result (statuses and messages ) should be implimeted in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+a final I<presentation> of validation results (statuses and messages ) should be implimeted in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
 
 
@@ -575,9 +576,74 @@ Outthentic provides program api for parser:
     $outh->validate('path/to/check/file','stdout string');
     
     
-    for my $chk_item ( @{dsl()->check_list}){
+    for my $chk_item ( @{$outh->check_list}){
         ok($chk_item->{status}, $chk_item->{message})
     }
+
+Method list
+
+
+=head3 new
+
+This is constructor, create Outthentic::DSL instance. 
+
+Obligatory parameters is:
+
+=over
+
+=item *
+
+stdout string 
+
+
+=back
+
+Optional parameters is passed as hashref:
+
+=over
+
+=item *
+
+matchI<l - truncate matching strings to {match>l} bytes
+
+
+=back
+
+Default value is `40'
+
+=over
+
+=item *
+
+debug_mod - enable debug mode
+
+
+=back
+
+Set to `1,2,3' if you want to see some debug information in output, default value is `0'.
+
+Increasing debug value means more low level information appeared in console.
+
+
+=head3 validate
+
+Runs parser for check file and and initiates validation process against stdout.
+
+Obligatory parameter is:
+
+    * path to check file
+
+=over
+
+=item *
+
+check_list
+
+
+
+=back
+
+Returns validation results as arrayref containing { status, message } hashrefs.
 
 
 =head2 Outthentic client
