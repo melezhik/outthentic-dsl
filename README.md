@@ -57,7 +57,7 @@ Validation process consists of:
 
 * calculating validation status and generating helping message which could be retrieved later
 
-* a final _presentation_ of validation result (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+* a final _presentation_ of validation results (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
 ## Parser API
 
@@ -71,9 +71,29 @@ Outthentic provides program api for parser:
     $outh->validate('path/to/check/file','stdout string');
 
 
-    for my $chk_item ( @{dsl()->check_list}){
+    for my $chk_item ( @{$outh->check_list}){
         ok($chk_item->{status}, $chk_item->{message})
     }
+
+Methods list
+
+* new
+
+this is constructor, create Outthentic::DSL instance. Optional parameters is passed as hashref:
+
+    * match_l - truncate matching strings to {match_l} bytes;  default value is \`30'
+
+* validate
+
+run parser and initiate validation process, obligatory parameters are:
+
+    * path to check file
+    * stdout string 
+
+* check_list  
+
+returns validation results as arrayref containing { status, message } hashrefs 
+
 
 ## Outthentic client
 
