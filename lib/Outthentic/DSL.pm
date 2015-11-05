@@ -641,7 +641,7 @@ path to check file
 =back
 
 
-=head2 check_list
+=head3 check_list
 
 
 Returns validation results as arrayref containing { status, message } hashrefs.

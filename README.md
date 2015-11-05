@@ -106,7 +106,7 @@ Obligatory parameter is:
 
 * path to check file
 
-## check_list  
+### check_list  
 
 Returns validation results as arrayref containing { status, message } hashrefs.
 
