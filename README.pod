@@ -207,17 +207,18 @@ Runs parser for check file and and initiates validation process against stdout.
 
 Obligatory parameter is:
 
-    * path to check file
-
 =over
 
 =item *
 
-check_list
-
+path to check file
 
 
 =back
+
+
+=head2 check_list
+
 
 Returns validation results as arrayref containing { status, message } hashrefs.
 
