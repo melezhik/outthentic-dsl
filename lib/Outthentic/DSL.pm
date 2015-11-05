@@ -429,6 +429,11 @@ __END__
 Language to validate text output.
 
 
+=head1 Install
+
+    cpanm Outthentic
+
+
 =head1 Glossary
 
 
@@ -1172,7 +1177,7 @@ try to find `color:' followed by `red' or `green' or `blue' word
 
 =item *
 
-if previous check is successful new context is ""narrowed to matching line
+if previous check is successful new context is narrowed to matching line
 
 
 =item *
@@ -1185,10 +1190,10 @@ thus next plain string checks expression means - try to find `red' in line match
 Here more examples:
 
     # try to find a date string in following format
-    within: date: (\d\d\d\d)-\d\d-\d\d
+    within: date: \d\d\d\d-\d\d-\d\d
     
-    # we only need a dates older then 2000
-    validator: [ ( capture->[0] > 2000 ),'date is older then 2000' ];
+    # we only need a dates in 2000 year
+    2000-
 
 Within expressions could be sequential, which effectively means using `&&' logical operators for within expressions:
 
