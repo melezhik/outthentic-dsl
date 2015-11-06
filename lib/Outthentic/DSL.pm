@@ -143,7 +143,6 @@ sub check_line {
 
 
     $self->add_result({ status => $status , message => $message });
-    $self->add_debug_result("@{[$status ? 'OK': 'FAIL']} - $message");
 
     $self->{last_check_status} = $status;
 
