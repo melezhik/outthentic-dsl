@@ -140,6 +140,11 @@ a final I<presentation> of validation results (statuses and messages ) should be
 =back
 
 
+=head2 Parser journal
+
+Parser activity could be logged into journal, see L<parser api|parser-api>, `journal' method description
+
+
 =head2 Parser API
 
 Outthentic provides program api for parser:
@@ -196,9 +201,10 @@ debug_mod - enable debug mode
 
 =back
 
-Set to `1,2,3' if you want to see some debug information in output, default value is `0'.
+Set to `1,2,3' if you want to see some debug information in a L<parser journal|#parser-journal>, 
+increasing debug_mod value means more low level information appeared at journal.
 
-Increasing debug value means more low level information appeared in console.
+Default value is `0' - means do not create journal.
 
 
 =head3 validate
@@ -221,6 +227,19 @@ path to check file
 
 
 Returns validation results as arrayref containing { status, message } hashrefs.
+
+
+=head3 journal
+
+Get parser journal records:
+
+    open my $fh, ">>", "outthentic.log"
+    for my $r ( @{$outh->journal}){
+    
+        print $fh $r->{message}
+    }
+    
+    close $fh;
 
 
 =head2 Outthentic client

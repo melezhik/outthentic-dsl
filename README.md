@@ -59,7 +59,7 @@ Validation process consists of:
 
 * a final _presentation_ of validation results (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
-## Parse journal
+## Parser journal
 
 Parser activity could be logged into journal, see [parser api](parser-api), \`journal' method description
 
