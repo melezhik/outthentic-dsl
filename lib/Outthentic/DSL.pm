@@ -142,7 +142,6 @@ sub check_line {
     }
 
 
-    $self->add_result({ status => $status , message => $message });
 
     $self->{last_check_status} = $status;
 
@@ -167,6 +166,8 @@ sub check_line {
     }elsif ( $self->{within_mode} and ! $status ){
         $self->{search_context} = []; # empty context if within expression has not passed 
     }
+
+    $self->add_result({ status => $status , message => $message });
 
     return $status;
 
