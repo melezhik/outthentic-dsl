@@ -560,13 +560,13 @@ executing validator code and checking if returned value is true
 
 =item *
 
-calculating validation status and generating helping message which could be retrieved later
+generating validation results could be retrieved later
 
 
 
 =item *
 
-a final I<presentation> of validation results (statuses and messages ) should be implimeted in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+a final I<presentation> of validation results should be implimeted in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
 
 
@@ -586,12 +586,14 @@ Outthentic provides program api for parser:
     
     use Outthentic::DSL;
     
-    my $outh = Outthentic::DSL->new($opts);
+    my $outh = Outthentic::DSL->new('stdout string', $opts);
     $outh->validate('path/to/check/file','stdout string');
     
     
-    for my $chk_item ( @{$outh->results}){
-        ok($chk_item->{status}, $chk_item->{message})
+    for my $r ( @{$outh->results}){
+        ok($r->{status}, $r->{message}) if $r->{type} eq 'check_expression';
+        diag($r->{message}) if $r->{type} eq 'debug';
+    
     }
 
 Method list
@@ -631,13 +633,37 @@ Default value is `40'
 
 debug_mod - enable debug mode
 
+=over
+
+=item *
+
+Possible values is 0,1,2,3.
+
+
+
+=item *
+
+Set to 1 or 2 or 3 if you want to see some debug information in validation results.
+
+
+
+=item *
+
+Increasing debug_mod value means more low level information appeared.
+
+
+
+=item *
+
+Default value is `0' - means do not create debug messages.
+
+
 
 =back
 
-Set to `1,2,3' if you want to see some debug information in a L<parser journal|#parser-journal>, 
-increasing debug_mod value means more low level information appeared at journal.
 
-Default value is `0' - means do not create journal.
+
+=back
 
 
 =head3 validate
@@ -659,20 +685,7 @@ path to check file
 =head3 results
 
 
-Returns validation results as arrayref containing { status, message } hashrefs.
-
-
-=head3 journal
-
-Get parser journal records:
-
-    open my $fh, ">>", "outthentic.log"
-    for my $r ( @{$outh->journal}){
-    
-        print $fh $r->{message}
-    }
-    
-    close $fh;
+Returns validation results as arrayref containing { type, status, message } hashrefs.
 
 
 =head2 Outthentic client
@@ -781,7 +794,7 @@ Check expressions defines I<lines stdout should match>. Here is a simple example
     regexp: \d\d\d\d-\d\d-\d\d
     
     
-    # validation output
+    # validation results
     
     +--------+------------------------------+
     | status | message                      |
@@ -1132,7 +1145,7 @@ For example:
     string
     here
      
-     # validation output
+     # validation results
     
     +--------+---------------------------------------+
     | status | message                               |
