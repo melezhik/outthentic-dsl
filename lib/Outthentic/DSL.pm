@@ -2,24 +2,36 @@ package Outthentic::DSL;
 
 use strict;
 
-require Test::More;
-
 our $VERSION = '0.0.3';
-
-our @CHECK_LIST;
 
 sub check_list {
 
-    shift;
+    my $self = shift;
 
-    [ @CHECK_LIST ];
+    $self->{check_list};
 }
 
 sub add_check_item {
 
-    shift;
+    my $self = shift;
     my $item = shift;
-    push @CHECK_LIST, $item;
+    push @{$self->check_list}, $item;
+        
+}
+
+sub journal {
+
+    my $self = shift;
+
+    $self->{journal};
+}
+
+sub add_to_journal {
+
+    my $self = shift;
+    my $item = shift;
+
+    push @{$self->journal}, { message => $item };
         
 }
 
@@ -32,6 +44,8 @@ sub new {
     my $opts = shift || {};
 
     bless {
+        journal => [],
+        check_list => [],
         output_context => [],
         search_context => [],
         context_populated => 0,
@@ -41,7 +55,7 @@ sub new {
         last_match_line => undef,
         last_check_status => undef,
         debug_mod => 0,
-        output => $output,
+        output => $output||'',
         match_l => 40,
         %{$opts},
     }, __PACKAGE__;
@@ -68,7 +82,7 @@ sub populate_context {
     $self->{output_context} = [@output_context];
     $self->{search_context} = [@output_context];
 
-    Test::More::diag("context populated") if $self->{debug_mod} >= 2;
+    $self->add_to_journal('context populated') if $self->{debug_mod} >= 2;
 
     $self->{context_populated} = 1;
 
@@ -98,7 +112,7 @@ sub check_line {
 
     $self->populate_context;
 
-    Test::More::diag("lookup $pattern ...") if $self->{debug_mod} >= 2;
+    $self->add_to_journal("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
     my @output_context         = @{$self->{output_context}};
     my @search_context   = @{$self->{search_context}};
@@ -135,6 +149,7 @@ sub check_line {
 
 
     $self->add_check_item({ status => $status , message => $message });
+    $self->add_to_journal("@{[$status ? 'OK': 'FAIL']} - $message");
 
     $self->{last_check_status} = $status;
 
@@ -142,9 +157,9 @@ sub check_line {
         my $k=0;
         for my $ce (@captures) {
             $k++;
-            Test::More::diag("captured item N $k");
+            $self->add_to_journal("captured item N $k");
             for  my $c (@{$ce}){
-                Test::More::diag("\tcaptures: $c");
+                $self->add_to_journal("captures: $c");
             }
         }
     }
@@ -190,14 +205,14 @@ sub validate {
 
         chomp $l;
 
-        Test::More::diag $l if $self->{debug_mod} >= 3;
+        $self->add_to_journal($l) if $self->{debug_mod} >= 3;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
         next LINE if $l=~ /^\s*#(.*)/; # skip comments
 
         if ($l=~ /^\s*begin:\s*$/) { # begin of text block
-            Test::More::diag("begin text block") if $self->{debug_mod} >= 2;
+            $self->add_to_journal('begin text block') if $self->{debug_mod} >= 2;
             $self->{block_mode} = 1;
             next LINE;
         }
@@ -208,7 +223,7 @@ sub validate {
             # restore local context
             $self->{search_context} = $self->{output_context};
 
-            Test::More::diag("end text block") if $self->{debug_mod} >= 2;
+            $self->add_to_journal('end text block') if $self->{debug_mod} >= 2;
 
             next LINE;
         }
@@ -294,12 +309,12 @@ sub handle_code {
     unless (ref $code){
         eval "package main; $code;";
         die "code LINE eval perl error, code:$code , error: $@" if $@;
-        Test::More::diag("handle_code OK. $code") if $self->{debug_mod} >= 3;
+        $self->add_to_journal("handle_code OK. $code") if $self->{debug_mod} >= 3;
     } else {
         my $code_to_eval = join "\n", @$code;
         eval "package main; $code_to_eval";
         die "code LINE eval error, code:$code_to_eval , error: $@" if $@;
-        Test::More::diag("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+        $self->add_to_journal("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
     }
 
 }
@@ -312,14 +327,14 @@ sub handle_generator {
     unless (ref $code){
         my $arr_ref = eval "package main; $code";
         die "generator LINE eval error, code:$code , error: $@" if $@;
-        Test::More::diag("handle_generator OK. $code") if $self->{debug_mod} >= 3;
-        $self->generate_asserts($arr_ref);
+        $self->add_to_journal("handle_generator OK. $code") if $self->{debug_mod} >= 3;
+        $self->validate($arr_ref);
     } else {
         my $code_to_eval = join "\n", @$code;
         my $arr_ref = eval " package main; $code_to_eval";
         die "generator LINE eval error, code:$code_to_eval , error: $@" if $@;
-        Test::More::diag("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
-        $self->generate_asserts($arr_ref);
+        $self->add_to_journal("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+        $self->validate($arr_ref);
     }
 
 }
@@ -348,7 +363,7 @@ sub handle_regexp {
 
     $self->check_line($re, 'regexp', $m);
 
-    Test::More::diag("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
+    $self->add_to_journal("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
 
 }
 
@@ -374,7 +389,7 @@ sub handle_within {
 
     $self->check_line($re, 'regexp', $m);
 
-    Test::More::diag "handle_within OK. $re" if $self->{debug_mod} >= 3;
+    $self->add_to_journal("handle_within OK. $re") if $self->{debug_mod} >= 3;
     
 }
 
@@ -403,7 +418,7 @@ sub handle_plain {
 
     $self->check_line($l, 'default', $m);
 
-    Test::More::diag("handle_plain OK. $l") if $self->{debug_mod} >= 3;
+    $self->add_to_journal("handle_plain OK. $l") if $self->{debug_mod} >= 3;
 }
 
 

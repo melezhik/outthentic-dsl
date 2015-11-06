@@ -71,7 +71,7 @@ Outthentic provides program api for parser:
 
     use Outthentic::DSL;
 
-    my $outh = Outthentic::DSL->new($opts);
+    my $outh = Outthentic::DSL->new('stdout string', $opts);
     $outh->validate('path/to/check/file','stdout string');
 
 
