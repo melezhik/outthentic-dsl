@@ -59,6 +59,10 @@ Validation process consists of:
 
 * a final _presentation_ of validation results (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
+## Parse journal
+
+Parser activity could be logged into journal, see [parser api](parser-api), \`journal' method description
+
 ## Parser API
 
 Outthentic provides program api for parser:
@@ -93,9 +97,10 @@ Default value is `40'
 
 * debug_mod - enable debug mode
 
-Set to \`1,2,3' if you want to see some debug information in output, default value is \`0'.
+Set to \`1,2,3' if you want to see some debug information in a [parser journal](#parser-journal), 
+increasing debug_mod value means more low level information appeared at journal.
 
-Increasing debug value means more low level information appeared in console.
+Default value is \`0' - means do not create journal.
 
 
 ### validate
@@ -109,6 +114,19 @@ Obligatory parameter is:
 ### check_list  
 
 Returns validation results as arrayref containing { status, message } hashrefs.
+
+### journal
+
+Get parser journal records:
+
+    open my $fh, ">>", "outthentic.log"
+    for my $r ( @{$outh->journal}){
+
+        print $fh $r->{message}
+    }
+
+    close $fh;
+
 
 ## Outthentic client
 
