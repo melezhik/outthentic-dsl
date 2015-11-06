@@ -5,6 +5,8 @@ use strict;
 our $VERSION = '0.0.3';
 
 use Carp;
+use Data::Dumper;
+$Data::Dumper::Terse=1;
 
 sub results {
 
@@ -102,7 +104,7 @@ sub check_line {
 
     $self->reset_captures;
 
-    my @captures;
+    my @captures = ();
 
     $self->populate_context;
 
@@ -146,14 +148,16 @@ sub check_line {
     $self->{last_check_status} = $status;
 
     if ( $self->{debug_mod} >= 2 ){
-        my $k=0;
-        for my $ce (@captures) {
-            $k++;
-            $self->add_debug_result("captured item N $k");
-            for  my $c (@{$ce}){
-                $self->add_debug_result("captures: $c");
-            }
-        }
+        $self->add_debug_result('captures:');
+        $self->add_debug_result(Dumper(\@captures));
+        #my $k=0;
+        #for my $ce (@captures) {
+        #    $k++;
+        #    $self->add_debug_result("captured item N $k");
+        #    for  my $c (@{$ce}){
+        #        $self->add_debug_result("captures: $c");
+        #    }
+        #}
     }
 
     $self->{captures} = [ @captures ];
