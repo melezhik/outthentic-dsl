@@ -55,9 +55,9 @@ Validation process consists of:
 
     * executing validator code and checking if returned value is true 
 
-* calculating validation status and generating helping message which could be retrieved later
+* generating validation results could be retrieved later
 
-* a final _presentation_ of validation results (statuses and messages ) should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+* a final _presentation_ of validation results should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
 ## Parser journal
 
@@ -75,8 +75,10 @@ Outthentic provides program api for parser:
     $outh->validate('path/to/check/file','stdout string');
 
 
-    for my $chk_item ( @{$outh->check_list}){
-        ok($chk_item->{status}, $chk_item->{message})
+    for my $r ( @{$outh->results}){
+        ok($r->{status}, $r->{message}) if $r->{type} eq 'check_expression';
+        diag($r->{message}) if $r->{type} eq 'debug';
+
     }
 
 Method list
@@ -93,15 +95,17 @@ Optional parameters is passed as hashref:
 
 * match_l - truncate matching strings to {match_l} bytes
 
-Default value is `40'
+Default value is \`40'
 
 * debug_mod - enable debug mode
 
-Set to \`1,2,3' if you want to see some debug information in a [parser journal](#parser-journal), 
-increasing debug_mod value means more low level information appeared at journal.
+    * Possible values is 0,1,2,3.
 
-Default value is \`0' - means do not create journal.
+    * Set to 1 or 2 or 3 if you want to see some debug information in validation results.
 
+    * Increasing debug_mod value means more low level information appeared.
+
+    * Default value is \`0' - means do not create debug messages.
 
 ### validate
 
@@ -111,22 +115,9 @@ Obligatory parameter is:
 
 * path to check file
 
-### check_list  
+### results  
 
-Returns validation results as arrayref containing { status, message } hashrefs.
-
-### journal
-
-Get parser journal records:
-
-    open my $fh, ">>", "outthentic.log"
-    for my $r ( @{$outh->journal}){
-
-        print $fh $r->{message}
-    }
-
-    close $fh;
-
+Returns validation results as arrayref containing { type, status, message } hashrefs.
 
 ## Outthentic client
 
@@ -174,7 +165,7 @@ Check expressions defines _lines stdout should match_. Here is a simple example:
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-    # validation output
+    # validation results
 
     +--------+------------------------------+
     | status | message                      |
@@ -447,7 +438,7 @@ For example:
     string
     here
  
-     # validation output
+     # validation results
 
     +--------+---------------------------------------+
     | status | message                               |

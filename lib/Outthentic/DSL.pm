@@ -4,37 +4,32 @@ use strict;
 
 our $VERSION = '0.0.3';
 
-sub check_list {
+use Carp;
+
+sub results {
 
     my $self = shift;
 
-    $self->{check_list};
+    $self->{results};
 }
 
-sub add_check_item {
-
-    my $self = shift;
-    my $item = shift;
-    push @{$self->check_list}, $item;
-        
-}
-
-sub journal {
-
-    my $self = shift;
-
-    $self->{journal};
-}
-
-sub add_to_journal {
+sub add_result {
 
     my $self = shift;
     my $item = shift;
 
-    push @{$self->journal}, { message => $item };
+    push @{$self->results}, { %{$item}, type => 'check_expression' };
         
 }
 
+sub add_debug_result {
+
+    my $self = shift;
+    my $item = shift;
+
+    push @{$self->results}, { message => $item , type => 'debug' };
+        
+}
 
 
 sub new {
@@ -44,8 +39,7 @@ sub new {
     my $opts = shift || {};
 
     bless {
-        journal => [],
-        check_list => [],
+        results => [],
         output_context => [],
         search_context => [],
         context_populated => 0,
@@ -82,7 +76,7 @@ sub populate_context {
     $self->{output_context} = [@output_context];
     $self->{search_context} = [@output_context];
 
-    $self->add_to_journal('context populated') if $self->{debug_mod} >= 2;
+    $self->add_debug_result('context populated') if $self->{debug_mod} >= 2;
 
     $self->{context_populated} = 1;
 
@@ -112,7 +106,7 @@ sub check_line {
 
     $self->populate_context;
 
-    $self->add_to_journal("lookup $pattern ...") if $self->{debug_mod} >= 2;
+    $self->add_debug_result("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
     my @output_context         = @{$self->{output_context}};
     my @search_context   = @{$self->{search_context}};
@@ -144,12 +138,12 @@ sub check_line {
 
         }
     }else {
-        die "unknown check_type: $check_type";
+        confess "unknown check_type: $check_type";
     }
 
 
-    $self->add_check_item({ status => $status , message => $message });
-    $self->add_to_journal("@{[$status ? 'OK': 'FAIL']} - $message");
+    $self->add_result({ status => $status , message => $message });
+    $self->add_debug_result("@{[$status ? 'OK': 'FAIL']} - $message");
 
     $self->{last_check_status} = $status;
 
@@ -157,9 +151,9 @@ sub check_line {
         my $k=0;
         for my $ce (@captures) {
             $k++;
-            $self->add_to_journal("captured item N $k");
+            $self->add_debug_result("captured item N $k");
             for  my $c (@{$ce}){
-                $self->add_to_journal("captures: $c");
+                $self->add_debug_result("captures: $c");
             }
         }
     }
@@ -193,7 +187,7 @@ sub validate {
         @lines = @$filepath_or_array_ref
     }else{
         return unless $filepath_or_array_ref;
-        open my $fh, $filepath_or_array_ref or die $!;
+        open my $fh, $filepath_or_array_ref or confess $!;
         while (my $l = <$fh>){
             push @lines, $l
         }
@@ -205,14 +199,14 @@ sub validate {
 
         chomp $l;
 
-        $self->add_to_journal($l) if $self->{debug_mod} >= 3;
+        $self->add_debug_result($l) if $self->{debug_mod} >= 3;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
         next LINE if $l=~ /^\s*#(.*)/; # skip comments
 
         if ($l=~ /^\s*begin:\s*$/) { # begin of text block
-            $self->add_to_journal('begin text block') if $self->{debug_mod} >= 2;
+            $self->add_debug_result('begin text block') if $self->{debug_mod} >= 2;
             $self->{block_mode} = 1;
             next LINE;
         }
@@ -223,14 +217,14 @@ sub validate {
             # restore local context
             $self->{search_context} = $self->{output_context};
 
-            $self->add_to_journal('end text block') if $self->{debug_mod} >= 2;
+            $self->add_debug_result('end text block') if $self->{debug_mod} >= 2;
 
             next LINE;
         }
 
         # validate unterminated multiline chunks
         if ($l=~/^\s*(regexp|code|generator|within):\s*.*/){
-            die "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
+            confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
         }
 
         if ($l=~/^\s*code:\s*(.*)/){ # `code' line
@@ -297,7 +291,7 @@ sub validate {
         }
     }
 
-    die "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
+    confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
 
 }
 
@@ -308,13 +302,13 @@ sub handle_code {
 
     unless (ref $code){
         eval "package main; $code;";
-        die "code LINE eval perl error, code:$code , error: $@" if $@;
-        $self->add_to_journal("handle_code OK. $code") if $self->{debug_mod} >= 3;
+        confess "code LINE eval perl error, code:$code , error: $@" if $@;
+        $self->add_debug_result("handle_code OK. $code") if $self->{debug_mod} >= 3;
     } else {
         my $code_to_eval = join "\n", @$code;
         eval "package main; $code_to_eval";
-        die "code LINE eval error, code:$code_to_eval , error: $@" if $@;
-        $self->add_to_journal("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+        confess "code LINE eval error, code:$code_to_eval , error: $@" if $@;
+        $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
     }
 
 }
@@ -326,14 +320,14 @@ sub handle_generator {
 
     unless (ref $code){
         my $arr_ref = eval "package main; $code";
-        die "generator LINE eval error, code:$code , error: $@" if $@;
-        $self->add_to_journal("handle_generator OK. $code") if $self->{debug_mod} >= 3;
+        confess "generator LINE eval error, code:$code , error: $@" if $@;
+        $self->add_debug_result("handle_generator OK. $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
     } else {
         my $code_to_eval = join "\n", @$code;
         my $arr_ref = eval " package main; $code_to_eval";
-        die "generator LINE eval error, code:$code_to_eval , error: $@" if $@;
-        $self->add_to_journal("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+        confess "generator LINE eval error, code:$code_to_eval , error: $@" if $@;
+        $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
     }
 
@@ -363,7 +357,7 @@ sub handle_regexp {
 
     $self->check_line($re, 'regexp', $m);
 
-    $self->add_to_journal("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
 
 }
 
@@ -389,7 +383,7 @@ sub handle_within {
 
     $self->check_line($re, 'regexp', $m);
 
-    $self->add_to_journal("handle_within OK. $re") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("handle_within OK. $re") if $self->{debug_mod} >= 3;
     
 }
 
@@ -418,7 +412,7 @@ sub handle_plain {
 
     $self->check_line($l, 'default', $m);
 
-    $self->add_to_journal("handle_plain OK. $l") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("handle_plain OK. $l") if $self->{debug_mod} >= 3;
 }
 
 
@@ -596,7 +590,7 @@ Outthentic provides program api for parser:
     $outh->validate('path/to/check/file','stdout string');
     
     
-    for my $chk_item ( @{$outh->check_list}){
+    for my $chk_item ( @{$outh->results}){
         ok($chk_item->{status}, $chk_item->{message})
     }
 
@@ -662,7 +656,7 @@ path to check file
 =back
 
 
-=head3 check_list
+=head3 results
 
 
 Returns validation results as arrayref containing { status, message } hashrefs.
