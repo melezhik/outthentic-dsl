@@ -150,14 +150,6 @@ sub check_line {
     if ( $self->{debug_mod} >= 2 ){
         $self->add_debug_result('captures:');
         $self->add_debug_result(Dumper(\@captures));
-        #my $k=0;
-        #for my $ce (@captures) {
-        #    $k++;
-        #    $self->add_debug_result("captured item N $k");
-        #    for  my $c (@{$ce}){
-        #        $self->add_debug_result("captures: $c");
-        #    }
-        #}
     }
 
     $self->{captures} = [ @captures ];
@@ -227,7 +219,7 @@ sub validate {
         }
 
         # validate unterminated multiline chunks
-        if ($l=~/^\s*(regexp|code|generator|within):\s*.*/){
+        if ($l=~/^\s*(regexp|code|generator|within|validator):\s*.*/){
             confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
         }
 
@@ -241,6 +233,19 @@ sub validate {
             }else{
                 undef $chunk_type;
                 $self->handle_code($code);
+            }
+
+        }elsif($l=~/^\s*validator:\s*(.*)/){ # `validator' line
+
+            my $code = $1;
+
+            if ($code=~s/\\\s*$//){
+                 push @multiline_chunk, $code;
+                 $chunk_type = 'validator';
+                 next LINE; # this is multiline chunk, accumulate lines until meet '\' line
+
+            }else{
+                $self->handle_validator($code);
             }
 
         }elsif($l=~/^\s*generator:\s*(.*)/){ # `generator' line
@@ -306,13 +311,35 @@ sub handle_code {
 
     unless (ref $code){
         eval "package main; $code;";
-        confess "code LINE eval perl error, code:$code , error: $@" if $@;
+        confess "eval error; sub:handle_code; code:$code; error: $@" if $@;
         $self->add_debug_result("handle_code OK. $code") if $self->{debug_mod} >= 3;
     } else {
         my $code_to_eval = join "\n", @$code;
         eval "package main; $code_to_eval";
-        confess "code LINE eval error, code:$code_to_eval , error: $@" if $@;
+        confess "eval error; sub:handle_code; code:$code_to_eval; error: $@" if $@;
         $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+    }
+
+}
+
+sub handle_validator {
+
+    my $self = shift;
+    my $code = shift;
+
+    unless (ref $code){
+        my $r = eval "package main; $code;";
+        confess "eval error; sub:handle_validator; code:$code; error: $@" if $@;
+        confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
+        $self->add_result({ status => $r->[0] , message => $r->[0] });
+        $self->add_debug_result("handle_validator OK. $code") if $self->{debug_mod} >= 3;
+    } else {
+        my $code_to_eval = join "\n", @$code;
+        my $r = eval "package main; $code_to_eval";
+        confess "eval error; sub:handle_validator; code:$code_to_eval; error: $@" if $@;
+        confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
+        $self->add_result({ status => $r->[0] , message => $r->[0] });
+        $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
     }
 
 }
@@ -324,13 +351,15 @@ sub handle_generator {
 
     unless (ref $code){
         my $arr_ref = eval "package main; $code";
-        confess "generator LINE eval error, code:$code , error: $@" if $@;
+        confess "eval error; sub:handle_generator; code:$code; error: $@" if $@;
+        confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
         $self->add_debug_result("handle_generator OK. $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
     } else {
         my $code_to_eval = join "\n", @$code;
         my $arr_ref = eval " package main; $code_to_eval";
-        confess "generator LINE eval error, code:$code_to_eval , error: $@" if $@;
+        confess "eval error; sub:handle_generator; code:$code_to_eval; error: $@" if $@;
+        confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
         $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
     }
