@@ -331,14 +331,14 @@ sub handle_validator {
         my $r = eval "package main; $code;";
         confess "eval error; sub:handle_validator; code:$code; error: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
-        $self->add_result({ status => $r->[0] , message => $r->[0] });
+        $self->add_result({ status => $r->[0] , message => $r->[1] });
         $self->add_debug_result("handle_validator OK. $code") if $self->{debug_mod} >= 3;
     } else {
         my $code_to_eval = join "\n", @$code;
         my $r = eval "package main; $code_to_eval";
         confess "eval error; sub:handle_validator; code:$code_to_eval; error: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
-        $self->add_result({ status => $r->[0] , message => $r->[0] });
+        $self->add_result({ status => $r->[0] , message => $r->[1] });
         $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
     }
 
@@ -373,9 +373,13 @@ sub handle_regexp {
     
     my $m;
 
+    my $reset_search_context = 0;
+
     if ($self->{within_mode}){
+
         $self->{within_mode} = 0; 
-        $self->{search_context} = $self->{output_context};
+        $reset_search_context = 1;
+
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match /$re/";
@@ -390,7 +394,10 @@ sub handle_regexp {
 
     $self->check_line($re, 'regexp', $m);
 
+    $self->{search_context} = $self->{output_context} if $reset_search_context; 
+
     $self->add_debug_result("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
+
 
 }
 
@@ -427,10 +434,13 @@ sub handle_plain {
 
     my $m;
     my $lshort =  $self->_short_string($l);
+    my $reset_search_context = 0;
 
     if ($self->{within_mode}){
+        
         $self->{within_mode} = 0;
-        $self->{search_context} = $self->{output_context}; 
+        $reset_search_context = 1;
+
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
             $m = "'$lml' match '$lshort'";
@@ -444,6 +454,8 @@ sub handle_plain {
 
 
     $self->check_line($l, 'default', $m);
+
+    $self->{search_context} = $self->{output_context} if $reset_search_context; 
 
     $self->add_debug_result("handle_plain OK. $l") if $self->{debug_mod} >= 3;
 }
