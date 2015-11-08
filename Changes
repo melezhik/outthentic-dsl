@@ -1,9 +1,13 @@
-0.0.3
+0.0.3 2015-11-08
 
-* check statuses returned by check_list method
-* documentation: description of `within:' feature
-* small fixes at `ok' asserts messages 
-* refactoring
+* huge release
+* new features:
+    * within
+    * valiadator
+    * api clients
+* a lot of refactoring
+* a lof of documentation changes
+* asserts now are not generated in place but returned by \`result' method
 
 0.0.2 2015-10-29
 

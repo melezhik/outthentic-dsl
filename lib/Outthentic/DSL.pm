@@ -641,7 +641,7 @@ Outthentic provides program api for parser:
     
     }
 
-Method list
+Methods list:
 
 
 =head3 new
