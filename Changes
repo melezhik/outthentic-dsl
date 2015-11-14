@@ -1,3 +1,8 @@
+0.0.4 2015-11-14
+
+* update context: add some debug messages for debug level >=2
+* block_mode bug fix
+
 0.0.3 2015-11-08
 
 * huge release

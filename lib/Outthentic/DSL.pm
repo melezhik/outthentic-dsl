@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.3';
+our $VERSION = '0.0.4';
 
 use Carp;
 use Data::Dumper;
@@ -120,9 +120,10 @@ sub check_line {
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
+                push @context_new, $output_context[$next_i] if $self->{block_mode};
             }
-            push @context_new, $output_context[$next_i] if $self->{block_mode};
         }
+
     }elsif($check_type eq 'regexp'){
         for my $c (@search_context){
             my $re = qr/$pattern/;
@@ -135,8 +136,8 @@ sub check_line {
                 $status = 1;
                 push @context_new, $c if $self->{within_mode};
                 $self->{last_match_line} = $ln;
+                push @context_new, $output_context[$next_i] if $self->{block_mode};
             }
-            push @context_new, $output_context[$next_i] if $self->{block_mode};
 
         }
     }else {
@@ -155,12 +156,18 @@ sub check_line {
     $self->{captures} = [ @captures ];
 
     # update context
-    if ( $self->{block_mode} ){
+    if ( $self->{block_mode} and $status ){
         $self->{search_context} = [@context_new];
-    } elsif ( $self->{within_mode} and $status ){
+        $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
+    }elsif ( $self->{block_mode} and ! $status ){
+        $self->{search_context} = [];
+        $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
+    }elsif ( $self->{within_mode} and $status ){
         $self->{search_context} = [@context_new];
+        $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }elsif ( $self->{within_mode} and ! $status ){
         $self->{search_context} = []; # empty context if within expression has not passed 
+        $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }
 
     $self->add_result({ status => $status , message => $message });
@@ -616,11 +623,6 @@ a final I<presentation> of validation results should be implimeted in a certain 
 
 
 =back
-
-
-=head2 Parser journal
-
-Parser activity could be logged into journal, see L<parser api|parser-api>, `journal' method description
 
 
 =head2 Parser API

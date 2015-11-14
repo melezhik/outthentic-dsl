@@ -140,11 +140,6 @@ a final I<presentation> of validation results should be implimeted in a certain 
 =back
 
 
-=head2 Parser journal
-
-Parser activity could be logged into journal, see L<parser api|parser-api>, `journal' method description
-
-
 =head2 Parser API
 
 Outthentic provides program api for parser:
