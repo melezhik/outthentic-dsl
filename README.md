@@ -345,7 +345,7 @@ This is a simple example:
     # stdout
     # it's my family ages.
     alex    38
-    julia   25
+    julia   32
     jan     2
 
 
@@ -474,7 +474,7 @@ Captures are pieces of data get captured when parser validates stdout against a 
     # stdout
     # it's my family ages.
     alex    38
-    julia   25
+    julia   32
     jan     2
 
 
