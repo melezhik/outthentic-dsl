@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.4';
+our $VERSION = '0.0.5';
 
 use Carp;
 use Data::Dumper;
@@ -474,6 +474,8 @@ sub _short_string {
     my $str = shift;
     my $sstr = substr( $str, 0, $self->{match_l} );
 
+    s{\r}[]g for $str;
+    s{\r}[]g for $sstr;
     
     return $sstr < $str ? "$sstr ..." : $sstr; 
 

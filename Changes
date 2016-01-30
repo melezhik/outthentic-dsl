@@ -1,3 +1,7 @@
+0.0.5 2016-30-01
+
+* TAP output - removes `\r` symbols from matching lines ( within: mode ) to fix broken TAP on linux environment 
+
 0.0.4 2015-11-14
 
 * update context: add some debug messages for debug level >=2
@@ -8,10 +12,10 @@
 * huge release
 * new features:
     * within
-    * valiadator
+    * validator
     * api clients
 * a lot of refactoring
-* a lof of documentation changes
+* a lot of documentation changes
 * asserts now are not generated in place but returned by \`result' method
 
 0.0.2 2015-10-29
