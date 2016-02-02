@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.5';
+our $VERSION = '0.0.6';
 
 use Carp;
 use Data::Dumper;
@@ -110,9 +110,9 @@ sub check_line {
 
     $self->add_debug_result("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
-    my @output_context         = @{$self->{output_context}};
+    my @output_context   = @{$self->{output_context}};
     my @search_context   = @{$self->{search_context}};
-    my @context_new     = ();
+    my @context_new      = ();
 
     if ($check_type eq 'default'){
         for my $c (@search_context){
@@ -176,6 +176,37 @@ sub check_line {
 
 }
 
+sub set_context {
+
+    my $self = shift;
+    my $expr = shift;
+
+    $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
+
+    $self->populate_context;
+    
+    my @search_context   = @{$self->{search_context}};
+    my @context_new      = ();
+
+    my ($a, $b) = split $expr, /\s+/;
+
+    s{\s+}[] for $a, $b;
+
+    $a ||= '.*';
+    $b ||= '.*';
+
+
+    for my $c (@search_context){
+        my $re_a = qr/$a/;
+        my $re_b = qr/$b/;
+        my $ln = $c->[0];
+        if ($ln =~ /$re_a/ .. $ln =~ /$re_b/){
+            push @context_new, $c; 
+        }
+    }
+    $self->{search_context} = [@context_new];
+}
+
 sub validate {
 
     my $self = shift;
@@ -213,14 +244,33 @@ sub validate {
             $self->{block_mode} = 1;
             next LINE;
         }
+
         if ($l=~ /^\s*end:\s*$/) { # end of text block
 
             $self->{block_mode} = 0;
 
-            # restore local context
+            # restore search context
             $self->{search_context} = $self->{output_context};
 
+            $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
+
             $self->add_debug_result('end text block') if $self->{debug_mod} >= 2;
+
+            next LINE;
+        }
+
+        if ($l=~ /^\s*reset_context:\s*$/) { # restore search context
+
+            $self->{search_context} = $self->{output_context};
+
+            $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
+
+            next LINE;
+        }
+
+        if ($l=~ /^\s*set_context:\s+(.*)$/) { # set search context
+            
+            $self->set_context($1);
 
             next LINE;
         }
