@@ -130,10 +130,11 @@ Outthentic DSL comprises following basic entities:
 
 * Check expressions:
 
-    * plain strings
-    * regular expressions
-    * text blocks
-    * within expressions
+    * plain     strings
+    * regular   expressions
+    * text      blocks
+    * within    expressions
+    * between   expressions
     * validator expressions
 
 * Comments
@@ -590,6 +591,98 @@ Within expressions could be sequential, which effectively means using \`&&' logi
 
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
+
+# Between expressions
+
+Between expression acts like _search context modifier_ - they change search area to one included
+_between_ lines matching right and left regular expression of between statement. 
+
+It is very similar to what perl range operator does when parsing file content line by line:
+
+    if /foo/ .. /bar/
+
+This is analogous in swat between expression for it:
+
+    between: foo bar
+
+Between expression takes 2 arguments - left and right regular expression to setup search area boundaries.
+
+These are few examples:
+
+Parsing html output
+
+    # stdout
+    <table cols=10 rows=10>
+        <tr>
+            <td>one</td>
+        </tr>
+        <tr>
+            <td>two</td>
+        </tr>
+        <tr>
+            <td>the</td>
+        </tr>
+    </table>
+
+
+    # between expression:
+    between: <table.*> <\/table>
+    regexp: <td>(\S+)<\/td>
+
+    # or even so
+    between: <tr.*> <\/tr>
+    regexp: <td>(\S+)<\/td>
+
+Between expressions could not be nested, every new between expression discards old search context
+and setup new one:
+
+    # sample stdout
+
+    foo
+
+    1
+    2
+    3
+
+        fooo
+        100
+        baaar
+
+    bar
+
+    fooo
+
+    10
+    20
+    30
+
+    baaar
+
+
+    # outthentic check:
+
+    between: foo bar
+    # here will be everything
+    # between foo and bar lines
+    regexp: \d
+    code: diag(capture()->[0])
+
+    between: fooo baaar
+    # here will be everything
+    # between fooo and baaar lines
+    # NOT necessarily inside foo bar block 
+    regexp: \d
+    code: diag(capture()->[0])
+
+    # TAP output
+    
+        # 1
+        # 2
+        # 3
+        # 100
+        # 10
+        # 20
+        # 30
 
 # Author
 

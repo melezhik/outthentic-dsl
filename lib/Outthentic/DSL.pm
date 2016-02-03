@@ -102,7 +102,7 @@ sub set_context {
 
     $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
 
-    my ($a, $b) = (split $expr);
+    my ($a, $b) = split /\s+/, $expr;
 
     s{\s+}[] for $a, $b;
 
@@ -157,7 +157,7 @@ sub check_line {
     if ($check_type eq 'default'){
         for my $c (@current_context){
             my $ln = $c->[0]; my $next_i = $c->[1];
-            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_l}) or next; # apply boundaries
+            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_r}) or next; # apply boundaries
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
@@ -172,7 +172,7 @@ sub check_line {
 
             my $ln = $c->[0]; my $next_i = $c->[1];
 
-            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_l}) or next; # apply boundaries
+            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_r}) or next; # apply boundaries
 
             my @foo = ($ln =~ /$re/g);
 
