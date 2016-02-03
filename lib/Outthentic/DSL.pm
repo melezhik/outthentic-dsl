@@ -42,9 +42,9 @@ sub new {
 
     bless {
         results => [],
-        output_context => [],
-        search_context => [],
-        context_populated => 0,
+        original_context => [],
+        current_context => [],
+        has_context => 0,
         captures => [],
         within_mode => 0,
         block_mode => 0,
@@ -53,34 +53,36 @@ sub new {
         debug_mod => 0,
         output => $output||'',
         match_l => 40,
+        bound_l => qr/.*/, # lower boundary (left)
+        bound_r => qr/.*/, # upper boundary (right)
         %{$opts},
     }, __PACKAGE__;
 
 }
 
-sub populate_context {
+sub create_context {
 
     my $self = shift;
 
-    return if $self->{context_populated};
+    return if $self->{has_context};
 
     my $i = 0;
 
-    my @output_context = ();
+    my @original_context = ();
 
     for my $l ( split /\n/, $self->{output} ){
         chomp $l;
         $i++;
         $l=":blank_line" unless $l=~/\S/;
-        push @output_context, [$l, $i];
+        push @original_context, [$l, $i];
     }
 
-    $self->{output_context} = [@output_context];
-    $self->{search_context} = [@output_context];
+    $self->{original_context} = [@original_context];
+    $self->{current_context} = [@original_context];
 
     $self->add_debug_result('context populated') if $self->{debug_mod} >= 2;
 
-    $self->{context_populated} = 1;
+    $self->{has_context} = 1;
 
 
 }
@@ -89,6 +91,20 @@ sub reset_captures {
 
     my $self = shift;
     $self->{captures} = [];
+
+}
+
+sub reset_context {
+
+    my $self = shift;
+
+    $self->{current_context} = $self->{original_context};
+
+    $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
+
+    $self->{bound_l} = qr/.*/; 
+
+    $self->{bound_r} = qr/.*/;
 
 }
 
@@ -106,28 +122,33 @@ sub check_line {
 
     my @captures = ();
 
-    $self->populate_context;
+    $self->create_context;
 
     $self->add_debug_result("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
-    my @output_context   = @{$self->{output_context}};
-    my @search_context   = @{$self->{search_context}};
-    my @context_new      = ();
+    my @original_context   = @{$self->{original_context}};
+    my @current_context    = @{$self->{current_context}};
+    my @context_new        = ();
 
     if ($check_type eq 'default'){
-        for my $c (@search_context){
+        for my $c (@current_context){
             my $ln = $c->[0]; my $next_i = $c->[1];
+            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_l}) or next; # apply boundaries
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
-                push @context_new, $output_context[$next_i] if $self->{block_mode};
+                push @context_new, $original_context[$next_i] if $self->{block_mode};
             }
         }
 
     }elsif($check_type eq 'regexp'){
-        for my $c (@search_context){
+        for my $c (@current_context){
+
             my $re = qr/$pattern/;
+
             my $ln = $c->[0]; my $next_i = $c->[1];
+
+            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_l}) or next; # apply boundaries
 
             my @foo = ($ln =~ /$re/g);
 
@@ -136,7 +157,7 @@ sub check_line {
                 $status = 1;
                 push @context_new, $c if $self->{within_mode};
                 $self->{last_match_line} = $ln;
-                push @context_new, $output_context[$next_i] if $self->{block_mode};
+                push @context_new, $original_context[$next_i] if $self->{block_mode};
             }
 
         }
@@ -157,16 +178,16 @@ sub check_line {
 
     # update context
     if ( $self->{block_mode} and $status ){
-        $self->{search_context} = [@context_new];
+        $self->{current_context} = [@context_new];
         $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
     }elsif ( $self->{block_mode} and ! $status ){
-        $self->{search_context} = [];
+        $self->{current_context} = [];
         $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
     }elsif ( $self->{within_mode} and $status ){
-        $self->{search_context} = [@context_new];
+        $self->{current_context} = [@context_new];
         $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }elsif ( $self->{within_mode} and ! $status ){
-        $self->{search_context} = []; # empty context if within expression has not passed 
+        $self->{current_context} = []; # empty context if within expression has not passed 
         $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }
 
@@ -183,11 +204,6 @@ sub set_context {
 
     $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
 
-    $self->populate_context;
-    
-    my @search_context   = @{$self->{search_context}};
-    my @context_new      = ();
-
     my ($a, $b) = split $expr, /\s+/;
 
     s{\s+}[] for $a, $b;
@@ -195,16 +211,9 @@ sub set_context {
     $a ||= '.*';
     $b ||= '.*';
 
-
-    for my $c (@search_context){
-        my $re_a = qr/$a/;
-        my $re_b = qr/$b/;
-        my $ln = $c->[0];
-        if ($ln =~ /$re_a/ .. $ln =~ /$re_b/){
-            push @context_new, $c; 
-        }
-    }
-    $self->{search_context} = [@context_new];
+    $self->{bound_l} = qr/$a/; 
+    $self->{bound_r} = qr/$b/;
+ 
 }
 
 sub validate {
@@ -249,26 +258,21 @@ sub validate {
 
             $self->{block_mode} = 0;
 
-            # restore search context
-            $self->{search_context} = $self->{output_context};
-
-            $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
+            $self->reset_context;
 
             $self->add_debug_result('end text block') if $self->{debug_mod} >= 2;
 
             next LINE;
         }
 
-        if ($l=~ /^\s*reset_context:\s*$/) { # restore search context
+        if ($l=~ /^\s*reset_context:\s*$/) {
 
-            $self->{search_context} = $self->{output_context};
-
-            $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
+            $self->reset_context;
 
             next LINE;
         }
 
-        if ($l=~ /^\s*set_context:\s+(.*)$/) { # set search context
+        if ($l=~ /^\s*set_context:\s+(.*)$/) { # set new context
             
             $self->set_context($1);
 
@@ -430,12 +434,12 @@ sub handle_regexp {
     
     my $m;
 
-    my $reset_search_context = 0;
+    my $reset_context = 0;
 
     if ($self->{within_mode}){
 
         $self->{within_mode} = 0; 
-        $reset_search_context = 1;
+        $reset_context = 1;
 
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
@@ -451,7 +455,7 @@ sub handle_regexp {
 
     $self->check_line($re, 'regexp', $m);
 
-    $self->{search_context} = $self->{output_context} if $reset_search_context; 
+    $self->reset_context if $reset_context; 
 
     $self->add_debug_result("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
 
@@ -491,12 +495,12 @@ sub handle_plain {
 
     my $m;
     my $lshort =  $self->_short_string($l);
-    my $reset_search_context = 0;
+    my $reset_context = 0;
 
     if ($self->{within_mode}){
         
         $self->{within_mode} = 0;
-        $reset_search_context = 1;
+        $reset_context = 1;
 
         if ($self->{last_check_status}){
             my $lml =  $self->_short_string($self->{last_match_line});
@@ -512,7 +516,7 @@ sub handle_plain {
 
     $self->check_line($l, 'default', $m);
 
-    $self->{search_context} = $self->{output_context} if $reset_search_context; 
+    $self->reset_context if $reset_context; 
 
     $self->add_debug_result("handle_plain OK. $l") if $self->{debug_mod} >= 3;
 }
