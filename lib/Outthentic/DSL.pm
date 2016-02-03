@@ -87,12 +87,36 @@ sub create_context {
 
 }
 
+
 sub reset_captures {
 
     my $self = shift;
     $self->{captures} = [];
 
 }
+
+sub set_context {
+
+    my $self = shift;
+    my $expr = shift;
+
+    $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
+
+    my ($a, $b) = (split $expr);
+
+    s{\s+}[] for $a, $b;
+
+    $a ||= '.*';
+    $b ||= '.*';
+
+    $self->{bound_l} = qr/$a/; 
+    $self->{bound_r} = qr/$b/;
+
+    $self->add_debug_result("set context bound_l: $self->{bound_l}") if $self->{debug_mod} >= 1;
+    $self->add_debug_result("set context bound_r: $self->{bound_r}") if $self->{debug_mod} >= 1;
+ 
+}
+
 
 sub reset_context {
 
@@ -197,25 +221,6 @@ sub check_line {
 
 }
 
-sub set_context {
-
-    my $self = shift;
-    my $expr = shift;
-
-    $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
-
-    my ($a, $b) = split $expr, /\s+/;
-
-    s{\s+}[] for $a, $b;
-
-    $a ||= '.*';
-    $b ||= '.*';
-
-    $self->{bound_l} = qr/$a/; 
-    $self->{bound_r} = qr/$b/;
- 
-}
-
 sub validate {
 
     my $self = shift;
@@ -249,6 +254,9 @@ sub validate {
         next LINE if $l=~ /^\s*#(.*)/; # skip comments
 
         if ($l=~ /^\s*begin:\s*$/) { # begin of text block
+            confess "you can't switch to text block mode when within mode is enabled" 
+                if $self->{within_mode};
+    
             $self->add_debug_result('begin text block') if $self->{debug_mod} >= 2;
             $self->{block_mode} = 1;
             next LINE;
@@ -272,9 +280,15 @@ sub validate {
             next LINE;
         }
 
-        if ($l=~ /^\s*set_context:\s+(.*)$/) { # set new context
+        if ($l=~ /^\s*between:\s+(.*)/) { # set new context
             
             $self->set_context($1);
+
+            confess "you can't change context when within mode is enabled" 
+                if $self->{within_mode};
+
+            confess "you can't change context when text block mode is enabled" 
+                if $self->{block_mode};
 
             next LINE;
         }
@@ -328,6 +342,9 @@ sub validate {
             $self->handle_regexp($re);
 
         }elsif($l=~/^\s*within:\s*(.*)/){
+
+            confess "you can't switch to within mode when text block mode is enabled" 
+                if $self->{block_mode};
 
             my $re=$1;
             $self->handle_within($re);
