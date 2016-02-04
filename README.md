@@ -4,7 +4,7 @@ Language to validate text output.
 
 # Install
 
-    cpanm Outthentic
+    cpanm Outthentic::DSL
 
 # Glossary
 
@@ -41,7 +41,7 @@ Parser is the program which:
 
     * generating new outthentic entries if entry is generator one
 
-    * execution of perl code if entry is perl expression one
+    * execution of Perl code if entry is Perl expression one
 
 
 
@@ -57,7 +57,7 @@ Validation process consists of:
 
 * generating validation results could be retrieved later
 
-* a final _presentation_ of validation results should be implimeted in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+* a final _presentation_ of validation results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
 
 ## Parser API
 
@@ -219,7 +219,7 @@ Comment lines start with \`#' symbol, comments chunks are ignored by parser:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
-    Hello World # or could be added to existed expression to the right, like here
+    Hello World # or could be added for the existed expression to the right, like here
 
 ## Blank lines
 
@@ -295,32 +295,32 @@ Parser will remain in a \`text block' mode till the end of check file, which is 
 
 # Perl expressions
 
-Perl expressions are just a pieces of perl code to _get evaled_ during parsing process. This is how it works:
+Perl expressions are just a pieces of Perl code to _get evaled_ during parsing process. This is how it works:
 
-    # perl expression between two check expressions
+    # Perl expression between two check expressions
     Once upon a time
     code: print "hello I am Outthentic"
     Lived a boy called Outthentic
 
 
-Internally once check file gets parsed this piece of DSL code is "turned" into regular perl code:
+Internally once check file gets parsed this piece of DSL code is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-One of the use case for perl expressions is to store [\`captures'](#captures) data:
+One of the use case for Perl expressions is to store [\`captures'](#captures) data:
 
     regexp: my name is (\w+) and my age is (\d+)
     code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
 
-* Perl expressions are executed by perl eval function in context of `package main`, please be aware of that.
+* Perl expressions are executed by Perl eval function in context of `package main`, please be aware of that.
 
-* Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to get know more about perl eval.
+* Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to get know more about Perl eval.
 
 # Validators
 
-* Validator expressions like perl expressions are just a piece of perl code. 
+* Validator expressions like Perl expressions are just a piece of Perl code. 
 
 * Validator expressions start with \`validator:' marker
 
@@ -365,7 +365,7 @@ This is a simple example:
 
 * Generators is the way to _generate new outthentic entries on the fly_.
 
-* Generator expressions like perl expressions are just a piece of perl code.
+* Generator expressions like Perl expressions are just a piece of Perl code.
 
 * The only requirement for generator code - it should return _reference to array of strings_.
 
@@ -449,7 +449,7 @@ For example:
 
 Use text blocks if you want to achieve multiline checks.
 
-However when writing perl expressions, validators or generators one could use multilines strings.
+However when writing Perl expressions, validators or generators one could use multilines strings.
 
 \`\' delimiters breaks a single line text on a multi lines:
 
@@ -597,9 +597,9 @@ Within expressions could be sequential, which effectively means using \`&&' logi
 Between expression acts like _search context modifier_ - they change search area to one included
 _between_ lines matching right and left regular expression of between statement. 
 
-It is very similar to what perl range operator does when parsing file content line by line:
+It is very similar to what Perl [range operator](http://perldoc.perl.org/perlop.html#Range-Operators) does when parsing file content line by line:
 
-    if /foo/ .. /bar/
+    if /foo/ ... /bar/
 
 This is analogous in swat between expression for it:
 
@@ -659,7 +659,7 @@ and setup new one:
     baaar
 
 
-    # outthentic check:
+    # outthentic check list:
 
     between: foo bar
     # here will be everything
@@ -683,6 +683,30 @@ and setup new one:
         # 10
         # 20
         # 30
+
+And finaly to restore search context use \`reset_context:' statement:
+
+    # stdoud
+
+    foo
+        hello
+        hello again
+    bar
+
+
+    between foo bar
+    # all check expressions here
+    # will be applied to chunks
+    # between /foo/ ... /bar/
+    hello       # should match once
+    hello again # should match once
+
+    # if you want to get back to a normal mode
+    # just say restore_context:
+
+    reset_context:
+    hello       # should match two times
+    hello again # should match two times
 
 # Author
 
