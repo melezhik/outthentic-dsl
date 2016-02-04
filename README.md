@@ -684,7 +684,7 @@ and setup new one:
         # 20
         # 30
 
-And finaly to restore search context use \`reset_context:' statement:
+And finaly to restore search context use \`reset\_context:' statement:
 
     # stdoud
 
@@ -696,13 +696,13 @@ And finaly to restore search context use \`reset_context:' statement:
 
     between foo bar
     # all check expressions here
-    # will be applied to chunks
+    # will be applied to the chunks
     # between /foo/ ... /bar/
     hello       # should match once
     hello again # should match once
 
-    # if you want to get back to a normal mode
-    # just say restore_context:
+    # if you want to get back to an original search context
+    # just say reset_context:
 
     reset_context:
     hello       # should match two times
