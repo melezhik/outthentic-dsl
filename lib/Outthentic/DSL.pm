@@ -1569,15 +1569,23 @@ and setup new one:
     between: foo bar
     # here will be everything
     # between foo and bar lines
-    regexp: \d
-    code: diag(capture()->[0])
+    regexp: \d+
+    code: \
+    for my $i (@{captures()}) { \
+        diag $i->[0] \
+    } \
+    diag "foo/bar end"
     
     between: fooo baaar
     # here will be everything
     # between fooo and baaar lines
-    # NOT necessarily inside foo bar block 
-    regexp: \d
-    code: diag(capture()->[0])
+    # NOT necessarily inside foo bar block
+    regexp: \d+
+    code: \
+    for my $i (@{captures()}) { \
+        diag $i->[0] \
+    } \
+    diag "fooo/baaar end"
     
     # TAP output
     
@@ -1585,9 +1593,12 @@ and setup new one:
         # 2
         # 3
         # 100
+        # foo/bar end
+        # 100
         # 10
         # 20
         # 30
+        # fooo/baaar end
 
 And finaly to restore search context use `reset_context:' statement:
 
