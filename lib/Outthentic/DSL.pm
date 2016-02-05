@@ -132,6 +132,56 @@ sub reset_context {
 
 }
 
+sub dynamic_context {
+
+    my $self    = shift;
+    my $bound_l = $self->{bound_l};
+    my $bound_r = $self->{bound_r};
+    my @dc = ();
+    my @chunk;
+    my $inside = 0;
+
+    for my $c (@{$self->{current_context}}){
+
+        if ( $inside and $c->[0] !~ $bound_r ){
+            push @chunk, $c;
+            next;
+        }
+
+        if ( $inside and $c->[0] =~ $bound_r  ){
+
+            push @chunk, $c;
+            push @dc, @chunk;
+
+            if ($self->{debug_mod} >= 1){
+                for my $cc (@chunk){
+                    $self->add_debug_result("dc line: $cc->[0]") 
+                }
+            };
+
+            @chunk = ();
+            $inside = 0;
+            next;
+        }
+
+        if ($c->[0] =~ $bound_l and $c->[0] =~ $bound_r ){
+            push @dc, $c;
+            $self->add_debug_result("dc line: $c->[0]") if $self->{debug_mod} >= 1; 
+            next;
+        }
+
+        if ($c->[0] =~ $bound_l and $c->[0] !~ $bound_r ){
+            push @chunk, $c;
+            $inside = 1;
+            next;
+        }
+
+    }
+
+
+    return [@dc];
+}
+
 sub check_line {
 
     my $self = shift;
@@ -151,13 +201,11 @@ sub check_line {
     $self->add_debug_result("lookup $pattern ...") if $self->{debug_mod} >= 2;
 
     my @original_context   = @{$self->{original_context}};
-    my @current_context    = @{$self->{current_context}};
     my @context_new        = ();
 
     if ($check_type eq 'default'){
-        for my $c (@current_context){
+        for my $c (@{$self->dynamic_context}){
             my $ln = $c->[0]; my $next_i = $c->[1];
-            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_r}) or next; # apply boundaries
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
@@ -166,13 +214,12 @@ sub check_line {
         }
 
     }elsif($check_type eq 'regexp'){
-        for my $c (@current_context){
+
+        for my $c (@{$self->dynamic_context}){
 
             my $re = qr/$pattern/;
 
             my $ln = $c->[0]; my $next_i = $c->[1];
-
-            ($ln =~ $self->{bound_l} .. $ln =~ $self->{bound_r}) or next; # apply boundaries
 
             my @foo = ($ln =~ /$re/g);
 
