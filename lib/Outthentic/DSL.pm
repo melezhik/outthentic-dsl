@@ -221,7 +221,7 @@ sub validate {
 
         chomp $l;
 
-        $self->add_debug_result($l) if $self->{debug_mod} >= 3;
+        $self->add_debug_result("[DSL] $l") if $self->{debug_mod} >= 3;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
