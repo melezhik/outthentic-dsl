@@ -7,6 +7,9 @@ our $VERSION = '0.0.6';
 use Carp;
 use Data::Dumper;
 $Data::Dumper::Terse=1;
+use Outthentic::DSL::Context::Range;
+use Outthentic::DSL::Context::Default;
+
 
 sub results {
 
@@ -44,6 +47,7 @@ sub new {
         results => [],
         original_context => [],
         current_context => [],
+        context_modificator => Outthentic::DSL::Context::Default->new(),
         has_context => 0,
         captures => [],
         within_mode => 0,
@@ -53,8 +57,6 @@ sub new {
         debug_mod => 0,
         output => $output||'',
         match_l => 40,
-        bound_l => qr/.*/, # lower boundary (left)
-        bound_r => qr/.*/, # upper boundary (right)
         %{$opts},
     }, __PACKAGE__;
 
@@ -95,29 +97,6 @@ sub reset_captures {
 
 }
 
-sub set_context {
-
-    my $self = shift;
-    my $expr = shift;
-
-    $self->add_debug_result("set context with: $expr") if $self->{debug_mod} >= 1;
-
-    my ($a, $b) = split /\s+/, $expr;
-
-    s{\s+}[] for $a, $b;
-
-    $a ||= '.*';
-    $b ||= '.*';
-
-    $self->{bound_l} = qr/$a/; 
-    $self->{bound_r} = qr/$b/;
-
-    $self->add_debug_result("set context bound_l: $self->{bound_l}") if $self->{debug_mod} >= 1;
-    $self->add_debug_result("set context bound_r: $self->{bound_r}") if $self->{debug_mod} >= 1;
- 
-}
-
-
 sub reset_context {
 
     my $self = shift;
@@ -126,60 +105,8 @@ sub reset_context {
 
     $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
 
-    $self->{bound_l} = qr/.*/; 
+    $self->{context_modificator} = Outthentic::DSL::Context::Default->new();
 
-    $self->{bound_r} = qr/.*/;
-
-}
-
-sub dynamic_context {
-
-    my $self    = shift;
-    my $bound_l = $self->{bound_l};
-    my $bound_r = $self->{bound_r};
-    my @dc = ();
-    my @chunk;
-    my $inside = 0;
-
-    for my $c (@{$self->{current_context}}){
-
-        if ( $inside and $c->[0] !~ $bound_r ){
-            push @chunk, $c;
-            next;
-        }
-
-        if ( $inside and $c->[0] =~ $bound_r  ){
-
-            push @chunk, $c;
-            push @dc, @chunk;
-
-            if ($self->{debug_mod} >= 1){
-                for my $cc (@chunk){
-                    $self->add_debug_result("dc line: $cc->[0]") 
-                }
-            };
-
-            @chunk = ();
-            $inside = 0;
-            next;
-        }
-
-        if ($c->[0] =~ $bound_l and $c->[0] =~ $bound_r ){
-            push @dc, $c;
-            $self->add_debug_result("dc line: $c->[0]") if $self->{debug_mod} >= 1; 
-            next;
-        }
-
-        if ($c->[0] =~ $bound_l and $c->[0] !~ $bound_r ){
-            push @chunk, $c;
-            $inside = 1;
-            next;
-        }
-
-    }
-
-
-    return [@dc];
 }
 
 sub check_line {
@@ -204,7 +131,7 @@ sub check_line {
     my @context_new        = ();
 
     if ($check_type eq 'default'){
-        for my $c (@{$self->dynamic_context}){
+        for my $c (@{$self->{context_modificator}->change_context($self->{current_context})}){
             my $ln = $c->[0]; my $next_i = $c->[1];
             if ( index($ln,$pattern) != -1){
                 $status = 1;
@@ -215,7 +142,7 @@ sub check_line {
 
     }elsif($check_type eq 'regexp'){
 
-        for my $c (@{$self->dynamic_context}){
+        for my $c (@{$self->{context_modificator}->change_context($self->{current_context})}){
 
             my $re = qr/$pattern/;
 
@@ -329,12 +256,12 @@ sub validate {
 
         if ($l=~ /^\s*between:\s+(.*)/) { # set new context
             
-            $self->set_context($1);
+            $self->{context_modificator} = Outthentic::DSL::Context::Range->new($1);
 
-            confess "you can't change context when within mode is enabled" 
+            confess "you can't set context modificator when within mode is enabled" 
                 if $self->{within_mode};
 
-            confess "you can't change context when text block mode is enabled" 
+            confess "you can't set context modificator when text block mode is enabled" 
                 if $self->{block_mode};
 
             next LINE;

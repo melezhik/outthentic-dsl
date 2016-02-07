@@ -8,6 +8,8 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Outthentic/DSL.pm
+lib/Outthentic/DSL/Context/Default.pm
+lib/Outthentic/DSL/Context/Range.pm
 LICENSE
 Makefile.PL
 MANIFEST			This list of files
