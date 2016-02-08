@@ -196,8 +196,8 @@ sub check_line {
 
     if ( $self->{debug_mod} >= 2 ){
 
-        my $i = 0;
-        my $j = 0;
+        my $i = -1;
+        my $j = -1;
         for my $cpp (@captures){
             $i++;
             for my $cp (@{$cpp}){
@@ -255,7 +255,7 @@ sub validate {
 
         chomp $l;
 
-        $self->add_debug_result("[DSL] $l") if $self->{debug_mod} >= 3;
+        $self->add_debug_result("[dsl] $l") if $self->{debug_mod} >= 2;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
