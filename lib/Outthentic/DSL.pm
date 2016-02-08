@@ -134,7 +134,7 @@ sub check_line {
 
     $self->create_context;
 
-    $self->add_debug_result("lookup $pattern ...") if $self->{debug_mod} >= 2;
+    $self->add_debug_result("[lookup] $pattern ...") if $self->{debug_mod} >= 2;
 
     my @original_context   = @{$self->{original_context}};
     my @context_new        = ();
@@ -145,6 +145,15 @@ sub check_line {
         $self->{original_context},
         $self->{succeeded}
     );
+
+    $self->add_debug_result("context modificator applied: ".(ref $self->{context_modificator})) 
+        if $self->{debug_mod} >=1;
+        
+    if ( $self->{debug_mod} >= 2 ) {
+        for my $dcl (@$dc){ 
+            $self->add_debug_result("[dc] $dcl->[0]");
+        } 
+    };
 
     $self->reset_succeeded;
 
@@ -190,6 +199,7 @@ sub check_line {
         my $i = 0;
         my $j = 0;
         for my $cpp (@captures){
+            $i++;
             for my $cp (@{$cpp}){
                 $j++;
                 $self->add_debug_result("CAP[$i,$j]: $cp");
