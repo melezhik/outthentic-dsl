@@ -5,10 +5,12 @@ sub new { bless {}, __PACKAGE__ }
 
 sub change_context { 
 
-    my $self = shift;
-    my $ctx  = shift;
+    my $self        = shift;
+    my $cur_ctx     = shift; # current search context
+    my $orig_ctx    = shift; # original search context
+    my $succ        = shift; # latest succeeded items
 
-    return $ctx;
+    return $cur_ctx;
 }
 
 

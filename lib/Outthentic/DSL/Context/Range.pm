@@ -23,8 +23,10 @@ sub new {
 
 sub change_context {
 
-    my $self    = shift;
-    my $ctx     = shift;
+    my $self        = shift;
+    my $cur_ctx     = shift; # current search context
+    my $orig_ctx    = shift; # original search context
+    my $succ        = shift; # latest succeeded items
 
     my $bound_l = $self->{bound_l};
     my $bound_r = $self->{bound_r};
@@ -34,7 +36,7 @@ sub change_context {
 
     my $inside = 0;
 
-    for my $c (@{$ctx}){
+    for my $c (@{$cur_ctx}){
 
         if ( $inside and $c->[0] !~ $bound_r ){
             push @chunk, $c;
@@ -43,9 +45,7 @@ sub change_context {
 
         if ( $inside and $c->[0] =~ $bound_r  ){
 
-            push @chunk, $c;
             push @dc, @chunk;
-
 
             @chunk = ();
             $inside = 0;
@@ -53,8 +53,7 @@ sub change_context {
         }
 
 
-        if ($c->[0] =~ $bound_l and $c->[0] !~ $bound_r ){
-            push @chunk, $c;
+        if ($c->[0] =~ $bound_l){
             $inside = 1;
             next;
         }

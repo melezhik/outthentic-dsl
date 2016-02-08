@@ -6,10 +6,11 @@ our $VERSION = '0.0.6';
 
 use Carp;
 use Data::Dumper;
-$Data::Dumper::Terse=1;
 use Outthentic::DSL::Context::Range;
 use Outthentic::DSL::Context::Default;
+use Outthentic::DSL::Context::TextBlock;
 
+$Data::Dumper::Terse=1;
 
 sub results {
 
@@ -49,6 +50,7 @@ sub new {
         current_context => [],
         context_modificator => Outthentic::DSL::Context::Default->new(),
         has_context => 0,
+        succeeded => [],
         captures => [],
         within_mode => 0,
         block_mode => 0,
@@ -97,6 +99,13 @@ sub reset_captures {
 
 }
 
+sub reset_succeeded {
+
+    my $self = shift;
+    $self->{succeeded} = [];
+
+}
+
 sub reset_context {
 
     my $self = shift;
@@ -130,32 +139,41 @@ sub check_line {
     my @original_context   = @{$self->{original_context}};
     my @context_new        = ();
 
+    # dynamic context 
+    my $dc = $self->{context_modificator}->change_context(
+        $self->{current_context},
+        $self->{original_context},
+        $self->{succeeded}
+    );
+
+    $self->reset_succeeded;
+
     if ($check_type eq 'default'){
-        for my $c (@{$self->{context_modificator}->change_context($self->{current_context})}){
-            my $ln = $c->[0]; my $next_i = $c->[1];
+        for my $c (@{$dc}){
+            my $ln = $c->[0];
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
-                push @context_new, $original_context[$next_i] if $self->{block_mode};
+                push @{$self->{succeeded}}, $c;
             }
         }
 
     }elsif($check_type eq 'regexp'){
 
-        for my $c (@{$self->{context_modificator}->change_context($self->{current_context})}){
+        for my $c (@{$dc}) {
 
             my $re = qr/$pattern/;
 
-            my $ln = $c->[0]; my $next_i = $c->[1];
-
+            my $ln = $c->[0];
+ 
             my @foo = ($ln =~ /$re/g);
 
             if (scalar @foo){
                 push @captures, [@foo];
                 $status = 1;
+                push @{$self->{succeeded}}, $c;
                 push @context_new, $c if $self->{within_mode};
                 $self->{last_match_line} = $ln;
-                push @context_new, $original_context[$next_i] if $self->{block_mode};
             }
 
         }
@@ -168,20 +186,26 @@ sub check_line {
     $self->{last_check_status} = $status;
 
     if ( $self->{debug_mod} >= 2 ){
-        $self->add_debug_result('captures:');
-        $self->add_debug_result(Dumper(\@captures));
+
+        my $i = 0;
+        my $j = 0;
+        for my $cpp (@captures){
+            for my $cp (@{$cpp}){
+                $j++;
+                $self->add_debug_result("CAP[$i,$j]: $cp");
+            }
+            $j=0;
+        }
+
+        for my $s (@{$self->{succeeded}}){
+            $self->add_debug_result("SUCC: $s->[0]");
+        }
     }
 
     $self->{captures} = [ @captures ];
 
     # update context
-    if ( $self->{block_mode} and $status ){
-        $self->{current_context} = [@context_new];
-        $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
-    }elsif ( $self->{block_mode} and ! $status ){
-        $self->{current_context} = [];
-        $self->add_debug_result('block mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2
-    }elsif ( $self->{within_mode} and $status ){
+    if ( $self->{within_mode} and $status ){
         $self->{current_context} = [@context_new];
         $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }elsif ( $self->{within_mode} and ! $status ){
@@ -230,9 +254,14 @@ sub validate {
         if ($l=~ /^\s*begin:\s*$/) { # begin of text block
             confess "you can't switch to text block mode when within mode is enabled" 
                 if $self->{within_mode};
-    
+
+            $self->{context_modificator} = Outthentic::DSL::Context::TextBlock->new();
+
             $self->add_debug_result('begin text block') if $self->{debug_mod} >= 2;
             $self->{block_mode} = 1;
+
+            $self->reset_succeeded;
+
             next LINE;
         }
 
