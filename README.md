@@ -719,6 +719,122 @@ And finaly to restore search context use \`reset\_context:' statement:
     hello       # should match two times
     hello again # should match two times
 
+
+# Experimental features
+
+
+Below is highly experimental features purely tested. You may use it on your own risk! ;)
+
+## Streams
+
+Streams are alternative for captures. Consider following example:
+
+
+    # stdout
+
+    foo
+        a
+        b
+        c
+    bar
+
+    foo
+        1
+        2
+        3
+    bar
+
+    # outthentic check list
+
+    begin:
+
+        foo
+
+            regexp: (\S+)
+            code: print "#", capture()->[0], "\n"
+
+            regexp: (\S+)
+            code: print "#", capture()->[0], "\n"
+
+            regexp: (\S+)
+            code: print "#", capture()->[0], "\n"
+
+        bar
+
+    end:
+     
+The code above will print:
+
+    # a
+    # b
+    # c
+
+The reason for this is outthentic check expression works in "scanning" mode when output is scanned
+line by line and all matching lines get dropped into one heap ignoring any context.
+And what is worst all previously matched data is not accessible via captures.
+
+
+Thus to print all captured data one would need to have this:
+
+
+    begin:
+
+        foo
+            regexp: (\S+)
+            code: print "#", $_->[0], "\n" for @{captures()}
+
+            regexp: (\S+)
+            code: print "#", $_->[0], "\n" for @{captures()}
+
+            regexp: (\S+)
+            code: print "#", $_->[0], "\n" for @{captures()}
+        bar
+
+    end:
+
+
+This will give you:
+
+
+    # a
+    # 1
+    # b
+    # 2
+    # c
+    # 3
+
+
+Not very convenient, huh? So streams feature comes to rescue.
+
+Streams - are all the data matched for given context. Currently streams are available for text blocks and range expressions.
+
+Let's rewrite the example:
+
+
+    begin:
+
+        regexp: \S+
+        regexp: \S+
+        regexp: \S+
+
+        code:                           \
+            for my $s (@{stream()}) {  
+                for my $i (@{$s}){
+                    print "#", $i->[0] 
+                }
+                print "\n", "# next stream\n";
+            }
+    end:
+
+
+Stream function returns an arrays of streams - data matched _inside_ given text block. It is much closer to what
+was given originally in stdout:
+
+    # a b c
+    # 1 2 3
+
+
+
 # Author
 
 [Aleksei Melezhik](mailto:melezhik@gmail.com)
