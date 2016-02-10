@@ -37,37 +37,46 @@ sub update_stream {
 
     my $self        = shift;
     my $succ        = shift; # latest succeeded items
+    my $stream_ref  = shift;
+
+    use Data::Dumper;
+
+    my @keep_chains;
+
 
     if (scalar @{$succ}){
 
        unless ($self->{chains}){
             for my $c ( @{$succ} ){
                 $self->{chains}->{$c->[1]} = [$c];
+                ${$stream_ref}->{$c->[1]} =  [$c];
             }
        };
 
-       my %keep_chain = map { $_ => 0 } keys %{$self->{chains}};
-         
+
        for my $c (@{$succ}){
             my $kc;
             my $next_i = $c->[1];
             for my $cid (keys %{$self->{chains}}){
-                #warn "a: ".($self->{chains}->{$cid}->[-1]->[1]);
-                #warn "b: ".($next_i-1);
                 if ( $self->{chains}->{$cid}->[-1]->[1] == $next_i-1 ){
                     $kc = $cid;
-                    $keep_chain{$cid} = 1;
-                    #warn "$c->[0]"
+                    push @keep_chains, $cid;
                 }
             }
             push @{$self->{chains}->{$kc}}, $c if $kc; 
         }
     }
 
-    for my $cid ( keys %keep_chain ){
-        $self->{chains}->{$cid} = undef unless $keep_chain{$cid};
+    #warn 100;
+    #warn Dumper($succ);
+    #warn Dumper($self->{chains});
+    #warn Dumper(\@keep_chains);
+
+    for my $cid ( @keep_chains ){
+        ${$stream_ref}->{$cid} = $self->{chains}->{$cid};
     }        
 
+    
 }
 
 

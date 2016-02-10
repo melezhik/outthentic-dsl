@@ -59,6 +59,7 @@ sub new {
         debug_mod => 0,
         output => $output||'',
         match_l => 40,
+        stream => {},
         %{$opts},
     }, __PACKAGE__;
 
@@ -116,6 +117,23 @@ sub reset_context {
 
     $self->{context_modificator} = Outthentic::DSL::Context::Default->new();
 
+}
+
+sub stream {
+
+    my $self = shift;
+    my @stream;
+    my $i=0;
+
+    for my $cid ( sort { $a <=> $b } keys  %{$self->{stream}} ){
+        $stream[$i]=[];
+        for my $c (@{$self->{stream}->{$cid}}){
+            push @{$stream[$i]}, $c->[0];
+            $self->add_debug_result("[stream [$i]] $c->[0]") if $self->{debug_mod} >= 2;
+        }
+        $i++;
+    }
+    [@stream]
 }
 
 sub check_line {
@@ -228,7 +246,7 @@ sub check_line {
     $self->add_result({ status => $status , message => $message });
 
 
-    $self->{context_modificator}->update_stream($self->{succeeded});
+    $self->{context_modificator}->update_stream($self->{succeeded}, \($self->{stream}));
 
     return $status;
 
