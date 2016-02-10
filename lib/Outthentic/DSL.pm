@@ -80,12 +80,16 @@ sub create_context {
         $i++;
         $l=":blank_line" unless $l=~/\S/;
         push @original_context, [$l, $i];
+
+        $self->add_debug_result("[oc] [$l, $i]") if $self->{debug_mod} >= 2;
+
     }
 
     $self->{original_context} = [@original_context];
     $self->{current_context} = [@original_context];
 
     $self->add_debug_result('context populated') if $self->{debug_mod} >= 2;
+
 
     $self->{has_context} = 1;
 
@@ -246,7 +250,12 @@ sub check_line {
     $self->add_result({ status => $status , message => $message });
 
 
-    $self->{context_modificator}->update_stream($self->{succeeded}, \($self->{stream}));
+    $self->{context_modificator}->update_stream(
+        $self->{current_context},
+        $self->{original_context},
+        $self->{succeeded}, 
+        \($self->{stream}),
+    );
 
     return $status;
 

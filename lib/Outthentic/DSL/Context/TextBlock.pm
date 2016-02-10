@@ -36,8 +36,10 @@ sub change_context {
 sub update_stream {
 
     my $self        = shift;
+    my $cur_ctx     = shift; # current search context
+    my $orig_ctx    = shift; # original search context
     my $succ        = shift; # latest succeeded items
-    my $stream_ref  = shift;
+    my $stream_ref  = shift; # reference to stream object to update
 
     use Data::Dumper;
 
@@ -71,6 +73,10 @@ sub update_stream {
     #warn Dumper($succ);
     #warn Dumper($self->{chains});
     #warn Dumper(\@keep_chains);
+
+    # remove unsuccessfull chains
+
+    ${$stream_ref} = {};
 
     for my $cid ( @keep_chains ){
         ${$stream_ref}->{$cid} = $self->{chains}->{$cid};
