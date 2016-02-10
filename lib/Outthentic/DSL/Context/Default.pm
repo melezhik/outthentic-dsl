@@ -13,7 +13,7 @@ sub change_context {
     return $cur_ctx;
 }
 
-
+sub update_stream  {}
 
 1;
 

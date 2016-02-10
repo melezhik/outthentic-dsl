@@ -153,7 +153,9 @@ sub check_line {
         for my $dcl (@$dc){ 
             $self->add_debug_result("[dc] $dcl->[0]");
         } 
+
     };
+    
 
     $self->reset_succeeded;
 
@@ -224,6 +226,9 @@ sub check_line {
     }
 
     $self->add_result({ status => $status , message => $message });
+
+
+    $self->{context_modificator}->update_stream($self->{succeeded});
 
     return $status;
 

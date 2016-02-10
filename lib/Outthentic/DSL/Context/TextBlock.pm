@@ -20,6 +20,26 @@ sub change_context {
     my $next_chunk  = [];
     if (scalar @{$succ}){
 
+       for my $c (@{$succ}){
+            my $next_i = $c->[1];
+            push @$next_chunk, $orig_ctx->[$next_i];
+        }
+    }else{
+        $next_chunk = $cur_ctx; 
+    }
+
+    $next_chunk;
+
+}
+
+
+sub update_stream {
+
+    my $self        = shift;
+    my $succ        = shift; # latest succeeded items
+
+    if (scalar @{$succ}){
+
        unless ($self->{chains}){
             for my $c ( @{$succ} ){
                 $self->{chains}->{$c->[1]} = [$c];
@@ -29,9 +49,8 @@ sub change_context {
        my %keep_chain = map { $_ => 0 } keys %{$self->{chains}};
          
        for my $c (@{$succ}){
-            my $next_i = $c->[1];
-            push @$next_chunk, $orig_ctx->[$next_i];
             my $kc;
+            my $next_i = $c->[1];
             for my $cid (keys %{$self->{chains}}){
                 #warn "a: ".($self->{chains}->{$cid}->[-1]->[1]);
                 #warn "b: ".($next_i-1);
@@ -43,14 +62,11 @@ sub change_context {
             }
             push @{$self->{chains}->{$kc}}, $c if $kc; 
         }
-    }else{
-        $next_chunk = $cur_ctx; 
     }
 
     for my $cid ( keys %keep_chain ){
         $self->{chains}->{$cid} = undef unless $keep_chain{$cid};
     }        
-    $next_chunk;
 
 }
 

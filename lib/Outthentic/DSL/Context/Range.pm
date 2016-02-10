@@ -66,5 +66,7 @@ sub change_context {
 
 
 
+sub update_stream {}
+
 1;
 
