@@ -800,12 +800,12 @@ Let's rewrite the example:
         regexp: \S+
         regexp: \S+
 
-        code:                           \
-            for my $s (@{stream()}) {  
-                for my $i (@{$s}){
-                    print "#", $i->[0] 
-                }
-                print "\n", "# next stream\n";
+        code:                                   \
+            for my $s (@{stream()}) {           \
+                for my $i (@{$s}){              \
+                    print "#", $i->[0]          \
+                }                               \
+                print "\n", "# next stream\n";  \
             }
     end:
 
