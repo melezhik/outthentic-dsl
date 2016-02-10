@@ -722,7 +722,6 @@ And finaly to restore search context use \`reset\_context:' statement:
 
 # Experimental features
 
-
 Below is highly experimental features purely tested. You may use it on your own risk! ;)
 
 ## Streams
@@ -744,6 +743,12 @@ Streams are alternative for captures. Consider following example:
         3
     bar
 
+    foo
+        0
+        00
+        000
+    bar
+
     # outthentic check list
 
     begin:
@@ -751,13 +756,14 @@ Streams are alternative for captures. Consider following example:
         foo
 
             regexp: (\S+)
-            code: print "#", capture()->[0], "\n"
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
 
             regexp: (\S+)
-            code: print "#", capture()->[0], "\n"
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
 
             regexp: (\S+)
-            code: print "#", capture()->[0], "\n"
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
+
 
         bar
 
@@ -765,51 +771,28 @@ Streams are alternative for captures. Consider following example:
      
 The code above will print:
 
-    # a
-    # b
-    # c
-
-The reason for this is outthentic check expression works in "scanning" mode when output is scanned
-line by line and all matching lines get dropped into one heap ignoring any context.
-And what is worst all previously matched data is not accessible via captures.
+    # a 1 0
+    # b 2 00
+    # c 3 000
 
 
-Thus to print all captured data one would need to have this:
+Notice something interesting? Output direction has been inverted.
+
+The reason for this is outthentic check expression works in "line by line scanning" mode 
+when output gets verified line by line against given check expression. Once line is matched
+it gets dropped into one heap an so on with the next check expression. Such a algorithm
+makes it hard to keep original "group context". 
+
+What if we would like to print all matching lines grouped by blocks, which is more convenient?
 
 
-    begin:
+This is where streams feature comes to rescue.
 
-        foo
-            regexp: (\S+)
-            code: print "#", $_->[0], "\n" for @{captures()}
+Streams - are all the data matched for given context. 
 
-            regexp: (\S+)
-            code: print "#", $_->[0], "\n" for @{captures()}
-
-            regexp: (\S+)
-            code: print "#", $_->[0], "\n" for @{captures()}
-        bar
-
-    end:
-
-
-This will give you:
-
-
-    # a
-    # 1
-    # b
-    # 2
-    # c
-    # 3
-
-
-Not very convenient, huh? So streams feature comes to rescue.
-
-Streams - are all the data matched for given context. Currently streams are available for text blocks and range expressions.
+Streams are available for text blocks and range expressions.
 
 Let's rewrite the example:
-
 
     begin:
 
@@ -830,8 +813,9 @@ Let's rewrite the example:
 Stream function returns an arrays of streams - data matched _inside_ given text block. It is much closer to what
 was given originally in stdout:
 
-    # a b c
-    # 1 2 3
+    # a b  c
+    # 1 2  3
+    # 0 00 000
 
 
 
