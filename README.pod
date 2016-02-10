@@ -1017,6 +1017,101 @@ And finaly to restore search context use `reset_context:' statement:
     hello again # should match two times
 
 
+=head1 Experimental features
+
+Below is highly experimental features purely tested. You may use it on your own risk! ;)
+
+
+=head2 Streams
+
+Streams are alternative for captures. Consider following example:
+
+    # stdout
+    
+    foo
+        a
+        b
+        c
+    bar
+    
+    foo
+        1
+        2
+        3
+    bar
+    
+    foo
+        0
+        00
+        000
+    bar
+    
+    # outthentic check list
+    
+    begin:
+    
+        foo
+    
+            regexp: (\S+)
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
+    
+            regexp: (\S+)
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
+    
+            regexp: (\S+)
+            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
+    
+    
+        bar
+    
+    end:
+
+The code above will print:
+
+    # a 1 0
+    # b 2 00
+    # c 3 000
+
+Notice something interesting? Output direction has been inverted.
+
+The reason for this is outthentic check expression works in "line by line scanning" mode 
+when output gets verified line by line against given check expression. Once line is matched
+it gets dropped into one heap an so on with the next check expression. Such a algorithm
+makes it hard to keep original "group context". 
+
+What if we would like to print all matching lines grouped by blocks, which is more convenient?
+
+This is where streams feature comes to rescue.
+
+Streams - are all the data matched for given context. 
+
+Streams are available for text blocks and range expressions.
+
+Let's rewrite the example:
+
+    begin:
+    
+        regexp: \S+
+        regexp: \S+
+        regexp: \S+
+    
+        code:                           \
+            for my $s (@{stream()}) {  
+                for my $i (@{$s}){
+                    print "#", $i->[0] 
+                }
+                print "\n", "# next stream\n";
+            }
+    end:
+
+Stream function returns an arrays of streams - data matched I<inside> given text block. It is much closer to what
+was given originally in stdout:
+
+    # a b  c
+    # 1 2  3
+    # 0 00 000
+
+
 =head1 Author
 
 L<Aleksei Melezhik|mailto:melezhik@gmail.com>
