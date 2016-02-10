@@ -711,25 +711,26 @@ And finaly to restore search context use \`reset\_context:' statement:
 
     # stdoud
 
+    hello
     foo
         hello
-        hello again
+        hello
     bar
 
 
     between foo bar
+
     # all check expressions here
     # will be applied to the chunks
     # between /foo/ ... /bar/
-    hello       # should match once
-    hello again # should match once
+
+    hello       # should match 2 times
 
     # if you want to get back to an original search context
     # just say reset_context:
 
     reset_context:
-    hello       # should match two times
-    hello again # should match two times
+    hello       # should match three times
 
 
 # Experimental features
