@@ -640,60 +640,72 @@ and setup new one:
 
     foo
 
-    1
-    2
-    3
+        1
+        2
+        3
 
-        fooo
-        100
-        baaar
+        FOO
+            100
+        BAR
 
     bar
 
-    fooo
+    FOO
 
-    10
-    20
-    30
+        10
+        20
+        30
 
-    baaar
-
+    BAR
 
     # outthentic check list:
 
     between: foo bar
+
+    code: print "# foo/bar start"
+
     # here will be everything
     # between foo and bar lines
+
     regexp: \d+
-    code: \
-    for my $i (@{captures()}) { \
-        diag $i->[0] \
-    } \
-    diag "foo/bar end"
+
+    code:                           \
+    for my $i (@{captures()}) {     \
+        print "# ", $i->[0], "\n"   \
+    }                               \
+    print "foo/bar end"
     
-    between: fooo baaar
+    between: FOO BAR
+
+    code: print "# FOO/BAR start"
+
     # here will be everything
-    # between fooo and baaar lines
+    # between FOO and BAR lines
     # NOT necessarily inside foo bar block
+
     regexp: \d+
-    code: \
-    for my $i (@{captures()}) { \
-        diag $i->[0] \
-    } \
-    diag "fooo/baaar end"
+
+    code:                           \
+    for my $i (@{captures()}) {     \
+        print "#", $i->[0], "\n";   \
+    }                               \
+    print "# FOO/BAR end"
     
     # TAP output
     
+        # foo/bar start
         # 1
         # 2
         # 3
         # 100
         # foo/bar end
+
+        # FOO/BAR start
         # 100
         # 10
         # 20
         # 30
-        # fooo/baaar end
+        # FOO/BAR end
         
 And finaly to restore search context use \`reset\_context:' statement:
 
