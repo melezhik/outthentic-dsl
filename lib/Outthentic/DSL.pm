@@ -183,7 +183,10 @@ sub check_line {
 
     if ($check_type eq 'default'){
         for my $c (@{$dc}){
+
             my $ln = $c->[0];
+            next if $ln =~/#dsl_note:/;
+
             if ( index($ln,$pattern) != -1){
                 $status = 1;
                 $self->{last_match_line} = $ln;
@@ -201,7 +204,8 @@ sub check_line {
             my $ln = $c->[0];
 
             next if $ln eq ":blank_line";
- 
+            next if $ln =~/#dsl_note:/;
+
             my @foo = ($ln =~ /$re/g);
 
             if (scalar @foo){

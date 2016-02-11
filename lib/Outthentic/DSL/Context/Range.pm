@@ -53,9 +53,13 @@ sub change_context {
 
         if ( $inside and $c->[0] =~ $bound_r  ){
 
+
             push @dc, @chunk;
 
+            push @dc, ["#dsl_note: end range"];
+
             @chunk = ();
+
             $inside = 0;
 
             $b_index = $c->[1]-1;
@@ -68,6 +72,7 @@ sub change_context {
         if ($c->[0] =~ $bound_l){
             $inside = 1;
             $a_index = $c->[1]-1;
+            push @chunk, ["#dsl_note: start range"];
             next;
         }
 
