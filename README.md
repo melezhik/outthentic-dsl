@@ -145,7 +145,7 @@ Outthentic DSL comprises following basic entities:
     * regular   expressions
     * text      blocks
     * within    expressions
-    * between   expressions
+    * range     expressions
     * validator expressions
 
 * Comments
@@ -569,7 +569,7 @@ There are two search context modificators to change this behavior:
 
 * within expressions
 
-* between expressions ( or range expressions )
+* range expressions
 
 
 ## Within expressions
@@ -652,7 +652,7 @@ generic assumptions and then make your requirements more specific. A failure on 
 immediate break. 
 
 
-# Between expressions
+# Range expressions
 
 Between or range expressions also act like _search context modificators_ - they change search area to one included
 _between_ lines matching right and left regular expression of between statement.
@@ -801,6 +801,37 @@ And finally to restore search context use \`reset\_context:' statement:
     hello       # should match three times
 
 
+Range expressions caveats
+
+* range expressions don't keep original order inside range
+
+For example:
+
+    # stdout
+    
+    foo
+        1
+        2
+        1
+        2
+    bar
+
+
+    # outthentic check
+
+    between: foo bar
+        regexp: 1
+        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+        regexp: 2
+        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+
+    # validation output
+
+        # 1 1
+        # 2 2
+
+* if you need precise order keep preserved use text blocks
+
 # Experimental features
 
 Below is highly experimental features purely tested. You may use it on your own risk! ;)
@@ -863,7 +894,7 @@ The reason for this is outthentic check expression works in "line by line scanni
 when output gets verified line by line against given check expression. Once all lines are matched
 they get dropped into one heap without preserving original "group context". 
 
-What if we would like to print all matching lines grouped by text blocks they bellong to which is more convenient?
+What if we would like to print all matching lines grouped by text blocks they belong to which is more convenient?
 
 This is where streams feature comes to rescue.
 
@@ -894,7 +925,7 @@ Let's rewrite the example:
 
 
 Stream function returns an arrays of streams. Every stream holds all the matched lines for given block.
-So streams preserve group context. Number of streams relates to the number of successfuly matched blocks.
+So streams preserve group context. Number of streams relates to the number of successfully matched blocks.
 
 Streams data presentation is much closer to what was originally given in stdout:
 
@@ -904,10 +935,10 @@ Streams data presentation is much closer to what was originally given in stdout:
 
 
 Stream could be specially useful when combined with range expressions where sizes
-of successfuly matched blocks could be different:
+of successfully matched blocks could be different:
 
 
-    # stdoud
+    # stdout
 
     foo
         2
