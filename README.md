@@ -833,23 +833,23 @@ Streams are alternative for captures. Consider following example:
     # outthentic check list
 
     begin:
-
+    
         foo
-
+    
             regexp: (\S+)
-            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
-
+            code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+    
             regexp: (\S+)
-            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
-
+            code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+    
             regexp: (\S+)
-            code: print '#', ( join ' ', map {$_->[0]} captures() ), "\n"
-
-
+            code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+    
+    
         bar
-
+    
     end:
-     
+    
 The code above will print:
 
     # a 1 0
@@ -860,11 +860,10 @@ The code above will print:
 Notice something interesting? Output direction has been inverted.
 
 The reason for this is outthentic check expression works in "line by line scanning" mode 
-when output gets verified line by line against given check expression. Once line is matched
-it gets dropped into one heap an so on with the next check expression. Such a algorithm
-makes it hard to keep original "group context". 
+when output gets verified line by line against given check expression. Once all lines are matched
+they get dropped into one heap without preserving original "group context". 
 
-What if we would like to print all matching lines grouped by blocks, which is more convenient?
+What if we would like to print all matching lines grouped by text blocks they bellong to which is more convenient?
 
 This is where streams feature comes to rescue.
 
@@ -876,27 +875,75 @@ Let's rewrite the example:
 
     begin:
 
-        regexp: \S+
-        regexp: \S+
-        regexp: \S+
+        foo
+            regexp: \S+
+            regexp: \S+
+            regexp: \S+
+        bar
 
         code:                                   \
             for my $s (@{stream()}) {           \
+                print "# ";                     \
                 for my $i (@{$s}){              \
-                    print "#", $i->[0]          \
+                    print $i;                   \
                 }                               \
-                print "\n", "# next stream\n";  \
+                print "\n";                     \
             }
+        
     end:
 
 
-Stream function returns an arrays of streams - data matched _inside_ given text block. It is much closer to what
-was given originally in stdout:
+Stream function returns an arrays of streams. Every stream holds all the matched lines for given block.
+So streams preserve group context. Number of streams relates to the number of successfuly matched blocks.
 
-    # a b  c
-    # 1 2  3
-    # 0 00 000
+Streams data presentation is much closer to what was originally given in stdout:
 
+    # foo a b  c    bar
+    # foo 1 2  3    bar
+    # foo 0 00 000  bar
+
+
+Stream could be specially useful when combined with range expressions where sizes
+of successfuly matched blocks could be different:
+
+
+    # stdoud
+
+    foo
+        2
+        4
+        6
+        8
+    bar
+
+    foo
+        1
+        3
+    bar
+
+
+    # outthentic check
+
+
+    between: foo bar
+
+    regexp: \d+
+
+    code:                                   \
+        for my $s (@{stream()}) {           \
+            print "# ";                     \
+            for my $i (@{$s}){              \
+                print $i;                   \
+            }                               \
+            print "\n";                     \
+        }
+    
+
+    # validation output:
+
+    
+    # 2 4 6 8
+    # 1 3
 
 
 # Author
