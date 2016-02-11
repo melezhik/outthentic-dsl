@@ -49,6 +49,17 @@ It's convenient to refer to the text validate by as stdout, thinking that one pr
 which is then validated.
 
 
+=head2 Search context
+
+A synonym for stdout term with emphasis of the fact that validation process if carried out in a given context.
+
+But default search context is equal to original stdout stream. 
+
+Parser verifies all stdout against a list of check expressions. 
+
+But see L<search context modificators|#search-context-modificators> section.
+
+
 =head2 Parser
 
 Parser is the program which:
@@ -829,24 +840,60 @@ You also may use `capture()' function to get a I<first element> of captures arra
     validator: [ ( capture()->[0] >  10 ), " first number is greater than 10 " ];
 
 
-=head1 Within expressions
+=head1 Search context modificators
 
-Within expression acts like regular expression but narrows search context to last matching line:
+Search context modificators are special check expressions which not only validate stdout but modify search context.
 
-    # one of 3 colors:
-    within: color: (red|green|blue)
+But default search context is equal to original stdout. 
+
+That means outthentic parser execute validation process against original stdout stream
+
+There are two search context modificators to change this behavior:
+
+=over
+
+=item *
+
+within expressions
+
+
+
+=item *
+
+between expressions ( or range expressions )
+
+
+
+=back
+
+
+=head2 Within expressions
+
+Within expression acts like regular expression - parser checks stdout against given pattern 
+
+    # stdout
     
-    # if within expression is successfully passed
-    # new search context is last matching line  
-
-In other words when `:within' marker is used parser tries to validate stdout against regular expression following after :within marker and 
-if validation is successful new search context is defined:
-
-    # one of 3 colors:
-    within: color: (red|green|blue)
+    These are my colors
     
-    # I really need a red color
-    red
+    color: red
+    color: green
+    color: blue
+    color: brown
+    color: back
+    
+    That is it!
+    
+    # outthentic check
+    
+    # I need one of 3 colors:
+    
+    within: color: (red|green|blue)
+
+Then if checks given by within statement succeed I<next> checks will be executed I<in a context of>
+succeeded lines:
+
+    # but I really need a green one
+    green
 
 The code above does follows:
 
@@ -854,20 +901,41 @@ The code above does follows:
 
 =item *
 
-try to find `color:' followed by `red' or `green' or `blue' word 
+try to validate stdout against regular expression "color: (red|green|blue)"
 
-
-=item *
-
-if previous check is successful new context is narrowed to matching line
 
 
 =item *
 
-thus next plain string checks expression means - try to find `red' in line matching the `color: (red|green|blue)'
+if validation is successful new search context is set to all I<matching> lines
+
 
 
 =back
+
+These are:
+
+    color: red
+    color: green
+    color: blue
+
+=over
+
+=item *
+
+thus next plain string checks expression will be executed against new search context
+
+
+=back
+
+The result will be:
+
+    +--------+------------------------------------------------+
+    | status | message                                        |
+    +--------+------------------------------------------------+
+    | OK     | matches /color: (red|green|blue)/              |
+    | OK     | /color: (red|green|blue)/ matches green        |
+    +--------+------------------------------------------------+
 
 Here more examples:
 
@@ -888,21 +956,32 @@ Within expressions could be sequential, which effectively means using `&&' logic
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
 
+Speaking in human language chained within expressions acts like specifications. When you may start with some
+generic assumptions and then make your requirements more specific. A failure on any step of chain results in
+immediate break. 
+
 
 =head1 Between expressions
 
-Between expression acts like I<search context modifier> - they change search area to one included
-I<between> lines matching right and left regular expression of between statement. 
+Between or range expressions also act like I<search context modificators> - they change search area to one included
+I<between> lines matching right and left regular expression of between statement.
 
-It is very similar to what Perl L<range operator|http://perldoc.perl.org/perlop.html#Range-Operators> does when parsing file content line by line:
+It is very similar to what Perl L<range operator|http://perldoc.perl.org/perlop.html#Range-Operators> does 
+when extracting pieces of lines inside stream
 
-    if /foo/ ... /bar/
+    while (<STDOUT>){
+        if /foo/ ... /bar/
+    }
 
-This is analogous in swat between expression for it:
+Outthentic analogy for this is between expression:
 
     between: foo bar
 
 Between expression takes 2 arguments - left and right regular expression to setup search area boundaries.
+
+A search context will be all the lines included between line matching left expression and line matching right expression.
+
+A matching (boundary) lines are not included in range:
 
 These are few examples:
 
@@ -937,84 +1016,97 @@ and setup new one:
     
     foo
     
-    1
-    2
-    3
+        1
+        2
+        3
     
-        fooo
-        100
-        baaar
+        FOO
+            100
+        BAR
     
     bar
     
-    fooo
+    FOO
     
-    10
-    20
-    30
+        10
+        20
+        30
     
-    baaar
-    
+    BAR
     
     # outthentic check list:
     
     between: foo bar
+    
+    code: print "# foo/bar start"
+    
     # here will be everything
     # between foo and bar lines
-    regexp: \d+
-    code: \
-    for my $i (@{captures()}) { \
-        diag $i->[0] \
-    } \
-    diag "foo/bar end"
     
-    between: fooo baaar
-    # here will be everything
-    # between fooo and baaar lines
-    # NOT necessarily inside foo bar block
     regexp: \d+
-    code: \
-    for my $i (@{captures()}) { \
-        diag $i->[0] \
-    } \
-    diag "fooo/baaar end"
+    
+    code:                           \
+    for my $i (@{captures()}) {     \
+        print "# ", $i->[0], "\n"   \
+    }                               \
+    print "foo/bar end"
+    
+    between: FOO BAR
+    
+    code: print "# FOO/BAR start"
+    
+    # here will be everything
+    # between FOO and BAR lines
+    # NOT necessarily inside foo bar block
+    
+    regexp: \d+
+    
+    code:                           \
+    for my $i (@{captures()}) {     \
+        print "#", $i->[0], "\n";   \
+    }                               \
+    print "# FOO/BAR end"
     
     # TAP output
     
+        # foo/bar start
         # 1
         # 2
         # 3
         # 100
         # foo/bar end
+    
+        # FOO/BAR start
         # 100
         # 10
         # 20
         # 30
-        # fooo/baaar end
+        # FOO/BAR end
 
-And finaly to restore search context use `reset_context:' statement:
+And finally to restore search context use `reset_context:' statement:
 
-    # stdoud
+    # stdout
     
+    hello
     foo
         hello
-        hello again
+        hello
     bar
     
     
     between foo bar
+    
     # all check expressions here
     # will be applied to the chunks
     # between /foo/ ... /bar/
-    hello       # should match once
-    hello again # should match once
+    
+    hello       # should match 2 times
     
     # if you want to get back to an original search context
     # just say reset_context:
     
     reset_context:
-    hello       # should match two times
-    hello again # should match two times
+    hello       # should match three times
 
 
 =head1 Experimental features
@@ -1083,7 +1175,7 @@ What if we would like to print all matching lines grouped by blocks, which is mo
 
 This is where streams feature comes to rescue.
 
-Streams - are all the data matched for given context. 
+Streams - are all the data successfully matched for given I<group context>. 
 
 Streams are available for text blocks and range expressions.
 
@@ -1095,12 +1187,12 @@ Let's rewrite the example:
         regexp: \S+
         regexp: \S+
     
-        code:                           \
-            for my $s (@{stream()}) {  
-                for my $i (@{$s}){
-                    print "#", $i->[0] 
-                }
-                print "\n", "# next stream\n";
+        code:                                   \
+            for my $s (@{stream()}) {           \
+                for my $i (@{$s}){              \
+                    print "#", $i->[0]          \
+                }                               \
+                print "\n", "# next stream\n";  \
             }
     end:
 
