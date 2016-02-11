@@ -73,9 +73,6 @@ sub change_context {
 
     }
 
-    use Data::Dumper;
-    warn 10;
-    warn Dumper($self->{ranges});
     return [@dc];
 }
 

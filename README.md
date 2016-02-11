@@ -27,6 +27,17 @@ Content of check file. Should be program code written on DSL.
 It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout
 which is then validated.
 
+## Search context
+
+A synonym for stdout term with emphasis of the fact that validation process if carried out in a given context.
+
+But default search context is equal to original stdout stream. 
+
+Parser verifies all stdout against a list of check expressions. 
+
+But see [search context modificators](#search-context-modificators) section.
+
+
 ## Parser
 
 Parser is the program which:
@@ -545,32 +556,76 @@ You also may use \`capture()' function to get a _first element_ of captures arra
     regexp: (\d+)
     validator: [ ( capture()->[0] >  10 ), " first number is greater than 10 " ];
 
-# Within expressions
+# Search context modificators
 
-Within expression acts like regular expression but narrows search context to last matching line:
+Search context modificators are special check expressions which not only validate stdout but modify search context.
+
+But default search context is equal to original stdout. 
+
+That means outthentic parser execute validation process against original stdout stream
+
+There are two search context modificators to change this behavior:
+ 
+
+* within expressions
+
+* between expressions ( or range expressions )
 
 
-    # one of 3 colors:
+## Within expressions
+
+Within expression acts like regular expression - parser checks stdout against given pattern 
+
+
+    # stdout
+
+    These are my colors
+
+    color: red
+    color: green
+    color: blue
+    color: brown
+    color: back
+
+    That is it!
+
+    # outthentic check
+
+    # I need one of 3 colors:
+
     within: color: (red|green|blue)
 
-    # if within expression is successfully passed
-    # new search context is last matching line  
-
-In other words when \`:within' marker is used parser tries to validate stdout against regular expression following after :within marker and 
-if validation is successful new search context is defined:
-
-
-    # one of 3 colors:
-    within: color: (red|green|blue)
-
-    # I really need a red color
-    red
+Then if checks given by within statement succeed _next_ checks will be executed _in a context of_
+succeeded lines:
+ 
+    # but I really need a green one
+    green
 
 The code above does follows:
 
-* try to find \`color:' followed by \`red' or \`green' or \`blue' word 
-* if previous check is successful new context is narrowed to matching line
-* thus next plain string checks expression means - try to find \`red' in line matching the \`color: (red|green|blue)'
+* try to validate stdout against regular expression "color: (red|green|blue)"
+
+* if validation is successful new search context is set to all _matching_ lines
+
+These are:
+
+    color: red
+    color: green
+    color: blue
+
+
+* thus next plain string checks expression will be executed against new search context
+
+The result will be:
+
+    +--------+------------------------------------------------+
+    | status | message                                        |
+    +--------+------------------------------------------------+
+    | OK     | matches /color: (red|green|blue)/              |
+    | OK     | /color: (red|green|blue)/ matches green        |
+    +--------+------------------------------------------------+
+
+
 
 Here more examples:
 
@@ -592,20 +647,33 @@ Within expressions could be sequential, which effectively means using \`&&' logi
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
 
+Speaking in human language chained within expressions acts like specifications. When you may start with some
+generic assumptions and then make your requirements more specific. A failure on any step of chain results in
+immediate break. 
+
+
 # Between expressions
 
-Between expression acts like _search context modifier_ - they change search area to one included
-_between_ lines matching right and left regular expression of between statement. 
+Between or range expressions also act like _search context modificators_ - they change search area to one included
+_between_ lines matching right and left regular expression of between statement.
 
-It is very similar to what Perl [range operator](http://perldoc.perl.org/perlop.html#Range-Operators) does when parsing file content line by line:
 
-    if /foo/ ... /bar/
+It is very similar to what Perl [range operator](http://perldoc.perl.org/perlop.html#Range-Operators) does 
+when extracting pieces of lines inside stream
 
-This is analogous in swat between expression for it:
+    while (<STDOUT>){
+        if /foo/ ... /bar/
+    }
+
+Outthentic analogy for this is between expression:
 
     between: foo bar
 
 Between expression takes 2 arguments - left and right regular expression to setup search area boundaries.
+
+A search context will be all the lines included between line matching left expression and line matching right expression.
+
+A matching (boundary) lines are not included in range:
 
 These are few examples:
 
@@ -707,9 +775,9 @@ and setup new one:
         # 30
         # FOO/BAR end
         
-And finaly to restore search context use \`reset\_context:' statement:
+And finally to restore search context use \`reset\_context:' statement:
 
-    # stdoud
+    # stdout
 
     hello
     foo
@@ -798,10 +866,9 @@ makes it hard to keep original "group context".
 
 What if we would like to print all matching lines grouped by blocks, which is more convenient?
 
-
 This is where streams feature comes to rescue.
 
-Streams - are all the data matched for given context. 
+Streams - are all the data successfully matched for given _group context_. 
 
 Streams are available for text blocks and range expressions.
 
