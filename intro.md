@@ -1,9 +1,8 @@
 
 # Outthentic DSL - informal introduction
 
-
 [Outthentic DSL](https://github.com/melezhik/outthentic-dsl) is a language to parse 
-and validate unstructured text. 
+and validate any unstructured text. 
 
 Two clients are based on this engine to get job done:
 
@@ -11,12 +10,11 @@ Two clients are based on this engine to get job done:
 
 * [outthentic](https://github.com/melezhik/outthentic) - generic purposes testing.
 
-Creating a new outthentic clients - programs using Outthentic DSL API - quite easy 
+Creating a new outthentic clients - programs using Outthentic DSL API - is quite easy 
 and everybody welcome to get involved. 
 
-In this short post I am trying to highlight some essential features of the DSL 
-helping in automation of type of task related to arbitrary text parsing and validation 
-- which are plenty of in our developer's life, huh?
+In this post I am trying to highlight some essential DSL features  
+helping in automation text parsing, verification tasks, which are plenty of in our daily jobs, huh?
 
 So, lets meet - outthentic DSL ...
 
@@ -26,23 +24,24 @@ Check expressions are search patterns to validate original text input.
 
 Original text is parsed line by line and every line is matched against check expression.
 
-If at least one line successfuly matches check succeeds, if none of lines does check fails. 
+If at least one line successfuly matches then check succeeds, 
+if none of lines matches check fails. 
 
 This procedure is repeated for all check expressions in the list.
 
-There are tow type of check expressions: 
+There are two type of check expressions: 
 
 * plain text expressions
 
 * regular expressions patterns
 
-Let see a simple example:
+Let see a simple example of DSL code:
 
      # two checks here     
      Hello # plain text expression 
      regexp: My name is outthentic\W # regular expression
 
-This code verifies will this text input
+This code will successfuly verifies this text input:
 
     Hello
     My name is outthentic!
@@ -73,33 +72,45 @@ Text input:
 DSL code:
 
     regexp: (\d+)
-    code: print "# ", scalar @{captures()}
+    code: print "# ", scalar @{match_lines()}
 
 
-captures() function returns array of items get captured by latest regular expression check,
-we will take a look at this function close a bit latter, but what should be important for us
-at the moment is the number of cpatures array equal of successfully matched lines.
+match_line() function returns array of lines successfuly matched by _latest_ check,
+we would talk about useful dsl function later, but what should be important for us
+at the moment is the _length_ of array returned.
  
-So the question is What it should be? Not too many variants for answer.
+So the question is what it should be? Not too many variants for answer.
 
 * 1 - nine greedy behavior 
 * 3 - greedy behavior
 
-And, yes, it will return 3! As outthentic parser is greedy. It means _ALL_ the 
-lines of original input are checked against a given check expressions, and 
-thus all successfully matched lines if any hit capture array. It is not really seen at
-dsl level as it only tell you whether your check successful or not and does not show you
-how many lines of text input succeeded in check, unless you ask him - lets read further ... 
+And, yes, it will return 3! As outthentic parser is greedy one. It it tries to find 
+matched lines as much as possible. In other words if parser successfuly find a line
+matched check expression it won't stop and try to find others, as much as possible. 
+
+That is why the match_lines array will hold 3 lines:
+
+    1
+    2
+    3
+
+Please take this behaviour into account when deal with outhentic dsl, sometimes
+it is good, but sometimes it could be a problem, we will see how this could 
+however changed in some cases. 
 
 
+# Group check expressions
 
-# Text blocks and ranges
+## Text blocks and ranges
 
-Often we need not only verify a single line occurrence but 
-_sequences_ of lines or _set_ of  lines inside some text blocks or ranges. 
+Often we need to verify not only a single line occurrence but 
+_sequence_ of lines or _set_ of  lines inside some range. This is where
+outthentic group check expressions could be usefull.
+ 
 
-Text blocks and range expressions abstraction for such a tasks. They could be treated
-as _containers_ for basic check expressions - plain text strings or regular expressions.
+Text blocks and range expressions abstraction for group check expressions. 
+
+They could be treated as _containers_ for basic check expressions - plain text strings or regular expressions.
 
 Let's first consider a text blocks.
 
@@ -108,7 +119,7 @@ Let's first consider a text blocks.
 
 Text blocks expressions insists that a sequence of lines should be found at original text input.
 
-Consider this imaginary text output:
+Consider this imaginary text output with 3 text blocks:
 
     
     <triples>
@@ -129,7 +140,9 @@ Consider this imaginary text output:
         baz
     </triples>     
 
-Now we need to ensure that triples are here. Let's write outthentic dsl code:
+Now we need to ensure that triples blocks are here. 
+
+Let's write up outthentic dsl code:
 
 
     begin:
@@ -144,52 +157,56 @@ Quite self-explanatory so far. Let's add some debugging info here:
 
     begin:
         <triples>
-            regexp (\S+)
-            code: print ( join ' ', map { $_->[0] } @{captures()} ), "\n"
-            regexp (\S+)
-            code: print ( join ' ', map { $_->[0] } @{captures()} ), "\n"
-            regexp (\S+)
-            code: print ( join ' ', map { $_->[0] } @{captures()} ), "\n"
+
+            regexp \S+
+            code: print "@{match_lines}\n";
+
+            regexp \S+
+            code: print "@{match_lines}\n";
+
+            regexp \S+
+            code: print "@{match_lines}\n";
+
         </triples>
     end:
   
 When run this code we get:
 
-    # 1 10 foo
-    # 2 20 bar
-    # 3 30 baz
+    1 10 foo
+    2 20 bar
+    3 30 baz
 
-Captures are piece of data get captured for the _latest_ regular expression check,
-they are very handy not, only when debugging a code, consider next example:
+As we learned match_lines() function return array of all successfuly matched lines,
+so the result is quite obvious.
 
-     begin:
-        <triples>
-            regexp \d+
-            regexp \d+
-            regexp \d+
-        </triples>
-     end:
-
-Now we rewrote a test and require that only triples block having numbers inside will be
-taken into account. Ok, let's now count total sum and check if it equal to 65 (as it should be!) 
+If we want to be more specific and see pieces of lines get captured with regular expression check
+we could use captures() function, which is very similar to match_lines() function but only deals
+with regular expressions checks. Lets find only triples blocks with 2 digits numbers inside and then
+print out _second_ digit of every number:
 
      begin:
         <triples>
-            regexp: (\d+)
-            regexp: (\d+)
-            regexp: (\d+)
-            code: for my $c (@{captures()}) { our $total += $c->[0] }
-            validator: [ our $total == 65 , 'total triple's number 65']
+
+            regexp (\d)(\d)
+            code: print "@{map {$_->[1]} @{captures()}}"
+
+            regexp (\d)(\d)
+            code: print "@{map {$_->[1]} @{captures()}}"
+
+
+            regexp (\d)(\d)
+            code: print "@{map {$_->[1]} @{captures()}}"
+
         </triples>
      end:
 
-Validator expression evaluate perl expression  and returns it value. DSL parser will treat this
-value as check status ( perl true of false ).
+Ok, what is wrong with both match_lines() and captures() is what they _bind_ to the latest check expressions,
+so if we need _accumulate_ data for all the text block we stuck and probably need something better.
 
+Here we gave to use stream() function.
 
-Ok, let's add some complexity and group data per blocks. So if have many `<triples> ... </triples>` 
-blocks it'd be nice to iterate over blocks data:
-
+Let's rewrite our latest code
+ 
      begin:
         <triples>
             regexp: \S+
@@ -197,25 +214,30 @@ blocks it'd be nice to iterate over blocks data:
             regexp: \S+
             code:                                           \
                 for my $s (@{stream()}) {                   \
-                    print "# ",( join ' ', @{$s} ),"\n";    \
+                    print " ",( join ' ', @{$s} ),"\n";    \
                 }                                           \
-                print "# next block\n";                     
+                print "next block\n";                     
         </triples>
      end:
 
+Much better! At least code became more concise and clear, no need to add this code:  ... cpature ...
+line after every regexp check.
+
+
 Streams are alternative for captures. While capture relates to latest regular expression checks
-and get lost with the next expression check, stream instead accumulate all matching lines and
-group them per blocks, thus running code above we will have:
+and get lost with the next expression check, stream instead _accumulate_ all matching lines and
+_group them per blocks_, so  code above will print:
 
 
-    # 1 10 foo
-    # next block
-    # 2 20 bar
-    # next block
-    # 3 30 baz
+    1 10 foo
+    next block
+    2 20 bar
+    next block
+    3 30 baz
 
-Pretty convenient now, because this is exactly the  groups we  in original text input stream.
+Pretty convenient now, because this is exactly the logical groups we have in original text input stream.
 
+Now let look at the ranges, the look like text blocks but they are not the ones :-) !
 
 ## Ranges
 
