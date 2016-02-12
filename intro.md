@@ -235,11 +235,11 @@ and gets _discarded_ with the next expression check, stream instead _accumulate_
 _group them per blocks_, so  code above will print:
 
 
-    1 10 foo
+    1 2 3
     next block
-    2 20 bar
+    10 20 30 bar
     next block
-    3 30 baz
+    foo bar baz
 
 Pretty convenient now, because this is exactly the logical groups we have in original text input stream.
 
