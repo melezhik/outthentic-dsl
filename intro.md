@@ -24,10 +24,11 @@ Check expressions are search patterns to validate original text input.
 
 Original text is parsed line by line and every line is matched against check expression.
 
-If at least one line successfuly matches then check succeeds, 
-if none of lines matches check fails. 
+If at least one line successfully matches then check succeeds, if none of lines matches check fails. 
 
-This procedure is repeated for all check expressions in the list.
+This procedure is repeated for all check expressions in the list. Overall check status is 
+multiplication of intermediate checks.
+
 
 There are two type of check expressions: 
 
@@ -41,7 +42,7 @@ Let see a simple example of DSL code:
      Hello # plain text expression 
      regexp: My name is outthentic\W # regular expression
 
-This code will successfuly verifies this text input:
+This code will successfully verifies this text input:
 
     Hello
     My name is outthentic!
@@ -56,9 +57,7 @@ Well quite easy so far. Good.
 
 # Greedy expressions
 
-Outthentic check expressions
-
-This is what I mean when I call them greedy. 
+Outthentic check expressions are greedy. This is what I mean when I call them greedy. 
 
 Consider this trivial example:
 
@@ -75,8 +74,8 @@ DSL code:
     code: print "# ", scalar @{match_lines()}
 
 
-match_line() function returns array of lines successfuly matched by _latest_ check,
-we would talk about useful dsl function later, but what should be important for us
+match_line() function returns array of lines successfully matched by _latest_ check,
+we would talk about useful dsl functions later, but what should be important for us
 at the moment is the _length_ of array returned.
  
 So the question is what it should be? Not too many variants for answer.
@@ -85,7 +84,7 @@ So the question is what it should be? Not too many variants for answer.
 * 3 - greedy behavior
 
 And, yes, it will return 3! As outthentic parser is greedy one. It it tries to find 
-matched lines as much as possible. In other words if parser successfuly find a line
+matched lines as much as possible. In other words if parser successfully find a line
 matched check expression it won't stop and try to find others, as much as possible. 
 
 That is why the match_lines array will hold 3 lines:
@@ -94,7 +93,7 @@ That is why the match_lines array will hold 3 lines:
     2
     3
 
-Please take this behaviour into account when deal with outhentic dsl, sometimes
+Please take this behavior into account when deal with outthentic dsl, sometimes
 it is good, but sometimes it could be a problem, we will see how this could 
 however changed in some cases. 
 
@@ -103,12 +102,13 @@ however changed in some cases.
 
 ## Text blocks and ranges
 
-Often we need to verify not only a single line occurrence but 
-_sequence_ of lines or _set_ of  lines inside some range. This is where
-outthentic group check expressions could be usefull.
- 
+Often we need to verify not only against single check expression, but we need to
+consider some context. Like occurrence _sequence_ of proper lines in original input 
+or _set_ of  lines inside some range. 
 
-Text blocks and range expressions abstraction for group check expressions. 
+This is where outthentic group check expressions could be useful.
+ 
+Text blocks and range expressions are abstractions for _group_ check expressions. 
 
 They could be treated as _containers_ for basic check expressions - plain text strings or regular expressions.
 
@@ -176,13 +176,15 @@ When run this code we get:
     2 20 bar
     3 30 baz
 
-As we learned match_lines() function return array of all successfuly matched lines,
+As we learned match_lines() function return array of all successfully matched lines,
 so the result is quite obvious.
 
-If we want to be more specific and see pieces of lines get captured with regular expression check
-we could use captures() function, which is very similar to match_lines() function but only deals
-with regular expressions checks. Lets find only triples blocks with 2 digits numbers inside and then
-print out _second_ digit of every number:
+If we want to be more specific and see pieces of lines get captured with regular expression checks
+we could use captures() function.
+Captures() function is very similar to match_lines() function except it holds not matching
+lines but their chunks relates to regexp groups \(\) used at regular expression. 
+
+Lets find only triples blocks with 2 digits numbers inside and then print out _second_ digit of every number:
 
      begin:
         <triples>
@@ -200,10 +202,14 @@ print out _second_ digit of every number:
         </triples>
      end:
 
-Ok, what is wrong with both match_lines() and captures() is what they _bind_ to the latest check expressions,
-so if we need _accumulate_ data for all the text block we stuck and probably need something better.
+Ok, what is _wrong_ with both match_lines() and captures() is what they _bind_ to the latest regular expression check,
+so if we need _accumulate_ the matched data for all the expressions inside a block it would be hard to do.
+  
+Let's consider a stream() function which acts _like_ match_lines() function with two
+essentials adjustments:
 
-Here we gave to use stream() function.
+* it accumulates previously matched data
+* it consider group context - it means it group matched data by original blocks ( text blocks or ranges - see further about ranges )
 
 Let's rewrite our latest code
  
@@ -220,12 +226,12 @@ Let's rewrite our latest code
         </triples>
      end:
 
-Much better! At least code became more concise and clear, no need to add this code:  ... cpature ...
-line after every regexp check.
+Much better! At least code became more concise and clear, no need to add this code:  ... capture ...
+line after every regular expression check.
 
 
-Streams are alternative for captures. While capture relates to latest regular expression checks
-and get lost with the next expression check, stream instead _accumulate_ all matching lines and
+Let me say it again - streams are alternative for captures. While captures relates to latest regular expression checks
+and gets _discarded_ with the next expression check, stream instead _accumulate_ all matching lines and
 _group them per blocks_, so  code above will print:
 
 
@@ -237,7 +243,7 @@ _group them per blocks_, so  code above will print:
 
 Pretty convenient now, because this is exactly the logical groups we have in original text input stream.
 
-Now let look at the ranges, the look like text blocks but they are not the ones :-) !
+Now let look at the ranges, they look like text blocks but they are not the ones :-) !
 
 ## Ranges
 
@@ -250,37 +256,38 @@ Let's reshape our solution for triples task. Verify that we have triples blocks 
      between: <triples> <\/triples> 
          regexp: \S+
 
-That's it! More laconic than text blocks solution. A few comments here:
+That's it! More laconic than text blocks solution. A few comments here.
 
-* between expression sets new search context for DSL parser, so that instead of looking
-through all original input it narrows it search to area _between_ lines matching <triples>
+Between expression sets new search context, so that instead of looking
+through all original input parser narrows search to area _between_ lines matching <triples>
 and <\/triples> regular expression. It is very similar to what happen when one use 
 [Perl range operator](http://perldoc.perl.org/perlop.html#Range-Operators) when selecting
 subsets of lines out of stdin stream:
+    
 
     while (<STDOUT>){
         if /<triples>/ ... /<\/triples>/
     }
+    
 
-
-Let's add some debug code to show what happening in more details:
+Let's add some debug code to show what happening in details:
 
 
      between: <triples> <\/triples> 
          regexp: (\S+)
-         code: print # "", ( join ' ', map { $_->[0] } @{captures()} ), "\n"
+         code: print ( join ' ', map { $_->[0] } @{captures()} ), "\n"
     
 We see then:
 
-    # 1 10 foo 2 20 bar 3 30 baz
+    1 10 foo 2 20 bar 3 30 baz
 
 This mean that check expressions inside range block remain "greedy" in comparison with text block,
 where they are none greedy.
 
-Check expression inside range block "eat up" all matched lines 
+Check expression inside range block "eat up" all matched lines.
 
-Check expressions inside text block none greedy as line but such a line should be followed by certain other - a sequence
-behavior. 
+Check expressions inside text block none greedy as they execute in context of previous checks -
+one line should follow by another. (TODO: probably will change this statement as it quite obscure ... )
 
 Other differences between text blocks and ranges.
 
