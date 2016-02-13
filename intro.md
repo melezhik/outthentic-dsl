@@ -118,7 +118,7 @@ Outthentic dsl provides some abstractions for such _context oriented_ matching:
 
 ## Text blocks
 
-Text blocks expressions insist that a _ continuous sequence_ of lines should be found at original text input.
+Text blocks expressions insist that a _continuous sequence_ of lines should be found at original text input.
 
 Consider this imaginary text output with 3 text blocks:
 
