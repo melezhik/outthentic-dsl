@@ -8,13 +8,11 @@ Two clients are based on this engine to get job done:
 
 * [swat](https://github.com/melezhik/swat) - web application testing tool.
 
-* [outthentic](https://github.com/melezhik/outthentic) - generic purposes testing.
+* [outthentic](https://github.com/melezhik/outthentic) - generic purposes testing tool.
 
-Creating a new outthentic clients - programs using Outthentic DSL API - is quite easy 
-and everybody welcome to get involved. 
+Creating a new outthentic clients - programs using Outthentic DSL API - is quite easy and everybody welcome to get involved. 
 
-In this post I am trying to highlight some essential DSL features  
-helping in automation text parsing, verification tasks, which are plenty of in our daily jobs, huh?
+In this document I try to highlight some essential DSL features helping in automation for text parsing, verification tasks, which are plenty of in our daily jobs, huh?
 
 So, lets meet - outthentic DSL ...
 
@@ -24,11 +22,9 @@ Check expressions are search patterns to validate original text input.
 
 Original text is parsed line by line and every line is matched against check expression.
 
-If at least one line successfully matches then check succeeds, if none of lines matches check fails. 
+If at least one line successfully matches then check succeeds, if none of lines matche then check fails. 
 
-This procedure is repeated for all check expressions in the list. Overall check status is 
-multiplication of intermediate checks.
-
+This procedure is repeated for all check expressions in the list. Overall check status is multiplication of intermediate checks.
 
 There are two type of check expressions: 
 
@@ -57,9 +53,9 @@ Well quite easy so far. Good.
 
 # Greedy expressions
 
-Outthentic check expressions are greedy. This is what I mean when I call them greedy. 
+Outthentic check expressions are greedy. 
 
-Consider this trivial example:
+This is what I mean when I call them greedy. Consider a trivial example:
 
 
 Text input:
@@ -74,18 +70,17 @@ DSL code:
     code: print "# ", scalar @{match_lines()}
 
 
-match_line() function returns array of lines successfully matched by _latest_ check,
-we would talk about useful dsl functions later, but what should be important for us
-at the moment is the _length_ of array returned.
+match_line() function returns an array of lines successfully matched by _latest_ check, we would talk about useful dsl functions later, but what should be important for us at the moment is 
+the _number_ of elements of array returned.
  
-So the question is what it should be? Not too many variants for answer.
+So the question is what it should be? Not too many variants for answer here:
 
-* 1 - nine greedy behavior 
-* 3 - greedy behavior
+* 1 element - nine greedy behavior 
+* 3 elements - greedy behavior
 
-And, yes, it will return 3! As outthentic parser is greedy one. It it tries to find 
-matched lines as much as possible. In other words if parser successfully find a line
-matched check expression it won't stop and try to find others, as much as possible. 
+And, yes, it will return 3 elements! As outthentic parser is greedy one it tries to find 
+as much as possible matching lines. In other words if parser successfully find a line
+matching check expression it won't stop and try to find others, as much as possible. 
 
 That is why the match_lines array will hold 3 lines:
 
@@ -93,31 +88,29 @@ That is why the match_lines array will hold 3 lines:
     2
     3
 
-Please take this behavior into account when deal with outthentic dsl, sometimes
-it is good, but sometimes it could be a problem, we will see how this could 
-however changed in some cases. 
+Please take this behavior into account when deal with outthentic dsl, sometimes it is good, but sometimes it could be a problem, we will see how this could  however changed in some cases. 
 
 
 # Group check expressions
 
 ## Text blocks and ranges
 
-Often we need to verify not only against single check expression, but we need to
-consider some context. Like occurrence _sequence_ of proper lines in original input 
-or _set_ of  lines inside some range. 
+Often we need to verify not only against single check expression, but we need to consider some _context_. 
+
+Like occurrence _sequence_ of proper lines in original input or _set_ of lines inside some range. 
 
 This is where outthentic group check expressions could be useful.
  
 Text blocks and range expressions are abstractions for _group_ check expressions. 
 
-They could be treated as _containers_ for basic check expressions - plain text strings or regular expressions.
+They could be treated as _containers_ for basic check expressions - plain text or regular expressions.
 
-Let's first consider a text blocks.
+Let's consider the first text blocks.
 
 
-## Text blocks. 
+## Text blocks
 
-Text blocks expressions insists that a sequence of lines should be found at original text input.
+Text blocks expressions insist that a _ continuous sequence_ of lines should be found at original text input.
 
 Consider this imaginary text output with 3 text blocks:
 
@@ -140,7 +133,7 @@ Consider this imaginary text output with 3 text blocks:
         baz
     </triples>     
 
-Now we need to ensure that triples blocks are here. 
+Now we need to ensure that triples blocks are here filled continuously by numbers or alphabetic symbol lines.  
 
 Let's write up outthentic dsl code:
 
@@ -176,13 +169,11 @@ When run this code we get:
     2 20 bar
     3 30 baz
 
-As we learned match_lines() function return array of all successfully matched lines,
-so the result is quite obvious.
+As we learned match_lines() function return array of all successfully matched lines, so the result is quite obvious.
 
-If we want to be more specific and see pieces of lines get captured with regular expression checks
-we could use captures() function.
-Captures() function is very similar to match_lines() function except it holds not matching
-lines but their chunks relates to regexp groups \(\) used at regular expression. 
+If we want to be more specific and see pieces of lines get captured with regular expression checks we could use captures() function.
+
+Captures() function is very similar to match_lines() function except it holds chunks relates to _regexp groups_ \(\) used at regular expression. 
 
 Lets find only triples blocks with 2 digits numbers inside and then print out _second_ digit of every number:
 
@@ -203,13 +194,12 @@ Lets find only triples blocks with 2 digits numbers inside and then print out _s
      end:
 
 Ok, what is _wrong_ with both match_lines() and captures() is what they _bind_ to the latest regular expression check,
-so if we need _accumulate_ the matched data for all the expressions inside a block it would be hard to do.
+so if we need to _accumulate_ the matched data for all the  block it would be _hard_ to do.
   
-Let's consider a stream() function which acts _like_ match_lines() function with two
-essentials adjustments:
+But let's consider a stream() function which acts _like_ match_lines() function with two essentials adjustments:
 
-* it accumulates previously matched data
-* it consider group context - it means it group matched data by original blocks ( text blocks or ranges - see further about ranges )
+* it accumulates previously matched lines
+* it groups matched line by original group context ( whether these are blocks in a text blocks expressions or ranges in ranges expressions - see further about ranges )
 
 Let's rewrite our latest code
  
@@ -220,19 +210,15 @@ Let's rewrite our latest code
             regexp: \S+
             code:                                           \
                 for my $s (@{stream()}) {                   \
-                    print " ",( join ' ', @{$s} ),"\n";    \
+                    print " ",( join ' ', @{$s} ),"\n";     \
                 }                                           \
                 print "next block\n";                     
         </triples>
      end:
 
 Much better! At least code became more concise and clear, no need to add this code:  ... capture ...
-line after every regular expression check.
-
-
-Let me say it again - streams are alternative for captures. While captures relates to latest regular expression checks
-and gets _discarded_ with the next expression check, stream instead _accumulate_ all matching lines and
-_group them per blocks_, so  code above will print:
+lines after every regular expression check. What is more important now we could see that test output
+respects original group context:
 
 
     1 2 3
@@ -242,6 +228,13 @@ _group them per blocks_, so  code above will print:
     foo bar baz
 
 Pretty convenient now, because this is exactly the logical groups we have in original text input stream.
+
+
+Let me say it again - streams are alternative for captures. While captures relates to latest regular expression checks
+and gets _discarded_ with the next expression check, stream instead _accumulate_ all matching lines and
+_group them per blocks_, so  code above will print:
+
+
 
 Now let look at the ranges, they look like text blocks but they are not the ones :-) !
 
