@@ -201,7 +201,7 @@ Lets find only triples blocks with 2 digits numbers inside and then print out _s
      end:
 
 
-Problem of not knowing the future.
+### Problem of not knowing the future.
 
 So good so far, but text blocks have a shortcoming not seen at the first glance.
 
