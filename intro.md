@@ -264,7 +264,7 @@ The output:
 
 Upps, not exactly what we would expect, huh? We see that outthentic parser not smart enough
 and caught all the blocks (1,2 1,2,3 1,2,3,4) even though we asked only 4 numbers sequences.
-_At the long run_ it left only two right ones - 1,2,3,4 but first 3 iterations grabbed 2 and 3 numbers
+_At the long run_ it left only two right ones - 1,2,3,4 but first and second iterations grabbed 2 and 3 numbers
 sequences as well. 
 
 Well the reason for this behavior is basic outthentic check expressions 
