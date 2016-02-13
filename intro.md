@@ -262,7 +262,7 @@ The output:
     3 3 3
     4 4
 
-Upps, not exactly what we would expect, huh? We see that outthentic parser not smart enough
+Upss, not exactly what we would expect, huh? We see that outthentic parser not smart enough
 and caught all the blocks (1,2 1,2,3 1,2,3,4) even though we asked only 4 numbers sequences.
 _At the long run_ it left only two right ones - 1,2,3,4 but first and second iterations grabbed 2 and 3 numbers
 sequences as well. 
@@ -315,11 +315,18 @@ _respects_ original group context.
 
 
 Ok, let me say it again - streams are alternative for captures. But text blocks works as designed
-with streams, captures or match_lines functions. It's up to which ones to use, it depends
+with streams, captures or match_lines functions. It's up to you which ones to use, it depends
 on _context_.
 
 While captures and match_lines relates to the latest expression check which is always single line context
 stream instead _accumulate_ previously matched lines and _group them per blocks or ranges.
+
+So:
+
+* use captures() and match_lines() when you do not care about context ( not inside ranges and blocks )
+
+* use stream() when you need to present matched data per group context
+
 
 ## Ranges
 
@@ -352,6 +359,7 @@ Let's add some debug code to show what happening in details:
      between: <triples> <\/triples> 
          regexp: (\S+)
          code: print ( join ' ', map { $_->[0] } @{captures()} ), "\n"
+     end:
     
 We see then:
 
@@ -381,6 +389,7 @@ Consider this code snippet:
          code: print "# ", ( join ' ', map { $_->[0] } @{captures()} ), "\n"
          regexp: (2)
          code: print "# ", ( join ' ', map { $_->[0] } @{captures()} ), "\n"
+     end:
  
 A natural assumption that we get something like that:
 
@@ -413,7 +422,60 @@ Compare with text block solution:
     # 1 
     # 2 
 
-## Summary.
+### Using stream() inside ranges expressions
+
+Stream function works for ranges the same way as does for text blocks. It:
+
+* accumulate all previously matched lines
+
+* it group data by context
+
+Consider this example:
+
+Text input:
+
+
+    foo
+        1
+    bar
+
+    foo
+        1
+        2
+    bar
+
+    foo
+        1
+        2
+        3
+    bar
+
+
+Dsl code:
+
+
+    between: foo bar
+        \d+
+        code:   
+            for my $s (@{stream()}) {           \
+                for my $i (@{$s}){              \
+                    print $i, ' ';              \
+                }                               \
+            print "\next block\n";              \
+        }
+    end:
+
+
+Output:
+
+    1
+    next block
+    1 2
+    next block
+    1 2 3
+        
+
+## Text blocks or Ranges?
 
 So when you want test a sequences ( continuous sets ) you need a text blocks. When you don't
 care about ordering and just want to pick up some data included  in a given range you need a range
