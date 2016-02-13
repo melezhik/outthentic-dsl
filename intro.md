@@ -49,6 +49,18 @@ And won't verify this one:
     My name is outthenticz
 
 
+## Multiple check expressions
+
+As one could easily guess multiple check expressions result in logical `AND` chains for text verification procedure:
+
+    # the input text
+    # should contain
+    # foo AND bar AND baz lines
+    foo
+    bar
+    baz
+
+
 # Test reports
 
 A quick remark should be made concerning results produced by running dsl code
@@ -451,7 +463,7 @@ Text input:
     bar
 
 
-Dsl code:
+DSL code:
 
 
     between: foo bar
@@ -474,6 +486,29 @@ Output:
     next block
     1 2 3
         
+## Multiple expressions inside ranges
+
+Multiple expressions work inside ranges works the same as the works without range context -
+they result in logical `AND` chains:
+
+    # the input text
+    # should contain
+    # foo AND bar AND baz lines
+    foo
+    bar
+    baz
+
+    # the input text inside foo ... bar range
+    # should contain
+    # foo AND bar AND baz lines
+    between: here there
+        foo
+        bar
+        baz
+    end:
+
+
+ 
 
 ## Text blocks or Ranges?
 
