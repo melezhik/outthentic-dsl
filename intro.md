@@ -49,7 +49,15 @@ And won't verify this one:
     My name is outthenticz
 
 
-Well quite easy so far. Good.
+# Test reports
+
+A quick remark should be made concerning results produced by running dsl code
+for examples given here.   
+
+For the sake of simplicity of the document a test reports not show here, as emphasis is made on dsl code itself rather than on
+result it yields. It should not be considered as problem though as in most of cases
+verification results are _obvious_ and could be resolved out of context.
+
 
 # Greedy expressions
 
@@ -88,24 +96,24 @@ That is why the match_lines array will hold 3 lines:
     2
     3
 
-Please take this behavior into account when deal with outthentic dsl, sometimes it is good, but sometimes it could be a problem, we will see how this could  however changed in some cases. 
+Please take this behavior into account when deal with outthentic dsl, 
+sometimes it is what you expect, but sometimes it could be tricky and may "delude" you ( see [ranges expressions](#ranges) for example ) 
 
+# Context oriented check expressions
 
-# Group check expressions
+Often we need to verify not only against single check expression, but to take into account some _context_. 
 
-## Text blocks and ranges
+A possible cases here:
 
-Often we need to verify not only against single check expression, but we need to consider some _context_. 
+* matching against _set_ of check expressions inside some range  ( range expressions )
 
-Like occurrence _sequence_ of proper lines in original input or _set_ of lines inside some range. 
+* matching against a continuous sequence of check expressions ( text block expressions )
 
-This is where outthentic group check expressions could be useful.
- 
-Text blocks and range expressions are abstractions for _group_ check expressions. 
+Outthentic dsl provides some abstractions for such _context oriented_ matching:
 
-They could be treated as _containers_ for basic check expressions - plain text or regular expressions.
+* Range expressions
 
-Let's consider the first text blocks.
+* Text block expressions
 
 
 ## Text blocks
@@ -114,7 +122,6 @@ Text blocks expressions insist that a _ continuous sequence_ of lines should be 
 
 Consider this imaginary text output with 3 text blocks:
 
-    
     <triples>
         1
         2    
@@ -193,55 +200,131 @@ Lets find only triples blocks with 2 digits numbers inside and then print out _s
         </triples>
      end:
 
-Ok, what is _wrong_ with both match_lines() and captures() is what they _bind_ to the latest regular expression check,
-so if we need to _accumulate_ the matched data for all the  block it would be _hard_ to do.
-  
-But let's consider a stream() function which acts _like_ match_lines() function with two essentials adjustments:
 
-* it accumulates previously matched lines
-* it groups matched line by original group context ( whether these are blocks in a text blocks expressions or ranges in ranges expressions - see further about ranges )
+Problem of not knowing the future.
 
-Let's rewrite our latest code
+So good so far, but text blocks have a shortcoming not seen at the first glance.
+
+Consider this example.
+
+Text input:
+
+
+    1
+    2
+
+    1
+    2
+    3
+
+    1
+    2
+    3
+    4
+
+    1
+    2
+    3
+    4
+
+
+Let's write a text block expression to capture all 4 numbers sequences:
+
+    begin:
+        regexp: \d+
+        regexp: \d+
+        regexp: \d+
+        regexp: \d+
+    end:
+
+Obviously this code will find two block consists of 1,2,3,4 numbers. To make it clear
+add debug info and see what we get:
+
+    begin:
+        regexp: \d+            
+        code: print "@{match_lines}\n";
+
+        regexp: \d+
+        code: print "@{match_lines}\n";
+
+        regexp: \d+
+        code: print "@{match_lines}\n";
+
+        regexp: \d+
+        code: print "@{match_lines}\n";
+    end:
+
+The output:
+
+    
+    1 1 1 1
+    2 2 2 2
+    3 3 3
+    4 4
+
+Upps, not exactly what we would expect, huh? We see that outthentic parser not smart enough
+and caught all the blocks (1,2 1,2,3 1,2,3,4) even though we asked only 4 numbers sequences.
+_At the long run_ it left only two right ones - 1,2,3,4 but first 3 iterations grabbed 2 and 3 numbers
+sequences as well. 
+
+Well the reason for this behavior is basic outthentic check expressions 
+are single line context - elementary check relates only a single line - it whether matched or not, 
+no other criteria or context is taken into account. Wait, but we told that text blocks are context oriented, 
+did we? Yes! But this context require knowing a future - there is no way to determine if we are successful
+or not till we reach the end of the sequence!
+
+Fortunately this kind of "issue" is only relates to captures() or match_lines() functions,
+but text blocks works as designed, they determine if a text contains a sequence of lines.
+
+Stream function as alternative to match_lines and captures 
+   
+Stream() function which acts _like_ match_lines() function with two essentials adjustments:
+
+* it _accumulates_ previously matched lines
+
+* it groups matched line by group context ( text blocks in a text blocks expressions or ranges in ranges expressions )
+
+Let's rewrite our latest code with usage of stream function
  
-     begin:
-        <triples>
-            regexp: \S+
-            regexp: \S+
-            regexp: \S+
-            code:                                           \
-                for my $s (@{stream()}) {                   \
-                    print " ",( join ' ', @{$s} ),"\n";     \
-                }                                           \
-                print "next block\n";                     
-        </triples>
-     end:
+    begin:
 
-Much better! At least code became more concise and clear, no need to add this code:  ... capture ...
-lines after every regular expression check. What is more important now we could see that test output
-respects original group context:
+        regexp: \d+
+        regexp: \d+
+        regexp: \d+
+        regexp: \d+
 
+        code:   
+            for my $s (@{stream()}) {           \
+                for my $i (@{$s}){              \
+                    print $i, ' ';              \
+                }                               \
+            print "\next block\n";             \
+        }
 
-    1 2 3
+    end:
+
+Now we get:
+
+    1 2 3 4
     next block
-    10 20 30 bar
-    next block
-    foo bar baz
+    1 2 3 4
 
-Pretty convenient now, because this is exactly the logical groups we have in original text input stream.
-
-
-Let me say it again - streams are alternative for captures. While captures relates to latest regular expression checks
-and gets _discarded_ with the next expression check, stream instead _accumulate_ all matching lines and
-_group them per blocks_, so  code above will print:
+Much better! At least code became more concise and clear, no need to add `code:`lines after every 
+regular expression check. But what is more important now we could see that test output
+_respects_ original group context.
 
 
+Ok, let me say it again - streams are alternative for captures. But text blocks works as designed
+with streams, captures or match_lines functions. It's up to which ones to use, it depends
+on _context_.
 
-Now let look at the ranges, they look like text blocks but they are not the ones :-) !
+While captures and match_lines relates to the latest expression check which is always single line context
+stream instead _accumulate_ previously matched lines and _group them per blocks or ranges.
 
 ## Ranges
 
 Range expressions looks like text blocks, but only for the first glance, they are very effective
-but a bit tricky to use for the beginners.
+but a bit tricky for the beginner's usage.
 
 Let's reshape our solution for triples task. Verify that we have triples blocks with numbers inside:
 
@@ -274,17 +357,13 @@ We see then:
 
     1 10 foo 2 20 bar 3 30 baz
 
-This mean that check expressions inside range block remain "greedy" in comparison with text block,
-where they are none greedy.
+We see that regular expression check \S+ inside range expression "ate up" all
+the lines in one iteration, it is ok, as we already learned that outthentic
+expressions are greedy ones.
 
-Check expression inside range block "eat up" all matched lines.
+The other hurdle with range expressions.
 
-Check expressions inside text block none greedy as they execute in context of previous checks -
-one line should follow by another. (TODO: probably will change this statement as it quite obscure ... )
-
-Other differences between text blocks and ranges.
-
-* ranges do not preserve sort order for lines in original input
+Ranges do not preserve sort order for lines in original input
 
 Consider this code snippet:
 
