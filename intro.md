@@ -276,7 +276,7 @@ or not till we reach the end of the sequence!
 Fortunately this kind of "issue" is only relates to captures() or match_lines() functions,
 but text blocks works as designed, they determine if a text contains a sequence of lines.
 
-Stream function as alternative to match_lines and captures 
+### Stream function as alternative to match_lines and captures 
    
 Stream() function which acts _like_ match_lines() function with two essentials adjustments:
 
