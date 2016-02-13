@@ -282,7 +282,7 @@ Stream() function which acts _like_ match_lines() function with two essentials a
 
 * it _accumulates_ previously matched lines
 
-* it groups matched line by group context ( text blocks in a text blocks expressions or ranges in ranges expressions )
+* it _groups_ matched line by group context ( text blocks in a text blocks expressions or ranges in ranges expressions )
 
 Let's rewrite our latest code with usage of stream function
  
@@ -413,7 +413,7 @@ Compare with text block solution:
     # 1 
     # 2 
 
-Summary.
+## Summary.
 
 So when you want test a sequences ( continuous sets ) you need a text blocks. When you don't
 care about ordering and just want to pick up some data included  in a given range you need a range
