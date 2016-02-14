@@ -133,7 +133,7 @@ sub stream {
         $stream[$i]=[];
         for my $c (@{$self->{stream}->{$cid}}){
             push @{$stream[$i]}, $c->[0];
-            $self->add_debug_result("[stream [$i]] $c->[0]") if $self->{debug_mod} >= 2;
+            $self->add_debug_result("[stream {$cid} [$i]] $c->[0]") if $self->{debug_mod} >= 2;
         }
         $i++;
     }

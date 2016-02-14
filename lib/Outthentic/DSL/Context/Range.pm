@@ -36,8 +36,9 @@ sub change_context {
 
     my $inside = 0;
 
-
+    $self->{chains} ||= {};
     $self->{ranges} ||= []; # this is initial ranges object
+    $self->{bad_ranges} ||={};  
 
     my $a_indx;
     my $b_index;
@@ -62,16 +63,21 @@ sub change_context {
 
             $inside = 0;
 
-            $b_index = $c->[1]-1;
-            push @{$self->{ranges}}, [$a_index, $b_index];
-            $self->{chains}->{$a_index} ||= [];
+            $b_index = $c->[1];
+
+            if ($self->{chains}->{$a_index}){
+
+            }else{
+                $self->{chains}->{$a_index} = [];
+                push @{$self->{ranges}}, [$a_index, $b_index];
+            }
             next;
         }
 
 
-        if ($c->[0] =~ $bound_l){
+        if ($c->[0] =~ $bound_l and ! $self->{bad_ranges}->{$c->[1]}){
             $inside = 1;
-            $a_index = $c->[1]-1;
+            $a_index = $c->[1];
             push @chunk, ["#dsl_note: start range"];
             next;
         }
@@ -96,17 +102,20 @@ sub update_stream {
     $self->{chains} ||= {}; # this is initial chain object
     $i = 0;
 
-    for my $c (@{$succ}){
+    my %keep_ranges;
 
-        for my $r (@{$self->{ranges}}){
+    for my $c (@{$succ}){
+       # warn $c->[0]; 
+       for my $r (@{$self->{ranges}}){
             my $a_index = $r->[0];
             my $b_index = $r->[1];
             #warn "kkk $a_index ... $b_index";
             #warn ($c->[0]);
             #warn ($c->[1]-1);
             #warn "----";
-            if ($c->[1]-1 >= $a_index and $c->[1]-1 <= $b_index  ){
+            if ($c->[1] > $a_index and $c->[1] < $b_index  ){
                 push @{$self->{chains}->{$a_index}}, $c;
+                $keep_ranges{$a_index}=1;
                 #warn "OK!";
             }
 
@@ -114,8 +123,24 @@ sub update_stream {
 
     }
 
-    ${$stream_ref} = $self->{chains};
+    ${$stream_ref} = {};
 
+    for my $r (@{$self->{ranges}}){
+        my $rid = $r->[0];
+        if ($keep_ranges{$rid}){
+            #warn "good range: $rid";
+            ${$stream_ref}->{$rid} = $self->{chains}->{$rid};
+        }else{
+            #warn "bad range: $rid";
+            $self->{bad_ranges}->{$rid} = 1;
+            delete ${$self->{chains}}{$rid};
+        }
+
+    }
+
+
+    #use Data::Dumper;
+    #warn Dumper(">>>>".($self->{bad_ranges}));
 }
 
 1;
