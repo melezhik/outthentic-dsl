@@ -188,20 +188,21 @@ Check expressions define patterns to match input text stream.
 
 Here is a simple example:
 
-    # input
+Input text:
+
 
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
 
 
-    # dsl code
+Dsl code:
 
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-    # verification results
+Results:
 
     +--------+------------------------------+
     | status | message                      |
