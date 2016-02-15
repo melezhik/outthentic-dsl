@@ -140,6 +140,13 @@ sub stream {
     [@stream]
 }
 
+sub match_lines {
+
+    my $self = shift;
+    return $self->{succeeded};
+}
+
+
 sub check_line {
 
     my $self = shift;
@@ -462,14 +469,14 @@ sub handle_validator {
         confess "eval error; sub:handle_validator; code:$code; error: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("handle_validator OK. $code") if $self->{debug_mod} >= 3;
+        $self->add_debug_result("handle_validator OK (status: $r->[0] message: $r->[1]). $code") if $self->{debug_mod} >= 2;
     } else {
         my $code_to_eval = join "\n", @$code;
         my $r = eval "package main; $code_to_eval";
         confess "eval error; sub:handle_validator; code:$code_to_eval; error: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+        $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 2;
     }
 
 }

@@ -6,6 +6,12 @@ Language to validate text output.
 
     cpanm Outthentic::DSL
 
+# Informal introduction
+
+Alternative introduction into outthentic dsl in more in infromal way could be found here 
+- [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
+
+
 # Glossary
 
 ## Outthentic DSL 

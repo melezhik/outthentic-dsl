@@ -100,6 +100,7 @@ sub update_stream {
     my $inside = 0;
 
     $self->{chains} ||= {}; # this is initial chain object
+    $self->{seen} ||= {};
     $i = 0;
 
     my %keep_ranges;
@@ -114,7 +115,8 @@ sub update_stream {
             #warn ($c->[1]-1);
             #warn "----";
             if ($c->[1] > $a_index and $c->[1] < $b_index  ){
-                push @{$self->{chains}->{$a_index}}, $c;
+                push @{$self->{chains}->{$a_index}}, $c unless $self->{seen}->{$c->[0]};
+                $self->{seen}->{$c->[0]}=1;
                 $keep_ranges{$a_index}=1;
                 #warn "OK!";
             }
@@ -129,7 +131,7 @@ sub update_stream {
         my $rid = $r->[0];
         if ($keep_ranges{$rid}){
             #warn "good range: $rid";
-            ${$stream_ref}->{$rid} = $self->{chains}->{$rid};
+            ${$stream_ref}->{$rid} = [ sort { $a->[1] <=> $b->[1] } @{$self->{chains}->{$rid}} ];
         }else{
             #warn "bad range: $rid";
             $self->{bad_ranges}->{$rid} = 1;
