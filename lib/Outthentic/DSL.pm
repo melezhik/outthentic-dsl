@@ -631,6 +631,12 @@ Language to validate text output.
     cpanm Outthentic::DSL
 
 
+=head1 Informal introduction
+
+Alternative introduction into outthentic dsl in more in infromal way could be found here 
+- L<intro.md|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
+
+
 =head1 Glossary
 
 
