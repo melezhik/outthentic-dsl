@@ -1,7 +1,9 @@
-0.0.6 
+0.0.6 2016-02-15
 
-* `between` feature added
-* refactoring  ( methods and variables renamed )
+* ranges expressions !
+* huge refactoring -  context modificators are moved into dedicated classes
+* a big informal introduction started
+
 
 0.0.5 2016-30-01
 
