@@ -80,13 +80,13 @@ This is schematic description of the process:
     For every check expression in check expressions list.
         Mark this check step in unknown state.
         For every line in input text.
-            Does line match check expression ? Check step is marked as succeeded.
+            Does line match check expression? Check step is marked as succeeded.
             Next line.
         End of loop.
         Is this check step marked in unknown state? Mark this check step in failed state.  
         Next check expression.
     End of loop.
-    Are all check steps succeeded ? Input text is verified.
+    Are all check steps succeeded? Input text is verified.
     Vise versa - input text is not verified.
     
 A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope. 
@@ -378,7 +378,9 @@ Result - not verified
 
 Markers should not be followed by any text at the same line.
 
-Also be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else 
+## Don't forget to close the block ...
+
+Be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else 
 parser will remain in a \`text block' mode till the end of the file, which is probably not you want:
 
 Dsl code:
@@ -565,10 +567,28 @@ Generators could produce not only check expressions but validators, perl express
 
 This is fictional example.
 
+Input Text:
+
+    A
+    AA
+    AAA
+    AAAA
+    AAAAA
+
 Dsl code:
 
-    code: sub next_number {  [ "A" x shift() ]  }
-    generator: our $i++;  $i <= 10 ? next_number($i)
+    generator:                              \ 
+    sub next_number {                       \    
+        my $i = shift;                      \ 
+        $i++;                               \
+        return [] if $i>=5;                 \
+        [                                   \
+            'regexp: ^'.('A' x $i).'$'      \
+            "generator: next_number($i)"    \ 
+        ]  
+    }
+
+Result - verified
 
 
 # Multiline expressions
@@ -642,10 +662,11 @@ Dsl code:
 
 # Captures
 
-Captures are pieces of data get captured when parser validates stdout against a regular expressions:
+Captures are pieces of data get captured when parser validate lines against a regular expressions:
 
-    # stdout
-    # it's my family ages.
+Input text:
+
+    # my family ages list.
     alex    38
     julia   32
     jan     2
@@ -653,9 +674,13 @@ Captures are pieces of data get captured when parser validates stdout against a 
 
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
+    code:                                   \
+        for my $c (@{captures}){            \
+            print "name:", $c->[0], "\n";   \
+            print "age:", $c->[1], "\n";    \
+        }    
 
-
-_After_ this regular expression check gets executed captured data will stored into a array:
+Data accessible via captures():
 
     [
         ['alex',    38 ]
@@ -663,7 +688,10 @@ _After_ this regular expression check gets executed captured data will stored in
         ['jan',     2  ]
     ]
 
-Then captured data might be accessed for example by code generator to define some extra checks:
+
+Then captured data usually good fit for validators extra checks.
+
+Dsl code
 
 
     validator:                          \
@@ -674,12 +702,14 @@ Then captured data might be accessed for example by code generator to define som
     [ ($total == 72 ), "total age of my family" ];
 
 
+## captures() function
 
-* \`captures()' function is used to access captured data array,
+captures() function returns an array reference holding all chunks captured during _latest regular expression check_.
 
-* it returns an array reference holding all chunks captured during _latest regular expression check_.
+Here some more examples.
 
-Here some more examples:
+Dsl code:
+
 
     # check if stdout contains numbers,
     # then calculate total amount
@@ -709,9 +739,16 @@ Here some more examples:
 
     [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
 
-You also may use \`capture()' function to get a _first element_ of captures array:
 
-    # check if stdout contains numbers
+## capture() function
+
+capture() function returns a _first element_ of captures array. 
+
+it is useful when you need data _related_ only  _first_ successfully matched line.
+
+Dsl code:
+
+    # check if  text contains numbers
     # a first number should be greater then ten
 
     regexp: (\d+)
@@ -719,13 +756,13 @@ You also may use \`capture()' function to get a _first element_ of captures arra
 
 # Search context modificators
 
-Search context modificators are special check expressions which not only validate stdout but modify search context.
+Search context modificators are special check expressions which not only validate text but modify search context.
 
-But default search context is equal to original stdout. 
+By default search context is equal to original input text stream. 
 
-That means outthentic parser execute validation process against original stdout stream
+That means parser executes validation use all the lines when performing checks 
 
-There are two search context modificators to change this behavior:
+However there are two search context modificators to change this behavior:
  
 
 * within expressions
@@ -735,10 +772,9 @@ There are two search context modificators to change this behavior:
 
 ## Within expressions
 
-Within expression acts like regular expression - parser checks stdout against given pattern 
+Within expression acts like regular expression - checks text against given patterns 
 
-
-    # stdout
+Text input:
 
     These are my colors
 
@@ -750,21 +786,20 @@ Within expression acts like regular expression - parser checks stdout against gi
 
     That is it!
 
-    # outthentic check
+Dsl code:
 
     # I need one of 3 colors:
 
     within: color: (red|green|blue)
 
-Then if checks given by within statement succeed _next_ checks will be executed _in a context of_
-succeeded lines:
+Then if checks given by within statement succeed _next_ checks will be executed _in a context of_ succeeded lines:
  
     # but I really need a green one
     green
 
 The code above does follows:
 
-* try to validate stdout against regular expression "color: (red|green|blue)"
+* try to validate input text against regular expression "color: (red|green|blue)"
 
 * if validation is successful new search context is set to all _matching_ lines
 
@@ -840,7 +875,8 @@ These are few examples:
 
 Parsing html output
 
-    # stdout
+Input text:
+
     <table cols=10 rows=10>
         <tr>
             <td>one</td>
@@ -854,6 +890,8 @@ Parsing html output
     </table>
 
 
+Dsl code:
+
     # between expression:
     between: <table.*> <\/table>
     regexp: <td>(\S+)<\/td>
@@ -865,7 +903,7 @@ Parsing html output
 Between expressions could not be nested, every new between expression discards old search context
 and setup new one:
 
-    # sample stdout
+Input text:
 
     foo
 
@@ -887,7 +925,7 @@ and setup new one:
 
     BAR
 
-    # outthentic check list:
+Dsl code:
 
     between: foo bar
 
@@ -920,8 +958,9 @@ and setup new one:
     }                               \
     print "# FOO/BAR end"
     
-    # TAP output
-    
+
+Output:
+
         # foo/bar start
         # 1
         # 2
@@ -935,10 +974,13 @@ and setup new one:
         # 20
         # 30
         # FOO/BAR end
-        
-And finally to restore search context use \`reset\_context:' statement:
 
-    # stdout
+
+## Restoring search context
+        
+And finally to restore search context use \`reset\_context:' statement.
+
+Input text:
 
     hello
     foo
@@ -946,6 +988,8 @@ And finally to restore search context use \`reset\_context:' statement:
         hello
     bar
 
+
+Dsl code:
 
     between foo bar
 
@@ -962,19 +1006,22 @@ And finally to restore search context use \`reset\_context:' statement:
     hello       # should match three times
 
 
-Range expressions caveats
+## Range expressions caveats
 
-* range expressions don't keep original order inside range
+### Range expressions don't verify continuous list:
 
-For example:
+Example.
 
-    # stdout
+Input text:
+
     
     foo
         1
+        a
         2
-        1
-        2
+        b
+        3
+        c
     bar
 
 
@@ -983,15 +1030,12 @@ For example:
     between: foo bar
         regexp: 1
         code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
-        regexp: 2
-        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
 
-    # validation output
+Output
 
-        # 1 1
-        # 2 2
+        # 1 2 3 
 
-* if you need precise order keep preserved use text blocks
+If you need check continuous sequences checks use text blocks.
 
 # Experimental features
 
@@ -1002,7 +1046,7 @@ Below is highly experimental features purely tested. You may use it on your own 
 Streams are alternative for captures. Consider following example:
 
 
-    # stdout
+Input text:
 
     foo
         a
@@ -1022,7 +1066,8 @@ Streams are alternative for captures. Consider following example:
         000
     bar
 
-    # outthentic check list
+Dsl code:
+
 
     begin:
     
@@ -1042,7 +1087,8 @@ Streams are alternative for captures. Consider following example:
     
     end:
     
-The code above will print:
+Output:
+
 
     # a 1 0
     # b 2 00
@@ -1063,7 +1109,9 @@ Streams - are all the data successfully matched for given _group context_.
 
 Streams are available for text blocks and range expressions.
 
-Let's rewrite the example:
+Let's rewrite the example.
+
+Dsl code:
 
     begin:
 
@@ -1099,7 +1147,8 @@ Stream could be specially useful when combined with range expressions where size
 of successfully matched blocks could be different:
 
 
-    # stdout
+Input text:
+
 
     foo
         2
@@ -1114,8 +1163,8 @@ of successfully matched blocks could be different:
     bar
 
 
-    # outthentic check
 
+Dsl code:
 
     between: foo bar
 
@@ -1131,7 +1180,7 @@ of successfully matched blocks could be different:
         }
     
 
-    # validation output:
+Output:
 
     
     # 2 4 6 8
