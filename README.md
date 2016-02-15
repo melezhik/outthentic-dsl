@@ -74,16 +74,24 @@ dsl parser is the program which:
 
 Verification process consists of matching lines of text input against check expressions.
 
-For every check expression in check expressions list
-    For every line in input text
-        If line match check expression ?
-            Check step is succeeded OR check step failed
-If all check steps are succeeded ?
-    Input text is verified OR text is not verified    
+This is schematic description of the process:
 
+
+    For every check expression in check expressions list.
+        Mark this check step in unknown state.
+        For every line in input text.
+            Does line match check expression ? Check step is marked as succeeded.
+            Next line.
+        End of loop.
+        Is this check step marked in unknown state? Mark this check step in failed state.  
+        Next check expression.
+    End of loop.
+    Are all check steps succeeded ? Input text is verified.
+    Vise versa - input text is not verified.
+    
 A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope. 
 
-For the sake of readability a fake table form is used in this document. 
+For the sake of readability a _fake_ layout is used in this document. 
 
 ## Parser API
 
@@ -136,7 +144,7 @@ Perform verification process
 
 Obligatory parameter is:
 
-* path to file with dsl code
+* a path to file with dsl code
 
 ### results  
 
@@ -213,7 +221,7 @@ There are two basic types of check expressions:
 
 Plain text expressions are just a lines should be _included_ at input text stream.
 
-dsl code:
+Dsl code:
         
         I am ok
         HELLO Outthentic
@@ -238,7 +246,7 @@ Result - not verified
 
 Similarly to plain text matching, you may require that input lines match some regular expressions:
 
-dsl code:
+Dsl code:
 
     regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
     regexp: Name: \w+ # name
@@ -288,7 +296,7 @@ Comments and blank lines don't impact verification process but one could use the
 Comment lines start with \`#' symbol, comments chunks are ignored by parser.
 
 
-dsl code:
+Dsl code:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
@@ -298,7 +306,7 @@ dsl code:
 
 Blank lines are ignored as well.
 
-dsl code:
+Dsl code:
 
     # every story has the beginning
     The beginning of a story
@@ -312,7 +320,7 @@ But you **can't ignore** blank lines in a \`text block' context ( see \`text blo
 
 Use \`:blank_line' marker to match blank lines.
 
-dsl code:
+Dsl code:
 
     # :blank_line marker matches blank lines
     # this is especially useful
@@ -326,12 +334,14 @@ dsl code:
 
 ## Text blocks
 
-Sometimes it is very helpful to match against a \`block of lines' goes consequentially, like here:
+Sometimes it is very helpful to match against a \`sequence of lines' like here.
+
+
+Dsl code:
 
     # this text block
     # consists of 5 strings
-    # goes consequentially
-    # line by line:
+    # going consecutive
 
     begin:
         # plain strings
@@ -344,7 +354,7 @@ Sometimes it is very helpful to match against a \`block of lines' goes consequen
         at the very end
     end:
 
-This validation will succeed when gets executed against this chunk:
+Input text:
 
     this string followed by
     that string followed by
@@ -352,7 +362,9 @@ This validation will succeed when gets executed against this chunk:
     with that string
     at the very end.
 
-But **will not** for this chunk:
+Result - not verified
+
+Input text:
 
     that string followed by
     this string followed by
@@ -360,11 +372,16 @@ But **will not** for this chunk:
     with that string
     at the very end.
 
-\`begin:' \`end:' markers decorate \`text blocks' content. \`:being|:end' markers should not be followed by any text at the same line.
+Result - not verified
 
-Also be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else
+\`begin:' \`end:' markers decorate \`text blocks' content. 
 
-Parser will remain in a \`text block' mode till the end of check file, which is probably not you want:
+Markers should not be followed by any text at the same line.
+
+Also be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else 
+parser will remain in a \`text block' mode till the end of the file, which is probably not you want:
+
+Dsl code:
 
         begin:
             here we begin
@@ -374,41 +391,72 @@ Parser will remain in a \`text block' mode till the end of check file, which is 
 
 # Perl expressions
 
-Perl expressions are just a pieces of Perl code to _get evaled_ during parsing process. This is how it works:
+Perl expressions are just a pieces of Perl code to _get evaled_ during parsing process. 
 
-    # Perl expression between two check expressions
+This is how it works.
+
+Dsl code:
+
+    # Perl expression 
+    # between two check expressions
     Once upon a time
     code: print "hello I am Outthentic"
     Lived a boy called Outthentic
 
 
-Internally once check file gets parsed this piece of dsk  code is "turned" into regular Perl code:
+Output:
+
+    hello I am Outthentic
+
+Internally once dsl code gets parsed it is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-One of the use case for Perl expressions is to store [\`captures'](#captures) data:
+One of the use case for Perl expressions is to store [\`captures'](#captures) data.
+
+Dsl code:
 
     regexp: my name is (\w+) and my age is (\d+)
     code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
+    code: print $data->{name}, "\n";
+    code: print $data->{age}, "\n";
+
+Input text:
+
+    my name is Alexey and my age is 38
+
+Output:
+
+    Alexey
+    38
+
+Additional comments on perl expressions:
 
 * Perl expressions are executed by Perl eval function in context of `package main`, please be aware of that.
 
-* Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to get know more about Perl eval.
+* Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to know more about Perl eval function.
 
 # Validators
 
-* Validator expressions like Perl expressions are just a piece of Perl code. 
+Validator expressions like Perl expressions are just a piece of Perl code. 
 
-* Validator expressions start with \`validator:' marker
+Validators start with \`validator:' marker
 
-* Validator code gets executed and value returned by the code is treated as validation status.
+A Perl code inside validator block should _return_ array reference. Once code is executed a returned array structure
+treated as:
 
-* Validator should return array reference. First element of array is validation status and second one is helpful message which
-will be shown when status is appeared in TAP output.
+* first element - is a status number ( perl true or false )
+* second element - is a helpful message 
 
-For example:
+Validators a kind of check expressions with check logic _expressed_ in validator code.
+
+
+Examples.
+
+Dsl code:
+
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
@@ -416,17 +464,29 @@ For example:
     # and this is not
     validator: [ 1>10, 'one is bigger then ten'  ]
 
+    # this one depends on previous check
+    regexp: card number: (\d+)
+    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
 
-* Validators become very efficient when gets combined with [\`captures expressions'](#captures)
 
-This is a simple example:
+    # and this could be any
+    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
+    
+
+Validators are very efficient when gets combined with [\`captures expressions'](#captures)
+
+This is a simple example.
+
+Input text:
 
 
-    # stdout
-    # it's my family ages.
+    # my family ages list
     alex    38
     julia   32
     jan     2
+
+
+Dsl code:
 
 
     # let's capture name and age chunks
@@ -442,19 +502,21 @@ This is a simple example:
 
 # Generators
 
-* Generators is the way to _generate new outthentic entries on the fly_.
+Generators is the way to _generate new outthentic entries on the fly_.
 
-* Generator expressions like Perl expressions are just a piece of Perl code.
+Generator expressions like Perl expressions are just a piece of Perl code.
 
-* The only requirement for generator code - it should return _reference to array of strings_.
+The only requirement for generator code - it should return _reference to array of strings_.
 
-* Strings in array returned by generator code _represent_ new outthentic entities.
+Strings in array returned by generator code _represent_ a _new_ outthentic entities.
 
-* An array items are passed back to parser, so parser generate news outthentic entities and execute them.
+A new outthentic entries are passed back to parser and executed immediately
 
 * Generators expressions start with \`:generator' marker.
 
-Here is simple example:
+Here is simple example.
+
+Dsl code:
 
     # original check list
 
@@ -466,6 +528,8 @@ Here is simple example:
     generator: [ qw{ say hello again } ]
 
 
+New dsl code:
+
     # final check list:
 
     Say
@@ -475,15 +539,21 @@ Here is simple example:
     again
 
 
-Here is more complicated example:
+Here is more complicated example.
+
+Dsl code:
+
 
     # this generator generates
     # comment lines
     # and plain string check expressions:
 
-    generator: my %d = { 'foo' => 'foo value', 'bar' => 'bar value' }; [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
+    generator:                                                  \    
+    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     \
+    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]               \
 
-    # generated entries:
+
+New dsl code:
 
     # foo
     foo value
@@ -491,14 +561,30 @@ Here is more complicated example:
     bar value
 
 
+Generators could produce not only check expressions but validators, perl expressions and ... generators.
+
+This is fictional example.
+
+Dsl code:
+
+    code: sub next_number {  [ "A" x shift() ]  }
+    generator: our $i++;  $i <= 10 ? next_number($i)
+
+
 # Multiline expressions
+
+
+## Multilines in check expressions
 
 When generate and execute check expressions parser operates in a _single line mode_ :
 
 * check expressions are treated as single line strings
-* stdout is validated by given check expression in line by line way
+* input text is validated by given check expression in line by line way
 
-For example:
+Example.
+
+Dsl code:
+
 
     # check list
     # consists of
@@ -513,8 +599,9 @@ For example:
     Multiline
     string
     here
- 
-     # validation results
+
+
+Verification results:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -526,11 +613,17 @@ For example:
     +--------+---------------------------------------+
 
 
-Use text blocks if you want to achieve multiline checks.
+Use text blocks if you want multiline checks.
+
+## Multilines in perl expressions, validators and generators
 
 However when writing Perl expressions, validators or generators one could use multilines strings.
 
-\`\' delimiters breaks a single line text on a multi lines:
+\`\' delimiters breaks a single line text on a multi lines.
+
+Examples.
+
+Dsl code:
 
 
     # What about to validate stdout
