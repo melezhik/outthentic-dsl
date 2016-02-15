@@ -1,3 +1,7 @@
+# NAME
+
+Outthentic::DSL
+
 # SYNOPSIS
 
 Language to validate text output.

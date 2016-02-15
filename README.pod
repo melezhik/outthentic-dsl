@@ -1,6 +1,11 @@
 =encoding utf8
 
 
+=head1 NAME
+
+Outthentic::DSL
+
+
 =head1 SYNOPSIS
 
 Language to validate text output.

@@ -1,3 +1,7 @@
+0.0.7 2016-02-15
+
+Added Name Outthentic::DSL section to pod to make pod doc  browserable in metacpan
+
 0.0.6 2016-02-15
 
 * ranges expressions !

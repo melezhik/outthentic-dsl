@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.6';
+our $VERSION = '0.0.7';
 
 use Carp;
 use Data::Dumper;
@@ -619,6 +619,11 @@ __END__
 
 
 =encoding utf8
+
+
+=head1 NAME
+
+Outthentic::DSL
 
 
 =head1 SYNOPSIS
