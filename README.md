@@ -136,7 +136,7 @@ Perform verification process
 
 Obligatory parameter is:
 
-* path to file with DSL code
+* path to file with dsl code
 
 ### results  
 
@@ -153,9 +153,9 @@ Client is a external program using dsl API. Existed outthentic clients:
 
 More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
-# DSL code syntax
+# dsl code syntax
 
-Outthentic DSL code comprises following basic entities:
+Outthentic dsl code comprises following basic entities:
 
 * Check expressions:
 
@@ -211,7 +211,7 @@ There are two basic types of check expressions:
 
 # Plain text expressions 
 
-Plain text expressions are just a lines should be _included_ at input text stream:
+Plain text expressions are just a lines should be _included_ at input text stream.
 
 dsl code:
         
@@ -259,7 +259,7 @@ Parser does not care about _how many times_ a given check expression is matched 
 
 If at least one line in a text match the check expression - _this check_ is considered as succeeded
 
-Parser  _accumulate_ all matching lines for given check expression, so they could be processed:
+Parser  _accumulate_ all matching lines for given check expression, so they could be processed.
 
 Input text:
 
@@ -382,7 +382,7 @@ Perl expressions are just a pieces of Perl code to _get evaled_ during parsing p
     Lived a boy called Outthentic
 
 
-Internally once check file gets parsed this piece of DSL code is "turned" into regular Perl code:
+Internally once check file gets parsed this piece of dsk  code is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
