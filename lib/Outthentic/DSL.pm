@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.8';
+our $VERSION = '0.0.9';
 
 use Carp;
 use Data::Dumper;
@@ -638,160 +638,162 @@ Language to validate text output.
 
 =head1 Informal introduction
 
-Alternative introduction into outthentic dsl in more in infromal way could be found here 
-- L<intro.md|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
+Alternative outthentic dsl introduction could be found L<here|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
 
 
 =head1 Glossary
 
 
-=head2 Outthentic DSL 
+=head2 Input text
+
+An arbitrary, often unstructured text being verified. It could be any text.
+
+Examples:
 
 =over
 
 =item *
 
-Is a language to validate I<arbitrary> plain text. Very often a short form `DSL' is used for this term. 
+html code
+
+
+=item *
+
+xml code
+
+
+=item *
+
+json 
+
+
+=item *
+
+plain text
+
+
+=item *
+
+emails :-)
+
+
+=item *
+
+http headers
+
+
+=item *
+
+another program languages code
+
+
+=back
+
+
+=head2 Outthentic dsl
+
+=over
+
+=item *
+
+Is a language to verify I<arbitrary> plain text
 
 
 
 =item *
 
-Outthentic DSL is both imperative and declarative language.
+Outthentic dsl is both imperative and declarative language
 
 
 
 =back
 
 
-=head2 Check files
+=head3 Declarative way
 
-A plain text files containing program code written on DSL to describe text L<validation process|#validation-process>.
-
-
-=head2 Code
-
-Content of check file. Should be program code written on DSL.
+You define rules ( check expressions ) to describe expected content.
 
 
-=head2 Stdout
+=head3 Imperative way
 
-It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout
-which is then validated.
+You define a process of verification using custom perl code ( validators, generators, code expressions  ).
+
+
+=head2 dsl code
+
+A  program code written on outthentic dsl language to verify text input.
 
 
 =head2 Search context
 
-A synonym for stdout term with emphasis of the fact that validation process if carried out in a given context.
+Verification process is carried out in a given I<context>.
 
-But default search context is equal to original stdout stream. 
+But default search context is the same as original input text stream. 
 
-Parser verifies all stdout against a list of check expressions. 
-
-But see L<search context modificators|#search-context-modificators> section.
+Search context could be however changed in some conditions.
 
 
-=head2 Parser
+=head2 dsl parser
 
-Parser is the program which:
+dsl parser is the program which:
 
 =over
 
 =item *
 
-parses check file line by line
+parses dsl code
 
 
 
 =item *
 
-creates and then I<executes> outthentic entries represented by parsed lines
+parses text input
 
 
 
 =item *
 
-execution of each entry results in one of three things:
-
-=over
-
-=item *
-
-performing L<validation|#validation> process if entry is check expression one
-
-
-
-=item *
-
-generating new outthentic entries if entry is generator one
-
-
-
-=item *
-
-execution of Perl code if entry is Perl expression one
+verifies text input ( line by line ) against check expressions ( line by line )
 
 
 
 =back
 
 
+=head2 Verification process
 
-=back
+Verification process consists of matching lines of text input against check expressions.
 
+This is schematic description of the process:
 
-=head2 Validation process
+    For every check expression in check expressions list.
+        Mark this check step as in unknown state.
+        For every line in input text.
+            Does line match check expression? Check step is marked as succeeded.
+            Next line.
+        End of loop.
+        Is this check step marked in unknown state? Mark this check step as in failed state.  
+        Next check expression.
+    End of loop.
+    Are all check steps succeeded? Input text is verified.
+    Vise versa - input text is not verified.
 
-Validation process consists of: 
+A final I<presentation> of verification results should be implemented in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at this scope. 
 
-=over
-
-=item *
-
-checking if stdout matches the check expression or
-
-
-
-=item *
-
-in case of L<validator expression|#validators> :
-
-=over
-
-=item *
-
-executing validator code and checking if returned value is true 
-
-
-=back
-
-
-
-=item *
-
-generating validation results could be retrieved later
-
-
-
-=item *
-
-a final I<presentation> of validation results should be implemented in a certain L<client|#clients> I<using> L<parser api|#parser-api> and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
-
-
-
-=back
+For the sake of readability a I<fake> results presentation layout is used in this document. 
 
 
 =head2 Parser API
 
-Outthentic provides program api for parser:
+Outthentic::DSL provides program api for client applications:
 
     use Test::More qw{no_plan};
     
     use Outthentic::DSL;
     
-    my $outh = Outthentic::DSL->new('stdout string', $opts);
-    $outh->validate('path/to/check/file','stdout string');
+    my $outh = Outthentic::DSL->new('input_text');
+    
+    $outh->validate('/file/with/check/expressions/','input text');
     
     
     for my $r ( @{$outh->results}){
@@ -813,7 +815,7 @@ Obligatory parameters is:
 
 =item *
 
-stdout string 
+input text string 
 
 
 =back
@@ -872,7 +874,7 @@ Default value is `0' - means do not create debug messages.
 
 =head3 validate
 
-Runs parser for check file and and initiates validation process against stdout.
+Perform verification process. 
 
 Obligatory parameter is:
 
@@ -880,7 +882,7 @@ Obligatory parameter is:
 
 =item *
 
-path to check file
+a path to file with dsl code
 
 
 =back
@@ -892,20 +894,22 @@ path to check file
 Returns validation results as arrayref containing { type, status, message } hashrefs.
 
 
-=head2 Outthentic client
+=head2 Outthentic clients
 
-Client is a external program using DSL API. Existed outthentic clients:
+Client is a external program using dsl API. Existed outthentic clients:
 
 =over
 
 =item *
 
-L<swat|https://github.com/melezhik/swat>
+L<swat|https://github.com/melezhik/swat> - web application testing tool
+
 
 
 =item *
 
-L<outthentic|https://github.com/melezhik/outthentic>
+L<outthentic|https://github.com/melezhik/outthentic> - generic testing tool
+
 
 
 =back
@@ -913,9 +917,9 @@ L<outthentic|https://github.com/melezhik/outthentic>
 More clients wanted :) , please L<write me|mailto:melezhik@gmail.com> if you have one!
 
 
-=head1 Outthentic entities
+=head1 dsl code syntax
 
-Outthentic DSL comprises following basic entities:
+Outthentic dsl code comprises following basic entities:
 
 =over
 
@@ -988,23 +992,23 @@ Generator expressions
 
 =head1 Check expressions
 
-Check expressions defines I<lines stdout should match>. Here is a simple example:
+Check expressions define patterns to match input text stream. 
 
-    # stdout
-    
+Here is a simple example:
+
+Input text:
+
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
-    
-    
-    # check list
-    
+
+Dsl code:
+
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
-    
-    
-    # validation results
-    
+
+Results:
+
     +--------+------------------------------+
     | status | message                      |
     +--------+------------------------------+
@@ -1012,51 +1016,105 @@ Check expressions defines I<lines stdout should match>. Here is a simple example
     | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
     +--------+------------------------------+
 
-There are two basic types of check expressions - L<plain strings|#plain-strings> and L<regular expressions|#regular-expressions>.
+There are two basic types of check expressions:
 
-It is convenient to talk about I<check list> as of all check expressions in a given check file.
+=over
+
+=item *
+
+L<plain text expressions|#plain-text-expressions> 
 
 
-=head1 Plain string expressions 
+
+=item *
+
+L<regular expressions|#regular-expressions>.
+
+
+
+=back
+
+
+=head1 Plain text expressions 
+
+Plain text expressions are just a lines should be I<included> at input text stream.
+
+Dsl code:
 
         I am ok
         HELLO Outthentic
 
-The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
+Input text:
+
+    I am ok , really
+    HELLO Outthentic !!!
+
+Result - verified
+
+Plain text expressions are case sensitive:
+
+Input text:
+
+    I am OK
+
+Result - not verified
 
 
 =head1 Regular expressions
 
-Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
+Similarly to plain text matching, you may require that input lines match some regular expressions:
+
+Dsl code:
 
     regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
     regexp: Name: \w+ # name
     regexp: App Version Number: \d+\.\d+\.\d+ # version number
 
-Regular expressions should start with `regexp:' marker.
+Input text:
+
+    2001-01-02
+    Name: outthentic
+    App Version Number: 1.1.10
+
+Result - verified
 
 
 =head1 One or many?
 
-Parser does not care about I<how many times> a given check expression is found in stdout.
+Parser does not care about I<how many times> a given check expression is matched in input text.
 
-It's only required that at least one line in stdout match the check expression ( this is not the case with text blocks, see later )
+If at least one line in a text match the check expression - I<this check> is considered as succeeded.
 
-However it's possible to I<accumulate> all matching lines and save them for further processing:
+Parser  I<accumulate> all matching lines for given check expression, so they could be processed.
 
-    regexp: (Hello, my name is (\w+))
+Input text:
+
+    1 - for one
+    2 - for two
+    3 - for three       
+    
+    regexp: (\d+) for (\w+)
+    code: for my $c( @{captures()}) {  print $c->[0], "/", $c->[1], "\n"}
+
+Output:
+
+    1/one
+    2/two
+    3/three
 
 See L<"captures"|#captures> section for full explanation of a captures mechanism:
 
 
 =head1 Comments, blank lines and text blocks
 
-Comments and blank lines don't impact validation process but one could use them to improve code readability.
+Comments and blank lines don't impact verification process but one could use them to improve code readability.
 
 
 =head2 Comments
 
-Comment lines start with `#' symbol, comments chunks are ignored by parser:
+Comment lines start with `#' symbol, comments chunks are ignored by parser.
+
+Dsl code:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
@@ -1065,7 +1123,9 @@ Comment lines start with `#' symbol, comments chunks are ignored by parser:
 
 =head2 Blank lines
 
-Blank lines are ignored as well:
+Blank lines are ignored as well.
+
+Dsl code:
 
     # every story has the beginning
     The beginning of a story
@@ -1075,7 +1135,11 @@ Blank lines are ignored as well:
     # end has the end
     The end of a story
 
-But you B<can't ignore> blank lines in a `text block matching' context ( see `text blocks' subsection ), use `:blank_line' marker to match blank lines:
+But you B<can't ignore> blank lines in a `text block' context ( see `text blocks' subsection ).
+
+Use `:blank_line' marker to match blank lines.
+
+Dsl code:
 
     # :blank_line marker matches blank lines
     # this is especially useful
@@ -1090,12 +1154,13 @@ But you B<can't ignore> blank lines in a `text block matching' context ( see `te
 
 =head2 Text blocks
 
-Sometimes it is very helpful to match a stdout against a `block of strings' goes consequentially, like here:
+Sometimes it is very helpful to match against a `sequence of lines' like here.
+
+Dsl code:
 
     # this text block
     # consists of 5 strings
-    # goes consequentially
-    # line by line:
+    # going consecutive
     
     begin:
         # plain strings
@@ -1108,7 +1173,7 @@ Sometimes it is very helpful to match a stdout against a `block of strings' goes
         at the very end
     end:
 
-This validation will succeed when gets executed against this chunk:
+Input text:
 
     this string followed by
     that string followed by
@@ -1116,7 +1181,9 @@ This validation will succeed when gets executed against this chunk:
     with that string
     at the very end.
 
-But B<will not> for this chunk:
+Result - verified
+
+Input text:
 
     that string followed by
     this string followed by
@@ -1124,11 +1191,19 @@ But B<will not> for this chunk:
     with that string
     at the very end.
 
-`begin:' `end:' markers decorate `text blocks' content. `:being|:end' markers should not be followed by any text at the same line.
+Result - not verified
 
-Also be aware if you leave "dangling" `begin:' marker without closing `end': somewhere else
+`begin:' `end:' markers decorate `text blocks' content. 
 
-Parser will remain in a `text block' mode till the end of check file, which is probably not you want:
+Markers should not be followed by any text at the same line.
+
+
+=head2 Don't forget to close the block ...
+
+Be aware if you leave "dangling" `begin:' marker without closing `end': somewhere else 
+parser will remain in a `text block' mode till the end of the file, which is probably not you want:
+
+Dsl code:
 
         begin:
             here we begin
@@ -1139,23 +1214,47 @@ Parser will remain in a `text block' mode till the end of check file, which is p
 
 =head1 Perl expressions
 
-Perl expressions are just a pieces of Perl code to I<get evaled> during parsing process. This is how it works:
+Perl expressions are just a pieces of Perl code to I<get evaled> during parsing process. 
 
-    # Perl expression between two check expressions
+This is how it works.
+
+Dsl code:
+
+    # Perl expression 
+    # between two check expressions
     Once upon a time
     code: print "hello I am Outthentic"
     Lived a boy called Outthentic
 
-Internally once check file gets parsed this piece of DSL code is "turned" into regular Perl code:
+Output:
+
+    hello I am Outthentic
+
+Internally once dsl code gets parsed it is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-One of the use case for Perl expressions is to store L<`captures'|#captures> data:
+One of the use case for Perl expressions is to store L<`captures'|#captures> data.
+
+Dsl code:
 
     regexp: my name is (\w+) and my age is (\d+)
     code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
+    code: print $data->{name}, "\n";
+    code: print $data->{age}, "\n";
+
+Input text:
+
+    my name is Alexey and my age is 38
+
+Output:
+
+    Alexey
+    38
+
+Additional comments on perl expressions:
 
 =over
 
@@ -1167,7 +1266,7 @@ Perl expressions are executed by Perl eval function in context of C<package main
 
 =item *
 
-Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/functions/eval.html> to get know more about Perl eval.
+Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/functions/eval.html> to know more about Perl eval function.
 
 
 
@@ -1176,61 +1275,60 @@ Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/fun
 
 =head1 Validators
 
+Validator expressions like Perl expressions are just a piece of Perl code. 
+
+Validators start with `validator:' marker
+
+A Perl code inside validator block should I<return> array reference. Once code is executed a returned array structure
+treated as:
+
 =over
 
 =item *
 
-Validator expressions like Perl expressions are just a piece of Perl code. 
-
-
-
-=item *
-
-Validator expressions start with `validator:' marker
-
+first element - is a status number ( perl true or false )
 
 
 =item *
 
-Validator code gets executed and value returned by the code is treated as validation status.
-
-
-
-=item *
-
-Validator should return array reference. First element of array is validation status and second one is helpful message which
-will be shown when status is appeared in TAP output.
-
+second element - is a helpful message 
 
 
 =back
 
-For example:
+Validators a kind of check expressions with check logic I<expressed> in validator code.
+
+Examples.
+
+Dsl code:
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
     
     # and this is not
     validator: [ 1>10, 'one is bigger then ten'  ]
+    
+    # this one depends on previous check
+    regexp: credit card number: (\d+)
+    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
+    
+    
+    # and this could be any
+    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
 
-=over
+Validators are very efficient when gets combined with L<`captures expressions'|#captures>
 
-=item *
+This is a simple example.
 
-Validators become very efficient when gets combined with L<`captures expressions'|#captures>
+Input text:
 
-
-=back
-
-This is a simple example:
-
-    # stdout
-    # it's my family ages.
+    # my family ages list
     alex    38
     julia   32
     jan     2
-    
-    
+
+Dsl code:
+
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
     
@@ -1244,47 +1342,21 @@ This is a simple example:
 
 =head1 Generators
 
-=over
-
-=item *
-
 Generators is the way to I<generate new outthentic entries on the fly>.
-
-
-
-=item *
 
 Generator expressions like Perl expressions are just a piece of Perl code.
 
-
-
-=item *
-
 The only requirement for generator code - it should return I<reference to array of strings>.
 
+Strings in array returned by generator code I<represent> a I<new> outthentic entities.
 
-
-=item *
-
-Strings in array returned by generator code I<represent> new outthentic entities.
-
-
-
-=item *
-
-An array items are passed back to parser, so parser generate news outthentic entities and execute them.
-
-
-
-=item *
+A new outthentic entries are passed back to parser and executed immediately.
 
 Generators expressions start with `:generator' marker.
 
+Here is simple example.
 
-
-=back
-
-Here is simple example:
+Dsl code:
 
     # original check list
     
@@ -1294,8 +1366,9 @@ Here is simple example:
     # this generator creates 3 new check expressions:
     
     generator: [ qw{ say hello again } ]
-    
-    
+
+New dsl code:
+
     # final check list:
     
     Say
@@ -1304,23 +1377,57 @@ Here is simple example:
     hello
     again
 
-Here is more complicated example:
+Here is more complicated example.
+
+Dsl code:
 
     # this generator generates
     # comment lines
     # and plain string check expressions:
     
-    generator: my %d = { 'foo' => 'foo value', 'bar' => 'bar value' }; [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
-    
-    # generated entries:
-    
+    generator:                                                  \    
+    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     \
+    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]               \
+
+New dsl code:
+
     # foo
     foo value
     # bar
     bar value
 
+Generators could produce not only check expressions but validators, perl expressions and ... generators.
+
+This is fictional example.
+
+Input Text:
+
+    A
+    AA
+    AAA
+    AAAA
+    AAAAA
+
+Dsl code:
+
+    generator:                              \ 
+    sub next_number {                       \    
+        my $i = shift;                      \ 
+        $i++;                               \
+        return [] if $i>=5;                 \
+        [                                   \
+            'regexp: ^'.('A' x $i).'$'      \
+            "generator: next_number($i)"    \ 
+        ]  
+    }
+
+Result - verified
+
 
 =head1 Multiline expressions
+
+
+=head2 Multilines in check expressions
 
 When generate and execute check expressions parser operates in a I<single line mode> :
 
@@ -1333,12 +1440,14 @@ check expressions are treated as single line strings
 
 =item *
 
-stdout is validated by given check expression in line by line way
+input text is validated by given check expression in line by line way
 
 
 =back
 
-For example:
+Example.
+
+Dsl code:
 
     # check list
     # consists of
@@ -1353,9 +1462,9 @@ For example:
     Multiline
     string
     here
-     
-     # validation results
-    
+
+Results:
+
     +--------+---------------------------------------+
     | status | message                               |
     +--------+---------------------------------------+
@@ -1365,11 +1474,18 @@ For example:
     | FAIL   | matches /Multiline \n string \n here/ |
     +--------+---------------------------------------+
 
-Use text blocks if you want to achieve multiline checks.
+Use text blocks if you want multiline checks.
+
+
+=head2 Multilines in perl expressions, validators and generators
 
 However when writing Perl expressions, validators or generators one could use multilines strings.
 
-`\' delimiters breaks a single line text on a multi lines:
+`\' delimiters breaks a single line text on a multi lines.
+
+Examples.
+
+Dsl code:
 
     # What about to validate stdout
     # With sqlite database entries?
@@ -1387,10 +1503,11 @@ However when writing Perl expressions, validators or generators one could use mu
 
 =head1 Captures
 
-Captures are pieces of data get captured when parser validates stdout against a regular expressions:
+Captures are pieces of data get captured when parser validate lines against a regular expressions:
 
-    # stdout
-    # it's my family ages.
+Input text:
+
+    # my family ages list.
     alex    38
     julia   32
     jan     2
@@ -1398,8 +1515,13 @@ Captures are pieces of data get captured when parser validates stdout against a 
     
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
+    code:                                   \
+        for my $c (@{captures}){            \
+            print "name:", $c->[0], "\n";   \
+            print "age:", $c->[1], "\n";    \
+        }    
 
-I<After> this regular expression check gets executed captured data will stored into a array:
+Data accessible via captures():
 
     [
         ['alex',    38 ]
@@ -1407,7 +1529,9 @@ I<After> this regular expression check gets executed captured data will stored i
         ['jan',     2  ]
     ]
 
-Then captured data might be accessed for example by code generator to define some extra checks:
+Then captured data usually good fit for validators extra checks.
+
+Dsl code
 
     validator:                          \
     my $total=0;                        \
@@ -1416,23 +1540,14 @@ Then captured data might be accessed for example by code generator to define som
     }                                   \
     [ ($total == 72 ), "total age of my family" ];
 
-=over
 
-=item *
+=head2 captures() function
 
-`captures()' function is used to access captured data array,
+captures() function returns an array reference holding all chunks captured during I<latest regular expression check>.
 
+Here some more examples.
 
-
-=item *
-
-it returns an array reference holding all chunks captured during I<latest regular expression check>.
-
-
-
-=back
-
-Here some more examples:
+Dsl code:
 
     # check if stdout contains numbers,
     # then calculate total amount
@@ -1462,9 +1577,16 @@ Here some more examples:
     
     [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
 
-You also may use `capture()' function to get a I<first element> of captures array:
 
-    # check if stdout contains numbers
+=head2 capture() function
+
+capture() function returns a I<first element> of captures array. 
+
+it is useful when you need data I<related> only  I<first> successfully matched line.
+
+Dsl code:
+
+    # check if  text contains numbers
     # a first number should be greater then ten
     
     regexp: (\d+)
@@ -1473,13 +1595,13 @@ You also may use `capture()' function to get a I<first element> of captures arra
 
 =head1 Search context modificators
 
-Search context modificators are special check expressions which not only validate stdout but modify search context.
+Search context modificators are special check expressions which not only validate text but modify search context.
 
-But default search context is equal to original stdout. 
+By default search context is equal to original input text stream. 
 
-That means outthentic parser execute validation process against original stdout stream
+That means parser executes validation use all the lines when performing checks 
 
-There are two search context modificators to change this behavior:
+However there are two search context modificators to change this behavior:
 
 =over
 
@@ -1500,10 +1622,10 @@ range expressions
 
 =head2 Within expressions
 
-Within expression acts like regular expression - parser checks stdout against given pattern 
+Within expression acts like regular expression - checks text against given patterns 
 
-    # stdout
-    
+Text input:
+
     These are my colors
     
     color: red
@@ -1513,15 +1635,14 @@ Within expression acts like regular expression - parser checks stdout against gi
     color: back
     
     That is it!
-    
-    # outthentic check
-    
+
+Dsl code:
+
     # I need one of 3 colors:
     
     within: color: (red|green|blue)
 
-Then if checks given by within statement succeed I<next> checks will be executed I<in a context of>
-succeeded lines:
+Then if checks given by within statement succeed I<next> checks will be executed I<in a context of> succeeded lines:
 
     # but I really need a green one
     green
@@ -1532,7 +1653,7 @@ The code above does follows:
 
 =item *
 
-try to validate stdout against regular expression "color: (red|green|blue)"
+try to validate input text against regular expression "color: (red|green|blue)"
 
 
 
@@ -1559,7 +1680,7 @@ thus next plain string checks expression will be executed against new search con
 
 =back
 
-The result will be:
+Results:
 
     +--------+------------------------------------------------+
     | status | message                                        |
@@ -1587,38 +1708,40 @@ Within expressions could be sequential, which effectively means using `&&' logic
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
 
-Speaking in human language chained within expressions acts like specifications. When you may start with some
-generic assumptions and then make your requirements more specific. A failure on any step of chain results in
+Speaking in human language chained within expressions acts like I<specifications>. 
+
+When you may start with some generic assumptions and then make your requirements more specific. A failure on any step of chain results in
 immediate break. 
 
 
 =head1 Range expressions
 
-Between or range expressions also act like I<search context modificators> - they change search area to one included
+Range expressions also act like I<search context modificators> - they change search area to one included
 I<between> lines matching right and left regular expression of between statement.
 
 It is very similar to what Perl L<range operator|http://perldoc.perl.org/perlop.html#Range-Operators> does 
-when extracting pieces of lines inside stream
+when extracting pieces of lines inside stream:
 
     while (<STDOUT>){
         if /foo/ ... /bar/
     }
 
-Outthentic analogy for this is between expression:
+Outthentic analogy for this is range expression:
 
     between: foo bar
 
-Between expression takes 2 arguments - left and right regular expression to setup search area boundaries.
+Between statement takes 2 arguments - left and right regular expression to setup search area boundaries.
 
 A search context will be all the lines included between line matching left expression and line matching right expression.
 
-A matching (boundary) lines are not included in range:
+A matching (boundary) lines are not included in range. 
 
 These are few examples:
 
 Parsing html output
 
-    # stdout
+Input text:
+
     <table cols=10 rows=10>
         <tr>
             <td>one</td>
@@ -1630,8 +1753,9 @@ Parsing html output
             <td>the</td>
         </tr>
     </table>
-    
-    
+
+Dsl code:
+
     # between expression:
     between: <table.*> <\/table>
     regexp: <td>(\S+)<\/td>
@@ -1640,11 +1764,13 @@ Parsing html output
     between: <tr.*> <\/tr>
     regexp: <td>(\S+)<\/td>
 
-Between expressions could not be nested, every new between expression discards old search context
-and setup new one:
 
-    # sample stdout
-    
+=head2 Multiple range expressions
+
+Multiple range expressions could not be nested, every new between statement discards old search context and setup new one:
+
+Input text:
+
     foo
     
         1
@@ -1664,9 +1790,9 @@ and setup new one:
         30
     
     BAR
-    
-    # outthentic check list:
-    
+
+Dsl code:
+
     between: foo bar
     
     code: print "# foo/bar start"
@@ -1697,9 +1823,9 @@ and setup new one:
         print "#", $i->[0], "\n";   \
     }                               \
     print "# FOO/BAR end"
-    
-    # TAP output
-    
+
+Output:
+
         # foo/bar start
         # 1
         # 2
@@ -1714,17 +1840,21 @@ and setup new one:
         # 30
         # FOO/BAR end
 
-And finally to restore search context use `reset_context:' statement:
 
-    # stdout
-    
+=head2 Restoring search context
+
+And finally to restore search context use `reset_context:' statement.
+
+Input text:
+
     hello
     foo
         hello
         hello
     bar
-    
-    
+
+Dsl code:
+
     between foo bar
     
     # all check expressions here
@@ -1739,50 +1869,45 @@ And finally to restore search context use `reset_context:' statement:
     reset_context:
     hello       # should match three times
 
-Range expressions caveats
 
-=over
-
-=item *
-
-range expressions don't keep original order inside range
+=head2 Range expressions caveats
 
 
-=back
+=head3 Range expressions can't verify continuous lists.
 
-For example:
+That means range expression only verifies that there are I<some set> of lines inside some range.
+It is not necessary should be continuous.
 
-    # stdout
-    
+Example.
+
+Input text:
+
     foo
         1
+        a
         2
-        1
-        2
+        b
+        3
+        c
     bar
-    
-    
-    # outthentic check
-    
+
+Dsl code:
+
     between: foo bar
-        regexp: 1
-        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
-        regexp: 2
-        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
-    
-    # validation output
-    
-        # 1 1
-        # 2 2
+        1
+        code: print capture()->[0], "\n"
+        2
+        code: print capture()->[0], "\n"
+        3
+        code: print capture()->[0], "\n"
 
-=over
+Output:
 
-=item *
+        1 
+        2 
+        3 
 
-if you need precise order keep preserved use text blocks
-
-
-=back
+If you need check continuous sequences checks use text blocks.
 
 
 =head1 Experimental features
@@ -1792,10 +1917,10 @@ Below is highly experimental features purely tested. You may use it on your own 
 
 =head2 Streams
 
-Streams are alternative for captures. Consider following example:
+Streams are alternative for captures. Consider following example.
 
-    # stdout
-    
+Input text:
+
     foo
         a
         b
@@ -1813,9 +1938,9 @@ Streams are alternative for captures. Consider following example:
         00
         000
     bar
-    
-    # outthentic check list
-    
+
+Dsl code:
+
     begin:
     
         foo
@@ -1834,7 +1959,7 @@ Streams are alternative for captures. Consider following example:
     
     end:
 
-The code above will print:
+Output:
 
     # a 1 0
     # b 2 00
@@ -1843,18 +1968,23 @@ The code above will print:
 Notice something interesting? Output direction has been inverted.
 
 The reason for this is outthentic check expression works in "line by line scanning" mode 
-when output gets verified line by line against given check expression. Once all lines are matched
-they get dropped into one heap without preserving original "group context". 
+when text input gets verified line by line against given check expression. 
 
-What if we would like to print all matching lines grouped by text blocks they belong to which is more convenient?
+Once all lines are matched they get dropped into one heap without preserving original "group context". 
+
+What if we would like to print all matching lines grouped by text blocks they belong to?
+
+As it's more convenient way ...
 
 This is where streams feature comes to rescue.
 
 Streams - are all the data successfully matched for given I<group context>. 
 
-Streams are available for text blocks and range expressions.
+Streams are I<applicable> for text blocks and range expressions.
 
-Let's rewrite the example:
+Let's rewrite last example.
+
+Dsl code:
 
     begin:
     
@@ -1875,20 +2005,24 @@ Let's rewrite the example:
         
     end:
 
-Stream function returns an arrays of streams. Every stream holds all the matched lines for given block.
-So streams preserve group context. Number of streams relates to the number of successfully matched blocks.
+Stream function returns an arrays of I<streams>. Every stream holds all the matched lines for given I<logical block>.
 
-Streams data presentation is much closer to what was originally given in stdout:
+Streams preserve group context. Number of streams relates to the number of successfully matched groups.
+
+Streams data presentation is much closer to what was originally given in text input:
+
+Output:
 
     # foo a b  c    bar
     # foo 1 2  3    bar
     # foo 0 00 000  bar
 
-Stream could be specially useful when combined with range expressions where sizes
-of successfully matched blocks could be different:
+Stream could be specially useful when combined with range expressions of I<various> ranges lengths.
 
-    # stdout
-    
+For example.
+
+Input text:
+
     foo
         2
         4
@@ -1901,10 +2035,14 @@ of successfully matched blocks could be different:
         3
     bar
     
-    
-    # outthentic check
-    
-    
+    foo
+        0
+        0
+        0
+    bar
+
+Dsl code:
+
     between: foo bar
     
     regexp: \d+
@@ -1917,13 +2055,12 @@ of successfully matched blocks could be different:
             }                               \
             print "\n";                     \
         }
-    
-    
-    # validation output:
-    
-    
+
+Output:
+
     # 2 4 6 8
     # 1 3
+    # 0 0 0
 
 
 =head1 Author
@@ -1941,6 +2078,11 @@ https://github.com/melezhik/outthentic-dsl
 Copyright 2015 Alexey Melezhik.
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+
+=head1 See also
+
+Alternative outthentic dsl introduction could be found here - L<intro.md|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
 
 
 =head1 Thanks

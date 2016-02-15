@@ -12,7 +12,7 @@ Language to validate text output.
 
 # Informal introduction
 
-Alternative outthentic dsl introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
+Alternative outthentic dsl introduction could be found [here](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
 
 # Glossary
 
@@ -32,31 +32,30 @@ Examples:
 
 ## Outthentic dsl
 
-* Is a language to verify _arbitrary_ plain text 
+* Is a language to verify _arbitrary_ plain text
 
 * Outthentic dsl is both imperative and declarative language
 
 ### Declarative way
 
-You define rules ( check expressions ) to describe expected content  
+You define rules ( check expressions ) to describe expected content.
 
 ### Imperative way
 
-You define a process of verification using custom perl code ( validators, generators, code expressions  )   
+You define a process of verification using custom perl code ( validators, generators, code expressions  ).
 
 
 ## dsl code
 
-A  program code written on outthentic dsl language to verify text input
+A  program code written on outthentic dsl language to verify text input.
 
 ## Search context
 
-Verification process if carried out in a given context.
+Verification process is carried out in a given _context_.
 
 But default search context is the same as original input text stream. 
 
-Search context could be however changes in some conditions
-
+Search context could be however changed in some conditions.
 
 ## dsl parser
 
@@ -77,12 +76,12 @@ This is schematic description of the process:
 
 
     For every check expression in check expressions list.
-        Mark this check step in unknown state.
+        Mark this check step as in unknown state.
         For every line in input text.
             Does line match check expression? Check step is marked as succeeded.
             Next line.
         End of loop.
-        Is this check step marked in unknown state? Mark this check step in failed state.  
+        Is this check step marked in unknown state? Mark this check step as in failed state.  
         Next check expression.
     End of loop.
     Are all check steps succeeded? Input text is verified.
@@ -90,7 +89,7 @@ This is schematic description of the process:
     
 A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope. 
 
-For the sake of readability a _fake_ layout is used in this document. 
+For the sake of readability a _fake_ results presentation layout is used in this document. 
 
 ## Parser API
 
@@ -139,7 +138,7 @@ Default value is \`40'
 
 ### validate
 
-Perform verification process 
+Perform verification process. 
 
 Obligatory parameter is:
 
@@ -265,7 +264,7 @@ Result - verified
 
 Parser does not care about _how many times_ a given check expression is matched in input text.
 
-If at least one line in a text match the check expression - _this check_ is considered as succeeded
+If at least one line in a text match the check expression - _this check_ is considered as succeeded.
 
 Parser  _accumulate_ all matching lines for given check expression, so they could be processed.
 
@@ -362,7 +361,7 @@ Input text:
     with that string
     at the very end.
 
-Result - not verified
+Result - verified
 
 Input text:
 
@@ -454,11 +453,9 @@ treated as:
 
 Validators a kind of check expressions with check logic _expressed_ in validator code.
 
-
 Examples.
 
 Dsl code:
-
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
@@ -467,7 +464,7 @@ Dsl code:
     validator: [ 1>10, 'one is bigger then ten'  ]
 
     # this one depends on previous check
-    regexp: card number: (\d+)
+    regexp: credit card number: (\d+)
     validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
 
 
@@ -512,7 +509,7 @@ The only requirement for generator code - it should return _reference to array o
 
 Strings in array returned by generator code _represent_ a _new_ outthentic entities.
 
-A new outthentic entries are passed back to parser and executed immediately
+A new outthentic entries are passed back to parser and executed immediately.
 
 Generators expressions start with \`:generator' marker.
 
@@ -621,7 +618,7 @@ Dsl code:
     here
 
 
-Verification results:
+Results:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -812,7 +809,7 @@ These are:
 
 * thus next plain string checks expression will be executed against new search context
 
-The result will be:
+Results:
 
     +--------+------------------------------------------------+
     | status | message                                        |
@@ -843,33 +840,34 @@ Within expressions could be sequential, which effectively means using \`&&' logi
     # and try to find month 04 in a date string
     within: \d\d\d\d-04-\d\d
 
-Speaking in human language chained within expressions acts like specifications. When you may start with some
-generic assumptions and then make your requirements more specific. A failure on any step of chain results in
+Speaking in human language chained within expressions acts like _specifications_. 
+
+When you may start with some generic assumptions and then make your requirements more specific. A failure on any step of chain results in
 immediate break. 
 
 
 # Range expressions
 
-Between or range expressions also act like _search context modificators_ - they change search area to one included
+Range expressions also act like _search context modificators_ - they change search area to one included
 _between_ lines matching right and left regular expression of between statement.
 
 
 It is very similar to what Perl [range operator](http://perldoc.perl.org/perlop.html#Range-Operators) does 
-when extracting pieces of lines inside stream
+when extracting pieces of lines inside stream:
 
     while (<STDOUT>){
         if /foo/ ... /bar/
     }
 
-Outthentic analogy for this is between expression:
+Outthentic analogy for this is range expression:
 
     between: foo bar
 
-Between expression takes 2 arguments - left and right regular expression to setup search area boundaries.
+Between statement takes 2 arguments - left and right regular expression to setup search area boundaries.
 
 A search context will be all the lines included between line matching left expression and line matching right expression.
 
-A matching (boundary) lines are not included in range:
+A matching (boundary) lines are not included in range. 
 
 These are few examples:
 
@@ -900,8 +898,10 @@ Dsl code:
     between: <tr.*> <\/tr>
     regexp: <td>(\S+)<\/td>
 
-Between expressions could not be nested, every new between expression discards old search context
-and setup new one:
+
+## Multiple range expressions
+
+Multiple range expressions could not be nested, every new between statement discards old search context and setup new one:
 
 Input text:
 
@@ -1008,7 +1008,10 @@ Dsl code:
 
 ## Range expressions caveats
 
-### Range expressions don't verify continuous list:
+### Range expressions can't verify continuous lists.
+
+That means range expression only verifies that there are _some set_ of lines inside some range.
+It is not necessary should be continuous.
 
 Example.
 
@@ -1025,15 +1028,21 @@ Input text:
     bar
 
 
-    # outthentic check
+Dsl code:
 
     between: foo bar
-        regexp: 1
-        code: print '#', ( join ' ', map {$_->[0]} @{captures()} ), "\n"
+        1
+        code: print capture()->[0], "\n"
+        2
+        code: print capture()->[0], "\n"
+        3
+        code: print capture()->[0], "\n"
 
-Output
+Output:
 
-        # 1 2 3 
+        1 
+        2 
+        3 
 
 If you need check continuous sequences checks use text blocks.
 
@@ -1043,8 +1052,7 @@ Below is highly experimental features purely tested. You may use it on your own 
 
 ## Streams
 
-Streams are alternative for captures. Consider following example:
-
+Streams are alternative for captures. Consider following example.
 
 Input text:
 
@@ -1098,18 +1106,21 @@ Output:
 Notice something interesting? Output direction has been inverted.
 
 The reason for this is outthentic check expression works in "line by line scanning" mode 
-when output gets verified line by line against given check expression. Once all lines are matched
-they get dropped into one heap without preserving original "group context". 
+when text input gets verified line by line against given check expression. 
 
-What if we would like to print all matching lines grouped by text blocks they belong to which is more convenient?
+Once all lines are matched they get dropped into one heap without preserving original "group context". 
+
+What if we would like to print all matching lines grouped by text blocks they belong to?
+
+As it's more convenient way ...
 
 This is where streams feature comes to rescue.
 
 Streams - are all the data successfully matched for given _group context_. 
 
-Streams are available for text blocks and range expressions.
+Streams are _applicable_ for text blocks and range expressions.
 
-Let's rewrite the example.
+Let's rewrite last example.
 
 Dsl code:
 
@@ -1133,19 +1144,22 @@ Dsl code:
     end:
 
 
-Stream function returns an arrays of streams. Every stream holds all the matched lines for given block.
-So streams preserve group context. Number of streams relates to the number of successfully matched blocks.
+Stream function returns an arrays of _streams_. Every stream holds all the matched lines for given _logical block_.
 
-Streams data presentation is much closer to what was originally given in stdout:
+Streams preserve group context. Number of streams relates to the number of successfully matched groups.
+
+Streams data presentation is much closer to what was originally given in text input:
+
+Output:
 
     # foo a b  c    bar
     # foo 1 2  3    bar
     # foo 0 00 000  bar
 
 
-Stream could be specially useful when combined with range expressions where sizes
-of successfully matched blocks could be different:
+Stream could be specially useful when combined with range expressions of _various_ ranges lengths.
 
+For example.
 
 Input text:
 
@@ -1162,6 +1176,11 @@ Input text:
         3
     bar
 
+    foo
+        0
+        0
+        0
+    bar
 
 
 Dsl code:
@@ -1185,7 +1204,7 @@ Output:
     
     # 2 4 6 8
     # 1 3
-
+    # 0 0 0
 
 # Author
 
