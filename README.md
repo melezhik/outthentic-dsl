@@ -12,84 +12,90 @@ Language to validate text output.
 
 # Informal introduction
 
-Alternative introduction into outthentic dsl in more in infromal way could be found here 
+Alternative introduction into outthentic dsl in more in informal way could be found here 
 - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
-
 
 # Glossary
 
-## Outthentic DSL 
+## Input text
 
-* Is a language to validate _arbitrary_ plain text. Very often a short form \`DSL' is used for this term. 
+An arbitrary, often unstructured text being verified. It could be any text.
 
-* Outthentic DSL is both imperative and declarative language.
+Examples:
 
-## Check files
+* html code
+* xml code
+* json 
+* plain text
+* emails :-)
+* http headers
+* another program languages code
 
-A plain text files containing program code written on DSL to describe text [validation process](#validation-process).
+## Outthentic dsl
 
-## Code
+* Is a language to verify _arbitrary_ plain text 
 
-Content of check file. Should be program code written on DSL.
+* Outthentic dsl is both imperative and declarative language
 
-## Stdout
+### Declarative way
 
-It's convenient to refer to the text validate by as stdout, thinking that one program generates and yields output into stdout
-which is then validated.
+You define rules ( check expressions ) to describe expected content  
+
+### Imperative way
+
+You define a process of verification using custom perl code ( validators, generators, code expressions  )   
+
+
+## dsl code
+
+A  program code written on outthentic dsl language to verify text input
 
 ## Search context
 
-A synonym for stdout term with emphasis of the fact that validation process if carried out in a given context.
+Verification process if carried out in a given context.
 
-But default search context is equal to original stdout stream. 
+But default search context is the same as original input text stream. 
 
-Parser verifies all stdout against a list of check expressions. 
-
-But see [search context modificators](#search-context-modificators) section.
+Search context could be however changes in some conditions
 
 
-## Parser
+## dsl parser
 
-Parser is the program which:
+dsl parser is the program which:
 
-* parses check file line by line
+* parses dsl code
 
-* creates and then _executes_ outthentic entries represented by parsed lines
+* parses text input
 
-* execution of each entry results in one of three things:
-
-    * performing [validation](#validation) process if entry is check expression one
-
-    * generating new outthentic entries if entry is generator one
-
-    * execution of Perl code if entry is Perl expression one
+* verifies text input ( line by line ) against check expressions ( line by line )
 
 
+## Verification process
 
-## Validation process
+Verification process consists of matching lines of text input against check expressions.
 
-Validation process consists of: 
+For every check expression in check expressions list
+    For every line in input text
+        If line match check expression ?
+            Check step is succeeded OR check step failed
+If all check steps are succeeded ?
+    Input text is verified OR text is not verified    
 
-* checking if stdout matches the check expression or
- 
-* in case of [validator expression](#validators) :
+A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope. 
 
-    * executing validator code and checking if returned value is true 
-
-* generating validation results could be retrieved later
-
-* a final _presentation_ of validation results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at DSL scope. For the sake of readability a table like form ( which is a fake one ) is used for validation results in this document. 
+For the sake of readability a fake table form is used in this document. 
 
 ## Parser API
 
-Outthentic provides program api for parser:
+Outthentic::DSL provides program api for client applications:
 
     use Test::More qw{no_plan};
 
     use Outthentic::DSL;
 
-    my $outh = Outthentic::DSL->new('stdout string', $opts);
-    $outh->validate('path/to/check/file','stdout string');
+    my $outh = Outthentic::DSL->new('input_text');
+
+    $outh->validate('/file/with/check/expressions/','input text');
 
 
     for my $r ( @{$outh->results}){
@@ -106,7 +112,7 @@ This is constructor, create Outthentic::DSL instance.
 
 Obligatory parameters is:
 
-* stdout string 
+* input text string 
 
 Optional parameters is passed as hashref:
 
@@ -126,28 +132,30 @@ Default value is \`40'
 
 ### validate
 
-Runs parser for check file and and initiates validation process against stdout.
+Perform verification process 
 
 Obligatory parameter is:
 
-* path to check file
+* path to file with DSL code
 
 ### results  
 
 Returns validation results as arrayref containing { type, status, message } hashrefs.
 
-## Outthentic client
+## Outthentic clients
 
-Client is a external program using DSL API. Existed outthentic clients:
+Client is a external program using dsl API. Existed outthentic clients:
 
-* [swat](https://github.com/melezhik/swat)
-* [outthentic](https://github.com/melezhik/outthentic)
+* [swat](https://github.com/melezhik/swat) - web application testing tool
+
+* [outthentic](https://github.com/melezhik/outthentic) - generic testing tool
+
 
 More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
-# Outthentic entities
+# DSL code syntax
 
-Outthentic DSL comprises following basic entities:
+Outthentic DSL code comprises following basic entities:
 
 * Check expressions:
 
@@ -168,22 +176,24 @@ Outthentic DSL comprises following basic entities:
 
 # Check expressions
 
-Check expressions defines _lines stdout should match_. Here is a simple example:
+Check expressions define patterns to match input text stream. 
 
-    # stdout
+Here is a simple example:
+
+    # input
 
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
 
 
-    # check list
+    # dsl code
 
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-    # validation results
+    # verification results
 
     +--------+------------------------------+
     | status | message                      |
@@ -193,50 +203,92 @@ Check expressions defines _lines stdout should match_. Here is a simple example:
     +--------+------------------------------+
 
 
-There are two basic types of check expressions - [plain strings](#plain-strings) and [regular expressions](#regular-expressions).
+There are two basic types of check expressions:
 
-It is convenient to talk about _check list_ as of all check expressions in a given check file.
+* [plain text expressions](#plain-text-expressions) 
 
-# Plain string expressions 
+* [regular expressions](#regular-expressions).
 
+# Plain text expressions 
+
+Plain text expressions are just a lines should be _included_ at input text stream:
+
+dsl code:
+        
         I am ok
         HELLO Outthentic
+
+Input text:
+
+    I am ok , really
+    HELLO Outthentic !!!
  
+Result - verified
 
-The code above declares that stdout should have lines 'I am ok' and 'HELLO Outthentic'.
+Plain text expressions are case sensitive:
 
+Input text:
 
+    I am OK
+ 
+Result - not verified
+
+    
 # Regular expressions
 
-Similarly to plain strings matching, you may require that stdout has lines matching the regular expressions:
+Similarly to plain text matching, you may require that input lines match some regular expressions:
+
+dsl code:
 
     regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
     regexp: Name: \w+ # name
     regexp: App Version Number: \d+\.\d+\.\d+ # version number
 
-Regular expressions should start with \`regexp:' marker.
- 
+Input text:
 
+    2001-01-02
+    Name: outthentic
+    App Version Number: 1.1.10
+ 
+Result - verified
+
+ 
 # One or many?
 
-Parser does not care about _how many times_ a given check expression is found in stdout.
+Parser does not care about _how many times_ a given check expression is matched in input text.
 
-It's only required that at least one line in stdout match the check expression ( this is not the case with text blocks, see later )
+If at least one line in a text match the check expression - _this check_ is considered as succeeded
 
-However it's possible to _accumulate_ all matching lines and save them for further processing:
+Parser  _accumulate_ all matching lines for given check expression, so they could be processed:
 
-    regexp: (Hello, my name is (\w+))
+Input text:
+
+    1 - for one
+    2 - for two
+    3 - for three       
+
+    regexp: (\d+) for (\w+)
+    code: for my $c( @{captures()}) {  print $c->[0], "/", $c->[1], "\n"}
+
+Output:
+
+    1/one
+    2/two
+    3/three
+
 
 See ["captures"](#captures) section for full explanation of a captures mechanism:
 
-
 # Comments, blank lines and text blocks
 
-Comments and blank lines don't impact validation process but one could use them to improve code readability.
+Comments and blank lines don't impact verification process but one could use them to improve code readability.
 
 ## Comments
 
-Comment lines start with \`#' symbol, comments chunks are ignored by parser:
+Comment lines start with \`#' symbol, comments chunks are ignored by parser.
+
+
+dsl code:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
@@ -244,7 +296,9 @@ Comment lines start with \`#' symbol, comments chunks are ignored by parser:
 
 ## Blank lines
 
-Blank lines are ignored as well:
+Blank lines are ignored as well.
+
+dsl code:
 
     # every story has the beginning
     The beginning of a story
@@ -254,7 +308,11 @@ Blank lines are ignored as well:
     # end has the end
     The end of a story
 
-But you **can't ignore** blank lines in a \`text block matching' context ( see \`text blocks' subsection ), use \`:blank_line' marker to match blank lines:
+But you **can't ignore** blank lines in a \`text block' context ( see \`text blocks' subsection ).
+
+Use \`:blank_line' marker to match blank lines.
+
+dsl code:
 
     # :blank_line marker matches blank lines
     # this is especially useful
@@ -268,7 +326,7 @@ But you **can't ignore** blank lines in a \`text block matching' context ( see \
 
 ## Text blocks
 
-Sometimes it is very helpful to match a stdout against a \`block of strings' goes consequentially, like here:
+Sometimes it is very helpful to match against a \`block of lines' goes consequentially, like here:
 
     # this text block
     # consists of 5 strings

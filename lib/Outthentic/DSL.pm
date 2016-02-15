@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.7';
+our $VERSION = '0.0.8';
 
 use Carp;
 use Data::Dumper;
