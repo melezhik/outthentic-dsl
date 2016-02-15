@@ -12,8 +12,7 @@ Language to validate text output.
 
 # Informal introduction
 
-Alternative introduction into outthentic dsl in more in informal way could be found here 
-- [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
+Alternative outthentic dsl introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
 
 # Glossary
 
@@ -515,7 +514,7 @@ Strings in array returned by generator code _represent_ a _new_ outthentic entit
 
 A new outthentic entries are passed back to parser and executed immediately
 
-* Generators expressions start with \`:generator' marker.
+Generators expressions start with \`:generator' marker.
 
 Here is simple example.
 
@@ -1202,6 +1201,9 @@ Copyright 2015 Alexey Melezhik.
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
+# See also
+
+Alternative outthentic dsl introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
 
 # Thanks
 
