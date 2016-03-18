@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.9';
+our $VERSION = '0.0.10';
 
 use Carp;
 use Data::Dumper;
@@ -176,7 +176,7 @@ sub check_line {
     );
 
     $self->add_debug_result("context modificator applied: ".(ref $self->{context_modificator})) 
-        if $self->{debug_mod} >=1;
+        if $self->{debug_mod} >=2;
         
     if ( $self->{debug_mod} >= 2 ) {
         for my $dcl (@$dc){ 
