@@ -115,8 +115,8 @@ sub update_stream {
             #warn ($c->[1]-1);
             #warn "----";
             if ($c->[1] > $a_index and $c->[1] < $b_index  ){
-                push @{$self->{chains}->{$a_index}}, $c unless $self->{seen}->{$c->[0]};
-                $self->{seen}->{$c->[0]}=1;
+                push @{$self->{chains}->{$a_index}}, $c unless $self->{seen}->{$c->[1]};
+                $self->{seen}->{$c->[1]}=1;
                 $keep_ranges{$a_index}=1;
                 #warn "OK!";
             }
