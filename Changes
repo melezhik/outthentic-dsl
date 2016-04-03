@@ -1,3 +1,7 @@
+0.0.12 2016-04-03
+
+Generators, validators, code blocks - print evaled code in human friendly manner for easy troubleshooting
+
 0.0.11 2016-03-25
 
 Outthentic::DSL::Context::Range::update_stream bugfix ( it was hard to find though ;-)

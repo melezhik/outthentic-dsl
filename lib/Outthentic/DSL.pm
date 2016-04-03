@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.11';
+our $VERSION = '0.0.12';
 
 use Carp;
 use Data::Dumper;
@@ -448,12 +448,14 @@ sub handle_code {
 
     unless (ref $code){
         eval "package main; $code;";
-        confess "eval error; sub:handle_code; code:$code; error: $@" if $@;
+        confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
         $self->add_debug_result("handle_code OK. $code") if $self->{debug_mod} >= 3;
     } else {
+        my $i = 0;
+        my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
         my $code_to_eval = join "\n", @$code;
         eval "package main; $code_to_eval";
-        confess "eval error; sub:handle_code; code:$code_to_eval; error: $@" if $@;
+        confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
         $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
     }
 
@@ -466,14 +468,16 @@ sub handle_validator {
 
     unless (ref $code){
         my $r = eval "package main; $code;";
-        confess "eval error; sub:handle_validator; code:$code; error: $@" if $@;
+        confess "eval error; sub:handle_validator; code:$code\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
         $self->add_debug_result("handle_validator OK (status: $r->[0] message: $r->[1]). $code") if $self->{debug_mod} >= 2;
     } else {
+        my $i = 0;
+        my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
         my $code_to_eval = join "\n", @$code;
         my $r = eval "package main; $code_to_eval";
-        confess "eval error; sub:handle_validator; code:$code_to_eval; error: $@" if $@;
+        confess "eval error; sub:handle_validator; code:\n$code_to_print\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
         $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 2;
@@ -488,14 +492,16 @@ sub handle_generator {
 
     unless (ref $code){
         my $arr_ref = eval "package main; $code";
-        confess "eval error; sub:handle_generator; code:$code; error: $@" if $@;
+        confess "eval error; sub:handle_generator; code:$code\nerror: $@" if $@;
         confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
         $self->add_debug_result("handle_generator OK. $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
     } else {
+        my $i = 0;
+        my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
         my $code_to_eval = join "\n", @$code;
         my $arr_ref = eval " package main; $code_to_eval";
-        confess "eval error; sub:handle_generator; code:$code_to_eval; error: $@" if $@;
+        confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
         confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
         $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
