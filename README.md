@@ -590,15 +590,21 @@ Result - verified
 
 # Multiline expressions
 
-
 ## Multilines in check expressions
 
-When generate and execute check expressions parser operates in a _single line mode_ :
+When parser parses check expressions it does it in a _single line mode_ :
 
-* check expressions are treated as single line strings
-* input text is validated by given check expression in line by line way
+* a check expression is always single line string
+
+* input text is parsed in line by line mode, thus every line is validated against a single line check expression
 
 Example.
+
+    # Input text
+
+    Multiline
+    string
+    here
 
 Dsl code:
 
@@ -612,10 +618,6 @@ Dsl code:
     here
     regexp: Multiline \n string \n here
 
-    # stdout
-    Multiline
-    string
-    here
 
 
 Results:
@@ -630,11 +632,20 @@ Results:
     +--------+---------------------------------------+
 
 
-Use text blocks if you want multiline checks.
+Use text blocks if you want to _represent_ multiline checks.
 
 ## Multilines in perl expressions, validators and generators
 
-However when writing Perl expressions, validators or generators one could use multilines strings.
+Perl expressions, validators and generators could contain multilines expressions
+
+There are two ways to write multiline expressions:
+
+* using ` delimeters to split multiline string to many chunks
+
+* using HERE documents expressions 
+
+
+### \ delimiters
 
 \`\' delimiters breaks a single line text on a multi lines.
 
@@ -1216,30 +1227,39 @@ WARNING!!! Don't use these features in production unless this message is removed
 One may use various languages in generators expressions:
 
     # bash 
-    generator:  \
-    !/bin/bash  \
+    generator:  <<HERE
 
+    !/bin/bash
     echo OK
+
+    HERE
 
 
     # perl6
-    generator:  \
-    !/usr/bin/perl6  \
+    generator: <<PERL6
+
+    !/usr/bin/perl6
 
     say 'OK';
 
+    PERL6
 
     # ruby
-    generator:  \
-    !/usr/bin/ruby  \
+    generator:  <<CODE
+    !/usr/bin/ruby
 
-    puts 'OK';
+    puts 'OK'
+
+    CODE
 
     # ruby, another way to set path to executable  
-    generator:  \
+
+    generator:  <<<CODE
     !ruby  \
 
-    puts 'OK';
+    puts 'OK'
+
+    CODE
 
 
 # Author
