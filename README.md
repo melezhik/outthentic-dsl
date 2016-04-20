@@ -1206,6 +1206,34 @@ Output:
     # 1 3
     # 0 0 0
 
+
+# Experimental features
+
+## Other languages support
+
+One may use various languages in generators expressions:
+
+    # bash 
+    generator:  \
+    !/bin/bash  \
+
+    echo OK
+
+
+    # perl6
+    generator:  \
+    !/usr/bin/perl6  \
+
+    say 'OK';
+
+
+    # ruby
+    generator:  \
+    !/usr/bin/ruby  \
+
+    puts 'OK';
+
+
 # Author
 
 [Aleksei Melezhik](mailto:melezhik@gmail.com)
