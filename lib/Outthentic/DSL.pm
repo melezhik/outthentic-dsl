@@ -544,9 +544,11 @@ sub handle_generator {
           print EXT_SOURCE_CODE $code_to_eval;
           close EXT_SOURCE_CODE;
 
-          my $out = join "\n", ( split "\n", `$ext_runner /tmp/ext-source`);  
+          system("$ext_runner /tmp/ext-source 2>/tmp/ext-source.err 1>/tmp/ext-source.out");  
 
           $self->add_debug_result("handle_external_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+          $self->validate('/tmp/ext-source.out');
 
         }else {
 
