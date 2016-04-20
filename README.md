@@ -1209,6 +1209,8 @@ Output:
 
 # Experimental features
 
+WARNING!!! Don't use these features in production unless this message is removed.
+
 ## Other languages support
 
 One may use various languages in generators expressions:
@@ -1230,6 +1232,12 @@ One may use various languages in generators expressions:
     # ruby
     generator:  \
     !/usr/bin/ruby  \
+
+    puts 'OK';
+
+    # ruby, another way to set path to executable  
+    generator:  \
+    !ruby  \
 
     puts 'OK';
 
