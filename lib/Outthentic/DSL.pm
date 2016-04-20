@@ -9,6 +9,7 @@ use Data::Dumper;
 use Outthentic::DSL::Context::Range;
 use Outthentic::DSL::Context::Default;
 use Outthentic::DSL::Context::TextBlock;
+use File::Temp qw/ tempfile /;
 
 $Data::Dumper::Terse=1;
 
@@ -296,6 +297,7 @@ sub validate {
         close $fh;
     }
 
+    my $multiline_mode;
 
     LINE: for my $l (@lines){
 
@@ -306,6 +308,13 @@ sub validate {
         next LINE unless $l =~ /\S/; # skip blank lines
 
         next LINE if $l=~ /^\s*#(.*)/; # skip comments
+        
+        if ($multiline_mode){
+            if ($l=~s/^$multiline_mode$//){
+              $multiline_mode = undef; 
+              $self->add_debug_result("multiline_mode off") if $self->{debug_mod} >= 2;
+            }
+        }
 
         if ($l=~ /^\s*begin:\s*$/) { # begin of text block
             confess "you can't switch to text block mode when within mode is enabled" 
@@ -385,12 +394,16 @@ sub validate {
         }elsif($l=~/^\s*generator:\s*(.*)/){ # `generator' line
 
             my $code = $1;
-
             if ($code=~s/\\\s*$//){
                  push @multiline_chunk, $code;
                  $chunk_type = 'generator';
                  next LINE; # this is multiline chunk, accumulate lines until meet '\' line
 
+            }elsif($code=~s/<<(\S+)//){
+                $multiline_mode = $1;
+                $chunk_type = 'generator';
+                $self->add_debug_result("multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
+                next LINE;
             }else{
                 $self->handle_generator($code);
             }
@@ -410,7 +423,7 @@ sub validate {
 
         }elsif(defined($chunk_type)){ # multiline 
 
-            if ($l=~s/\\\s*$//) {
+             if ($l=~s/\\\s*$// or $multiline_mode ) {
 
                 push @multiline_chunk, $l;
                 next LINE; # this is multiline chunk, accumulate lines until meet '\' line
@@ -532,24 +545,31 @@ sub handle_generator {
       my $i = 0;
       my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-        if ($code->[1]=~s/^!(.*)//){
-
+        if ($code->[0]=~s/^!(.*)//){
+  
           my $ext_runner = $1;
-          open EXT_SOURCE_CODE , ">", "/tmp/ext-source" or confess "can't open /tmp/ext-source to write; $!";
-          shift @$code;
+          my ($fh, $source_file) = tempfile( DIR => '/tmp' );
+
           shift @$code;
 
           my $code_to_eval = join "\n", @$code;
 
-          print EXT_SOURCE_CODE $code_to_eval;
-          close EXT_SOURCE_CODE;
+          print $fh $code_to_eval;
+          close $fh;
 
-          system("$ext_runner /tmp/ext-source 2>/tmp/ext-source.err 1>/tmp/ext-source.out");  
+          system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
 
-          $self->add_debug_result("handle_external_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->add_debug_result("handle_external_code OK. source: $source_file") if $self->{debug_mod} >= 2;
 
-          $self->validate('/tmp/ext-source.out');
+          $self->add_debug_result("handle_external_generator OK. $code_to_eval") if $self->{debug_mod} >= 3;
 
+          $self->validate("$source_file.out");
+        
+          unless ($ENV{outth_dls_keep_ext_source_code}){
+            unlink("$source_file.out");
+            unlink("$source_file.err");
+            unlink("$source_file");
+          }
         }else {
 
           my $code_to_eval = join "\n", @$code;
