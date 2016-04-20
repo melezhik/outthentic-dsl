@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.0.12';
+our $VERSION = '0.1.0';
 
 use Carp;
 use Data::Dumper;
@@ -447,16 +447,42 @@ sub handle_code {
     my $code = shift;
 
     unless (ref $code){
+
         eval "package main; $code;";
         confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
         $self->add_debug_result("handle_code OK. $code") if $self->{debug_mod} >= 3;
+
     } else {
+
         my $i = 0;
+
         my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
-        my $code_to_eval = join "\n", @$code;
-        eval "package main; $code_to_eval";
-        confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-        $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+        if ($code->[1]=~s/^!(.*)//){
+
+          my $ext_runner = $1;
+          open EXT_SOURCE_CODE , ">", "/tmp/ext-source" or confess "can't open /tmp/ext-source to write; $!";
+          shift @$code;
+          shift @$code;
+
+          my $code_to_eval = join "\n", @$code;
+
+          print EXT_SOURCE_CODE $code_to_eval;
+          close EXT_SOURCE_CODE;
+
+          my $out = join "\n", ( split "\n", `$ext_runner /tmp/ext-source`);  
+
+          $self->add_debug_result("handle_external_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+        }else{
+
+          my $code_to_eval = join "\n", @$code;
+          eval "package main; $code_to_eval";
+          confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
+          $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+        }
+
     }
 
 }
@@ -467,11 +493,13 @@ sub handle_validator {
     my $code = shift;
 
     unless (ref $code){
+
         my $r = eval "package main; $code;";
         confess "eval error; sub:handle_validator; code:$code\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
         $self->add_debug_result("handle_validator OK (status: $r->[0] message: $r->[1]). $code") if $self->{debug_mod} >= 2;
+
     } else {
         my $i = 0;
         my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
@@ -491,20 +519,48 @@ sub handle_generator {
     my $code = shift;
 
     unless (ref $code){
+
         my $arr_ref = eval "package main; $code";
         confess "eval error; sub:handle_generator; code:$code\nerror: $@" if $@;
         confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
         $self->add_debug_result("handle_generator OK. $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
+
+
     } else {
-        my $i = 0;
-        my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
-        my $code_to_eval = join "\n", @$code;
-        my $arr_ref = eval " package main; $code_to_eval";
-        confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
-        confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-        $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
-        $self->validate($arr_ref);
+
+      my $i = 0;
+      my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
+
+        if ($code->[1]=~s/^!(.*)//){
+
+          my $ext_runner = $1;
+          open EXT_SOURCE_CODE , ">", "/tmp/ext-source" or confess "can't open /tmp/ext-source to write; $!";
+          shift @$code;
+          shift @$code;
+
+          my $code_to_eval = join "\n", @$code;
+
+          print EXT_SOURCE_CODE $code_to_eval;
+          close EXT_SOURCE_CODE;
+
+          my $out = join "\n", ( split "\n", `$ext_runner /tmp/ext-source`);  
+
+          $self->add_debug_result("handle_external_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+        }else {
+
+          my $code_to_eval = join "\n", @$code;
+          my $arr_ref = eval " package main; $code_to_eval";
+
+          confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
+          confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
+
+          $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->validate($arr_ref);
+  
+      }
+
     }
 
 }
