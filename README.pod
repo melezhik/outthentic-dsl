@@ -712,12 +712,14 @@ Dsl code:
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
     
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator: <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ( $total == 72 ), "total age" ] 
+    
+    CODE
 
 
 =head1 Generators
@@ -765,9 +767,10 @@ Dsl code:
     # comment lines
     # and plain string check expressions:
     
-    generator:                                                  \    
-    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     \
-    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]               \
+    generator: <<CODE    
+    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     
+    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
+    CODE
 
 New dsl code:
 
@@ -790,16 +793,17 @@ Input Text:
 
 Dsl code:
 
-    generator:                              \ 
-    sub next_number {                       \    
-        my $i = shift;                      \ 
-        $i++;                               \
-        return [] if $i>=5;                 \
-        [                                   \
-            'regexp: ^'.('A' x $i).'$'      \
-            "generator: next_number($i)"    \ 
+    generator:  <<CODE
+    sub next_number {                       
+        my $i = shift;                       
+        $i++;                               
+        return [] if $i>=5;                 
+        [                                   
+            'regexp: ^'.('A' x $i).'$'      
+            "generator: next_number($i)"     
         ]  
     }
+    CODE
 
 Result - verified
 
@@ -809,23 +813,31 @@ Result - verified
 
 =head2 Multilines in check expressions
 
-When generate and execute check expressions parser operates in a I<single line mode> :
+When parser parses check expressions it does it in a I<single line mode> :
 
 =over
 
 =item *
 
-check expressions are treated as single line strings
+a check expression is always single line string
+
 
 
 =item *
 
-input text is validated by given check expression in line by line way
+input text is parsed in line by line mode, thus every line is validated against a single line check expression
+
 
 
 =back
 
 Example.
+
+    # Input text
+    
+    Multiline
+    string
+    here
 
 Dsl code:
 
@@ -837,11 +849,6 @@ Dsl code:
     string
     here
     regexp: Multiline \n string \n here
-    
-    # stdout
-    Multiline
-    string
-    here
 
 Results:
 
@@ -854,18 +861,37 @@ Results:
     | FAIL   | matches /Multiline \n string \n here/ |
     +--------+---------------------------------------+
 
-Use text blocks if you want multiline checks.
+Use text blocks if you want to I<represent> multiline checks.
 
 
 =head2 Multilines in perl expressions, validators and generators
 
-However when writing Perl expressions, validators or generators one could use multilines strings.
+Perl expressions, validators and generators could contain multilines expressions
+
+There are two ways to write multiline expressions:
+
+=over
+
+=item *
+
+using C<\> delimiters to split multiline string to many chunks
+
+
+
+=item *
+
+using HERE documents expressions 
+
+
+
+=back
+
+
+=head3 Back slash delimiters
 
 `\' delimiters breaks a single line text on a multi lines.
 
-Examples.
-
-Dsl code:
+Example:
 
     # What about to validate stdout
     # With sqlite database entries?
@@ -879,6 +905,26 @@ Dsl code:
     my $results = $sth->fetchall_arrayref;                              \
     
     [ map { $_->[0] } @${results} ]
+
+
+=head3 HERE documents expressions 
+
+Is alternative to make your multiline code more readable:
+
+    # What about to validate stdout
+    # With sqlite database entries?
+    
+    generator: <<CODE
+    
+    use DBI;                                                            
+    my $dbh = DBI->connect("dbi:SQLite:dbname=t/data/test.db","","");   
+    my $sth = $dbh->prepare("SELECT name from users");                  
+    $sth->execute();                                                    
+    my $results = $sth->fetchall_arrayref;                              
+    
+    [ map { $_->[0] } @${results} ]
+    
+    CODE
 
 
 =head1 Captures
@@ -913,12 +959,14 @@ Then captured data usually good fit for validators extra checks.
 
 Dsl code
 
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator: << CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ($total == 72 ), "total age of my family" ];
+    
+    CODE
 
 
 =head2 captures() function
@@ -935,12 +983,14 @@ Dsl code:
     
     regexp: (\d+)
     
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator:  <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ( $total > 10 ) "total amount is greater than 10" ]
+    
+    CODE
     
     
     # check if stdout contains lines
@@ -949,13 +999,15 @@ Dsl code:
     
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
     
-    validator:                          \
-    use DateTime;                       \
-    my $c = captures()->[0];            \
-    my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); \
-    my $yesterday = DateTime->now->subtract( days =>  1 );                        \
+    validator:  <<CODE
+    use DateTime;                       
+    my $c = captures()->[0];            
+    my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
+    my $yesterday = DateTime->now->subtract( days =>  1 );                        
     
     [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
+    
+    CODE
 
 
 =head2 capture() function
@@ -1182,11 +1234,13 @@ Dsl code:
     
     regexp: \d+
     
-    code:                           \
-    for my $i (@{captures()}) {     \
-        print "# ", $i->[0], "\n"   \
-    }                               \
-    print "foo/bar end"
+    code: <<CODE                           
+    for my $i (@{captures()}) {     
+        print "# ", $i->[0], "\n"   
+    }                               
+    print "# foo/bar end"
+    
+    CODE
     
     between: FOO BAR
     
@@ -1198,11 +1252,13 @@ Dsl code:
     
     regexp: \d+
     
-    code:                           \
-    for my $i (@{captures()}) {     \
-        print "#", $i->[0], "\n";   \
-    }                               \
+    code:  <<CODE
+    for my $i (@{captures()}) {     
+        print "#", $i->[0], "\n";   
+    }                               
     print "# FOO/BAR end"
+    
+    CODE
 
 Output:
 
@@ -1374,15 +1430,17 @@ Dsl code:
             regexp: \S+
         bar
     
-        code:                                   \
-            for my $s (@{stream()}) {           \
-                print "# ";                     \
-                for my $i (@{$s}){              \
-                    print $i;                   \
-                }                               \
-                print "\n";                     \
+        code:  <<CODE
+            for my $s (@{stream()}) {           
+                print "# ";                     
+                for my $i (@{$s}){              
+                    print $i;                   
+                }                               
+                print "\n";                     
             }
-        
+    
+    CODE
+    
     end:
 
 Stream function returns an arrays of I<streams>. Every stream holds all the matched lines for given I<logical block>.
@@ -1427,20 +1485,71 @@ Dsl code:
     
     regexp: \d+
     
-    code:                                   \
-        for my $s (@{stream()}) {           \
-            print "# ";                     \
-            for my $i (@{$s}){              \
-                print $i;                   \
-            }                               \
-            print "\n";                     \
+    code:  <<CODE
+        for my $s (@{stream()}) {           
+            print "# ";                     
+            for my $i (@{$s}){              
+                print $i;                   
+            }                               
+            print "\n";                     
         }
+    
+    CODE
 
 Output:
 
     # 2 4 6 8
     # 1 3
     # 0 0 0
+
+
+=head2 Inline code from other languages
+
+WARNING!!! Don't use these features in production unless this message is removed.
+
+One may use various languages in code and generators expressions. Here are examples.
+
+
+=head3 bash 
+
+    generator:  <<HERE
+    
+    !/bin/bash
+    echo OK
+    
+    HERE
+    
+    code: <<HERE
+    mkdir -p /tmp/foo   
+    HERE
+
+
+=head3 perl6
+
+    generator: <<PERL6
+    
+    !/usr/bin/perl6
+    
+    say 'OK';
+    
+    PERL6
+
+
+=head3 ruby
+
+    generator:  <<CODE
+    !/usr/bin/ruby
+    
+    puts 'OK'
+    
+    CODE
+    
+    generator:  <<<CODE
+    !ruby
+    
+    puts 'OK'
+    
+    CODE
 
 
 =head1 Author
