@@ -1235,15 +1235,12 @@ Output:
     # 0 0 0
 
 
-# Experimental features
+
+## Inline code from other languages
 
 WARNING!!! Don't use these features in production unless this message is removed.
 
-## Other languages support
-
 One may use various languages in code and generators expressions. Here are examples.
-
-
 
 ### bash 
 
