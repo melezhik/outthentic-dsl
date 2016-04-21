@@ -640,7 +640,7 @@ Perl expressions, validators and generators could contain multilines expressions
 
 There are two ways to write multiline expressions:
 
-* using ` delimeters to split multiline string to many chunks
+* using `\` delimeters to split multiline string to many chunks
 
 * using HERE documents expressions 
 
@@ -649,10 +649,7 @@ There are two ways to write multiline expressions:
 
 \`\' delimiters breaks a single line text on a multi lines.
 
-Examples.
-
-Dsl code:
-
+Example:
 
     # What about to validate stdout
     # With sqlite database entries?
@@ -667,6 +664,26 @@ Dsl code:
 
     [ map { $_->[0] } @${results} ]
 
+
+### HERE documents expressions 
+
+Is alternative if to make your multiline code more readable:
+
+
+    # What about to validate stdout
+    # With sqlite database entries?
+
+    generator: <<CODE
+
+    use DBI;                                                            
+    my $dbh = DBI->connect("dbi:SQLite:dbname=t/data/test.db","","");   
+    my $sth = $dbh->prepare("SELECT name from users");                  
+    $sth->execute();                                                    
+    my $results = $sth->fetchall_arrayref;                              
+
+    [ map { $_->[0] } @${results} ]
+
+CODE
 
 # Captures
 
