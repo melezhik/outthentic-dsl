@@ -640,7 +640,7 @@ Perl expressions, validators and generators could contain multilines expressions
 
 There are two ways to write multiline expressions:
 
-* using `\` delimeters to split multiline string to many chunks
+* using `\` delimiters to split multiline string to many chunks
 
 * using HERE documents expressions 
 
