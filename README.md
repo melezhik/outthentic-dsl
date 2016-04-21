@@ -1241,9 +1241,12 @@ WARNING!!! Don't use these features in production unless this message is removed
 
 ## Other languages support
 
-One may use various languages in generators expressions:
+One may use various languages in code and generators expressions. Here are examples.
 
-    # bash 
+
+
+### bash 
+
     generator:  <<HERE
 
     !/bin/bash
@@ -1251,8 +1254,12 @@ One may use various languages in generators expressions:
 
     HERE
 
+    code: <<HERE
+    mkdir -p /tmp/foo   
+    HERE
 
-    # perl6
+### perl6
+
     generator: <<PERL6
 
     !/usr/bin/perl6
@@ -1261,15 +1268,14 @@ One may use various languages in generators expressions:
 
     PERL6
 
-    # ruby
+### ruby
+
     generator:  <<CODE
     !/usr/bin/ruby
 
     puts 'OK'
 
     CODE
-
-    # ruby, another way to set path to executable  
 
     generator:  <<<CODE
     !ruby  \

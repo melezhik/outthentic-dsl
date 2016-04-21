@@ -363,16 +363,23 @@ sub validate {
 
         # validate unterminated multiline chunks
         if ($l=~/^\s*(regexp|code|generator|within|validator):\s*.*/){
-            confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
+            confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" 
+              if defined($chunk_type);
         }
 
         if ($l=~/^\s*code:\s*(.*)/){ # `code' line
 
             my $code = $1;
+
             if ($code=~s/\\\s*$//){
                  push @multiline_chunk, $code;
                  $chunk_type = 'code';
                  next LINE; # this is multiline chunk, accumulate lines until meet '\' line
+            }elsif($code=~s/<<(\S+)//){
+                $multiline_mode = $1;
+                $chunk_type = 'generator';
+                $self->add_debug_result("code: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
+                next LINE;
             }else{
                 undef $chunk_type;
                 $self->handle_code($code);
@@ -387,6 +394,11 @@ sub validate {
                  $chunk_type = 'validator';
                  next LINE; # this is multiline chunk, accumulate lines until meet '\' line
 
+            }elsif($code=~s/<<(\S+)//){
+                $multiline_mode = $1;
+                $chunk_type = 'validator';
+                $self->add_debug_result("validator: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
+                next LINE;
             }else{
                 $self->handle_validator($code);
             }
@@ -394,6 +406,7 @@ sub validate {
         }elsif($l=~/^\s*generator:\s*(.*)/){ # `generator' line
 
             my $code = $1;
+
             if ($code=~s/\\\s*$//){
                  push @multiline_chunk, $code;
                  $chunk_type = 'generator';
@@ -402,7 +415,7 @@ sub validate {
             }elsif($code=~s/<<(\S+)//){
                 $multiline_mode = $1;
                 $chunk_type = 'generator';
-                $self->add_debug_result("multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
+                $self->add_debug_result("generator: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
                 next LINE;
             }else{
                 $self->handle_generator($code);
@@ -474,18 +487,26 @@ sub handle_code {
         if ($code->[1]=~s/^!(.*)//){
 
           my $ext_runner = $1;
-          open EXT_SOURCE_CODE , ">", "/tmp/ext-source" or confess "can't open /tmp/ext-source to write; $!";
-          shift @$code;
+
+          my ($fh, $source_file) = tempfile( DIR => '/tmp' );
+
           shift @$code;
 
           my $code_to_eval = join "\n", @$code;
 
-          print EXT_SOURCE_CODE $code_to_eval;
-          close EXT_SOURCE_CODE;
+          print $fh $code_to_eval;
+          close $fh;
 
-          my $out = join "\n", ( split "\n", `$ext_runner /tmp/ext-source`);  
+          system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
 
+          $self->add_debug_result("handle_external_code OK. $code_to_eval") if $self->{debug_mod} >= 3;
           $self->add_debug_result("handle_external_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+
+          unless ($ENV{outth_dls_keep_ext_source_code}){
+            unlink("$source_file.out");
+            unlink("$source_file.err");
+            unlink("$source_file");
+          }
 
         }else{
 
@@ -548,6 +569,7 @@ sub handle_generator {
         if ($code->[0]=~s/^!(.*)//){
   
           my $ext_runner = $1;
+
           my ($fh, $source_file) = tempfile( DIR => '/tmp' );
 
           shift @$code;
@@ -559,7 +581,7 @@ sub handle_generator {
 
           system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
 
-          $self->add_debug_result("handle_external_code OK. source: $source_file") if $self->{debug_mod} >= 2;
+          $self->add_debug_result("handle_external_generator OK. source: $source_file") if $self->{debug_mod} >= 2;
 
           $self->add_debug_result("handle_external_generator OK. $code_to_eval") if $self->{debug_mod} >= 3;
 
@@ -570,6 +592,7 @@ sub handle_generator {
             unlink("$source_file.err");
             unlink("$source_file");
           }
+
         }else {
 
           my $code_to_eval = join "\n", @$code;
