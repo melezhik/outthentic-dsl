@@ -645,7 +645,7 @@ There are two ways to write multiline expressions:
 * using HERE documents expressions 
 
 
-### \ delimiters
+### Back slash delimiters
 
 \`\' delimiters breaks a single line text on a multi lines.
 
@@ -667,7 +667,7 @@ Example:
 
 ### HERE documents expressions 
 
-Is alternative if to make your multiline code more readable:
+Is alternative to make your multiline code more readable:
 
 
     # What about to validate stdout
@@ -683,7 +683,7 @@ Is alternative if to make your multiline code more readable:
 
     [ map { $_->[0] } @${results} ]
 
-CODE
+    CODE
 
 # Captures
 
