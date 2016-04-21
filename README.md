@@ -491,13 +491,14 @@ Dsl code:
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
 
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator: <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ( $total == 72 ), "total age" ] 
 
+    CODE
 
 # Generators
 
@@ -547,9 +548,10 @@ Dsl code:
     # comment lines
     # and plain string check expressions:
 
-    generator:                                                  \    
-    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     \
-    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]               \
+    generator: <<CODE    
+    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     
+    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
+    CODE
 
 
 New dsl code:
@@ -574,16 +576,17 @@ Input Text:
 
 Dsl code:
 
-    generator:                              \ 
-    sub next_number {                       \    
-        my $i = shift;                      \ 
-        $i++;                               \
-        return [] if $i>=5;                 \
-        [                                   \
-            'regexp: ^'.('A' x $i).'$'      \
-            "generator: next_number($i)"    \ 
+    generator:  <<CODE
+    sub next_number {                       
+        my $i = shift;                       
+        $i++;                               
+        return [] if $i>=5;                 
+        [                                   
+            'regexp: ^'.('A' x $i).'$'      
+            "generator: next_number($i)"     
         ]  
     }
+    CODE
 
 Result - verified
 
@@ -719,13 +722,14 @@ Then captured data usually good fit for validators extra checks.
 Dsl code
 
 
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator: << CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ($total == 72 ), "total age of my family" ];
 
+    CODE
 
 ## captures() function
 
@@ -735,19 +739,20 @@ Here some more examples.
 
 Dsl code:
 
-
     # check if stdout contains numbers,
     # then calculate total amount
     # and check if it is greater then 10
 
     regexp: (\d+)
 
-    validator:                          \
-    my $total=0;                        \
-    for my $c (@{captures()}) {         \
-        $total+=$c->[0];                \
-    }                                   \
+    validator:  <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
     [ ( $total > 10 ) "total amount is greater than 10" ]
+
+    CODE
 
 
     # check if stdout contains lines
@@ -756,14 +761,15 @@ Dsl code:
 
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
 
-    validator:                          \
-    use DateTime;                       \
-    my $c = captures()->[0];            \
-    my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); \
-    my $yesterday = DateTime->now->subtract( days =>  1 );                        \
+    validator:  <<CODE
+    use DateTime;                       
+    my $c = captures()->[0];            
+    my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
+    my $yesterday = DateTime->now->subtract( days =>  1 );                        
 
     [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
 
+    CODE
 
 ## capture() function
 
@@ -964,12 +970,14 @@ Dsl code:
 
     regexp: \d+
 
-    code:                           \
-    for my $i (@{captures()}) {     \
-        print "# ", $i->[0], "\n"   \
-    }                               \
-    print "foo/bar end"
-    
+    code: <<CODE                           
+    for my $i (@{captures()}) {     
+        print "# ", $i->[0], "\n"   
+    }                               
+    print "# foo/bar end"
+
+    CODE
+
     between: FOO BAR
 
     code: print "# FOO/BAR start"
@@ -980,12 +988,13 @@ Dsl code:
 
     regexp: \d+
 
-    code:                           \
-    for my $i (@{captures()}) {     \
-        print "#", $i->[0], "\n";   \
-    }                               \
+    code:  <<CODE
+    for my $i (@{captures()}) {     
+        print "#", $i->[0], "\n";   
+    }                               
     print "# FOO/BAR end"
-    
+
+    CODE
 
 Output:
 
@@ -1160,15 +1169,17 @@ Dsl code:
             regexp: \S+
         bar
 
-        code:                                   \
-            for my $s (@{stream()}) {           \
-                print "# ";                     \
-                for my $i (@{$s}){              \
-                    print $i;                   \
-                }                               \
-                print "\n";                     \
+        code:  <<CODE
+            for my $s (@{stream()}) {           
+                print "# ";                     
+                for my $i (@{$s}){              
+                    print $i;                   
+                }                               
+                print "\n";                     
             }
-        
+
+    CODE
+
     end:
 
 
@@ -1217,15 +1228,16 @@ Dsl code:
 
     regexp: \d+
 
-    code:                                   \
-        for my $s (@{stream()}) {           \
-            print "# ";                     \
-            for my $i (@{$s}){              \
-                print $i;                   \
-            }                               \
-            print "\n";                     \
+    code:  <<CODE
+        for my $s (@{stream()}) {           
+            print "# ";                     
+            for my $i (@{$s}){              
+                print $i;                   
+            }                               
+            print "\n";                     
         }
     
+    CODE
 
 Output:
 
@@ -1275,7 +1287,7 @@ One may use various languages in code and generators expressions. Here are examp
     CODE
 
     generator:  <<<CODE
-    !ruby  \
+    !ruby
 
     puts 'OK'
 

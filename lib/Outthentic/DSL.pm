@@ -377,7 +377,7 @@ sub validate {
                  next LINE; # this is multiline chunk, accumulate lines until meet '\' line
             }elsif($code=~s/<<(\S+)//){
                 $multiline_mode = $1;
-                $chunk_type = 'generator';
+                $chunk_type = 'code';
                 $self->add_debug_result("code: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
                 next LINE;
             }else{
