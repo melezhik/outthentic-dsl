@@ -1,6 +1,6 @@
 0.1.1 
 
-* various fixes concerning running inline code
+* various fixes concerning running inline code, generators and validators (both for perl and ruby)
 * added code to support integration with Outthentic version 0.1.*
 
 0.1.0 2016-04-21

@@ -500,39 +500,52 @@ sub handle_code {
 
           my $ext_runner = $1;
 
-          my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
+          my $language = (split /\\/, $ext_runner)[-1];
 
-          shift @$code;
+          if ($language eq 'perl'){
 
-          my $code_to_eval = join "\n", @$code;
+              my $code_to_eval = join "\n", @$code;
+              eval "package main; $code_to_eval";
+              confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
+              $self->add_debug_result("code OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
-          open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
+          }else{
 
-          print SOURCE_CODE $code_to_eval;
+            my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
 
-          close SOURCE_CODE;
+            shift @$code;
 
-          $ext_runner.= ' '.$self->{languages}->{$ext_runner} if $self->{languages}->{$ext_runner};
+            my $code_to_eval = join "\n", @$code;
 
-          my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+            open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
 
-          if ($st != 0){
-            confess "$ext_runner $source_file failed, see $source_file.err for detailes";
-          }
+            print SOURCE_CODE $code_to_eval;
 
-          $self->add_debug_result("code OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
+            close SOURCE_CODE;
 
-          open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
+            $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
 
-          while (my $s = <EXT_OUT>){
-            print $s;
-          }
-          close EXT_OUT;
+            my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
 
-          unless ($ENV{outth_dls_keep_ext_source_code}){
-            unlink("$source_file.out");
-            unlink("$source_file.err");
-            unlink("$source_file");
+            if ($st != 0){
+              confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+            }
+
+            $self->add_debug_result("code OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
+
+            open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
+
+            while (my $s = <EXT_OUT>){
+              print $s;
+            }
+
+            close EXT_OUT;
+
+              unless ($ENV{outth_dls_keep_ext_source_code}){
+                unlink("$source_file.out");
+                unlink("$source_file.err");
+                unlink("$source_file");
+              }
           }
 
         }else{
@@ -598,34 +611,54 @@ sub handle_generator {
   
           my $ext_runner = $1;
 
-          my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
+          my $language = (split /\\/, $ext_runner)[-1];
 
-          shift @$code;
+          if ($language eq 'perl'){
 
-          my $code_to_eval = join "\n", @$code;
+              my $code_to_eval = join "\n", @$code;
+              my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-          open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
+              my $arr_ref = eval "package main; $code_to_eval";
 
-          print SOURCE_CODE $code_to_eval;
+              confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
+              confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
 
-          close SOURCE_CODE;
+              $self->add_debug_result("generator OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
-          $ext_runner.= ' '.$self->{languages}->{$ext_runner} if $self->{languages}->{$ext_runner};
+              $self->validate($arr_ref);
+          
+          } else {
 
-          my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
-
-          if ($st != 0){
-            confess "$ext_runner $source_file failed, see $source_file.err for detailes";
-          }
-
-          $self->add_debug_result("generator OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
-
-          $self->validate("$source_file.out");
-        
-          unless ($ENV{outth_dls_keep_ext_source_code}){
-            unlink("$source_file.out");
-            unlink("$source_file.err");
-            unlink("$source_file");
+              my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
+    
+              shift @$code;
+    
+              my $code_to_eval = join "\n", @$code;
+    
+              open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
+    
+              print SOURCE_CODE $code_to_eval;
+    
+              close SOURCE_CODE;
+    
+              $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+    
+              my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+    
+              if ($st != 0){
+                confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+              }
+    
+              $self->add_debug_result("generator OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
+    
+              $self->validate("$source_file.out");
+            
+              unless ($ENV{outth_dls_keep_ext_source_code}){
+                unlink("$source_file.out");
+                unlink("$source_file.err");
+                unlink("$source_file");
+              }
+    
           }
 
         }else {
