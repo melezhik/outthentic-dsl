@@ -594,7 +594,7 @@ sub handle_generator {
 
       my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-        if ($code->[1]=~s/^!(.*)//){
+        if ($code->[0]=~s/^\!(.*)//){
   
           my $ext_runner = $1;
 
