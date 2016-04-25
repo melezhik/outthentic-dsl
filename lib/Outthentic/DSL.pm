@@ -10,6 +10,7 @@ use Outthentic::DSL::Context::Range;
 use Outthentic::DSL::Context::Default;
 use Outthentic::DSL::Context::TextBlock;
 use File::Temp qw/ tempfile /;
+use JSON;
 
 $Data::Dumper::Terse=1;
 
@@ -103,7 +104,7 @@ sub reset_captures {
 
     my $self = shift;
     $self->{captures} = [];
-
+    unlink $self->{cache_dir}."/captures.json" if -f $self->{cache_dir}."/captures.json";
 }
 
 sub reset_succeeded {
@@ -253,6 +254,14 @@ sub check_line {
     }
 
     $self->{captures} = [ @captures ];
+
+    if ($self->{cache_dir}){
+      open CAPTURES, '>', $self->{cache_dir}.'/captures.json' 
+        or confess "can't open ".($self->{cache_dir})."captures.json to write $!";
+      print CAPTURES encode_json($self->{captures});
+      $self->add_debug_result("CAPTURES saved at ".$self->{cache_dir}.'/captures.json');
+      close CAPTURES;
+    }
 
     # update context
     if ( $self->{within_mode} and $status ){
@@ -503,7 +512,11 @@ sub handle_code {
 
           $ext_runner.= ' '.$self->{languages}->{$ext_runner} if $self->{languages}->{$ext_runner};
 
-          system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+          my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+
+          if ($st != 0){
+            confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+          }
 
           $self->add_debug_result("running inline code: $ext_runner $source_file") if $self->{debug_mod} >= 2;
 
