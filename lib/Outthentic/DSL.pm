@@ -89,6 +89,7 @@ sub create_context {
     }
 
     $self->{original_context} = [@original_context];
+
     $self->{current_context} = [@original_context];
 
     $self->add_debug_result('context populated') if $self->{debug_mod} >= 2;
@@ -259,7 +260,8 @@ sub check_line {
       open CAPTURES, '>', $self->{cache_dir}.'/captures.json' 
         or confess "can't open ".($self->{cache_dir})."captures.json to write $!";
       print CAPTURES encode_json($self->{captures});
-      $self->add_debug_result("CAPTURES saved at ".$self->{cache_dir}.'/captures.json');
+      $self->add_debug_result("CAPTURES saved at ".$self->{cache_dir}.'/captures.json')
+        if $self->{debug_mod} >= 1;
       close CAPTURES;
     }
 
@@ -486,7 +488,7 @@ sub handle_code {
 
         eval "package main; $code;";
         confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
-        $self->add_debug_result("handle_code OK. $code") if $self->{debug_mod} >= 3;
+        $self->add_debug_result("code OK. single line. code: $code") if $self->{debug_mod} >= 3;
 
     } else {
 
@@ -518,7 +520,7 @@ sub handle_code {
             confess "$ext_runner $source_file failed, see $source_file.err for detailes";
           }
 
-          $self->add_debug_result("running inline code: $ext_runner $source_file") if $self->{debug_mod} >= 2;
+          $self->add_debug_result("code OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
 
           open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
 
@@ -538,7 +540,7 @@ sub handle_code {
           my $code_to_eval = join "\n", @$code;
           eval "package main; $code_to_eval";
           confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-          $self->add_debug_result("handle_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->add_debug_result("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
 
         }
 
@@ -557,7 +559,7 @@ sub handle_validator {
         confess "eval error; sub:handle_validator; code:$code\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("handle_validator OK (status: $r->[0] message: $r->[1]). $code") if $self->{debug_mod} >= 2;
+        $self->add_debug_result("validator OK. single line. code: $code") if $self->{debug_mod} >= 2;
 
     } else {
         my $i = 0;
@@ -567,7 +569,7 @@ sub handle_validator {
         confess "eval error; sub:handle_validator; code:\n$code_to_print\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("handle_validator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 2;
+        $self->add_debug_result("validator OK. multiline. code: $code_to_eval") if $self->{debug_mod} >= 2;
     }
 
 }
@@ -582,33 +584,41 @@ sub handle_generator {
         my $arr_ref = eval "package main; $code";
         confess "eval error; sub:handle_generator; code:$code\nerror: $@" if $@;
         confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-        $self->add_debug_result("handle_generator OK. $code") if $self->{debug_mod} >= 3;
+        $self->add_debug_result("generator OK. single line. code: $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
 
 
     } else {
 
       my $i = 0;
+
       my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
         if ($code->[1]=~s/^!(.*)//){
   
           my $ext_runner = $1;
 
-          my ($fh, $source_file) = tempfile( DIR => '/tmp' );
+          my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
 
           shift @$code;
 
           my $code_to_eval = join "\n", @$code;
 
-          print $fh $code_to_eval;
-          close $fh;
+          open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
 
-          system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+          print SOURCE_CODE $code_to_eval;
 
-          $self->add_debug_result("handle_external_generator OK. source: $source_file") if $self->{debug_mod} >= 2;
+          close SOURCE_CODE;
 
-          $self->add_debug_result("handle_external_generator OK. $code_to_eval") if $self->{debug_mod} >= 3;
+          $ext_runner.= ' '.$self->{languages}->{$ext_runner} if $self->{languages}->{$ext_runner};
+
+          my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+
+          if ($st != 0){
+            confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+          }
+
+          $self->add_debug_result("generator OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
 
           $self->validate("$source_file.out");
         
@@ -626,7 +636,7 @@ sub handle_generator {
           confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
           confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
 
-          $self->add_debug_result("handle_generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->add_debug_result("generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
           $self->validate($arr_ref);
   
       }
@@ -665,7 +675,7 @@ sub handle_regexp {
 
     $self->reset_context if $reset_context; 
 
-    $self->add_debug_result("handle_regexp OK. $re") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("regexp OK. $re") if $self->{debug_mod} >= 3;
 
 
 }
@@ -692,7 +702,7 @@ sub handle_within {
 
     $self->check_line($re, 'regexp', $m);
 
-    $self->add_debug_result("handle_within OK. $re") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("within OK. $re") if $self->{debug_mod} >= 3;
     
 }
 
@@ -726,7 +736,7 @@ sub handle_plain {
 
     $self->reset_context if $reset_context; 
 
-    $self->add_debug_result("handle_plain OK. $l") if $self->{debug_mod} >= 3;
+    $self->add_debug_result("plain OK. $l") if $self->{debug_mod} >= 3;
 }
 
 
