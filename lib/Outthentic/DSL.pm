@@ -504,6 +504,7 @@ sub handle_code {
 
           if ($language eq 'perl'){
 
+              shift @$code;
               my $code_to_eval = join "\n", @$code;
               eval "package main; $code_to_eval";
               confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
@@ -614,6 +615,8 @@ sub handle_generator {
           my $language = (split /\\/, $ext_runner)[-1];
 
           if ($language eq 'perl'){
+
+              shift @$code;
 
               my $code_to_eval = join "\n", @$code;
               my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
