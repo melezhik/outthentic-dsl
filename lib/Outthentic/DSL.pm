@@ -61,6 +61,7 @@ sub new {
         output => $output||'',
         match_l => 40,
         stream => {},
+        languages => {},
         %{$opts},
     }, __PACKAGE__;
 
@@ -484,23 +485,34 @@ sub handle_code {
 
         my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-        if ($code->[1]=~s/^!(.*)//){
+        if ($code->[0]=~s/^\!(.*)//){
 
           my $ext_runner = $1;
 
-          my ($fh, $source_file) = tempfile( DIR => '/tmp' );
+          my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
 
           shift @$code;
 
           my $code_to_eval = join "\n", @$code;
 
-          print $fh $code_to_eval;
-          close $fh;
+          open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
+
+          print SOURCE_CODE $code_to_eval;
+
+          close SOURCE_CODE;
+
+          $ext_runner.= ' '.$self->{languages}->{$ext_runner} if $self->{languages}->{$ext_runner};
 
           system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
 
-          $self->add_debug_result("handle_external_code OK. $code_to_eval") if $self->{debug_mod} >= 3;
-          $self->add_debug_result("handle_external_code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->add_debug_result("running inline code: $ext_runner $source_file") if $self->{debug_mod} >= 2;
+
+          open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
+
+          while (my $s = <EXT_OUT>){
+            print $s;
+          }
+          close EXT_OUT;
 
           unless ($ENV{outth_dls_keep_ext_source_code}){
             unlink("$source_file.out");
@@ -566,7 +578,7 @@ sub handle_generator {
       my $i = 0;
       my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-        if ($code->[0]=~s/^!(.*)//){
+        if ($code->[1]=~s/^!(.*)//){
   
           my $ext_runner = $1;
 
