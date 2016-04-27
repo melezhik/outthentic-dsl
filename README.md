@@ -170,6 +170,7 @@ Outthentic dsl code comprises following basic entities:
     * text      blocks
     * within    expressions
     * range     expressions
+    * asserts
     * validator expressions
 
 * Comments
@@ -441,6 +442,8 @@ Additional comments on perl expressions:
 
 # Validators
 
+WARNING!!! You should prefer asserts over validators. Validators feature will be deprecated soon!
+
 Validator expressions like Perl expressions are just a piece of Perl code. 
 
 Validators start with \`validator:' marker
@@ -500,6 +503,19 @@ Dsl code:
 
     CODE
 
+# Asserts
+
+Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
+
+
+Dsl code
+
+    assert: 0 'this is not true'
+    assert: 1 'this is true'
+
+Asserts almost always are created dynamically with generators. See next section.
+ 
+    
 # Generators
 
 Generators is the way to _generate new outthentic entries on the fly_.
@@ -525,7 +541,13 @@ Dsl code:
  
     # this generator creates 3 new check expressions:
 
-    generator: [ qw{ say hello again } ]
+    generator: <<CODE
+    [ 
+      'say', 
+      'hello', 
+      'again'
+    ]
+    CODE
 
 
 New dsl code:
@@ -589,6 +611,23 @@ Dsl code:
     CODE
 
 Result - verified
+
+
+Generators are commonly used to create an asserts.
+
+Input:
+
+    number: 10
+
+Dsl code:
+
+
+    number: (\d+)
+
+    generator: <<CODE
+    #!ruby
+      puts "assert: #{capture()[0] == 10}, you've got 10!"  
+    CODE
 
 
 # Multiline expressions

@@ -360,6 +360,12 @@ sub validate {
             next LINE;
         }
 
+        if ($l=~ /^\s*assert:\s(\S+)\s+(.*)$/) {
+            $self->add_debug_result("assert found: $1,$2") if $self->{debug_mod} >= 2;
+            $self->add_result({ status => $1 , message => $2 });
+            next LINE;
+        }
+
         if ($l=~ /^\s*between:\s+(.*)/) { # set new context
             
             $self->{context_modificator} = Outthentic::DSL::Context::Range->new($1);
