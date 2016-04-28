@@ -530,15 +530,26 @@ sub handle_code {
 
             close SOURCE_CODE;
 
-            $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+            if ($language eq 'bash'){
 
-            my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
+              if ($self->{languages}->{$language}){
+                $ext_runner = "bash -c '".($self->{languages}->{$language})." && source $source_file'";
+              }else{
+                $ext_runner = "bash -c 'source $source_file'";
+              }
 
-            if ($st != 0){
-              confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+            }else{
+              $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+              $ext_runner.=' '.$source_file;
             }
 
-            $self->add_debug_result("code OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
+            my $st = system("$ext_runner 2>$source_file.err 1>$source_file.out");  
+
+            if ($st != 0){
+              confess "$ext_runner failed, see $source_file.err for detailes";
+            }
+
+            $self->add_debug_result("code OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
 
             open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
 
@@ -650,15 +661,26 @@ sub handle_generator {
     
               close SOURCE_CODE;
     
-              $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
-    
-              my $st = system("$ext_runner $source_file 2>$source_file.err 1>$source_file.out");  
-    
+              if ($language eq 'bash'){
+  
+                if ($self->{languages}->{$language}){
+                  $ext_runner = "bash -c '".($self->{languages}->{$language})." && source $source_file'";
+                }else{
+                  $ext_runner = "bash -c 'source $source_file'";
+                }
+  
+              }else{
+                $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+                $ext_runner.=' '.$source_file;
+              }
+  
+              my $st = system("$ext_runner 2>$source_file.err 1>$source_file.out");  
+  
               if ($st != 0){
-                confess "$ext_runner $source_file failed, see $source_file.err for detailes";
+                confess "$ext_runner failed, see $source_file.err for detailes";
               }
     
-              $self->add_debug_result("generator OK. inline. $ext_runner $source_file") if $self->{debug_mod} >= 2;
+              $self->add_debug_result("generator OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
     
               $self->validate("$source_file.out");
             
