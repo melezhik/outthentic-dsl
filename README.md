@@ -426,7 +426,7 @@ One may use other languages in code expressions. Use should use \`here' document
 set shebang to define a language. Here are some examples:
 
 
-* bash 
+## bash 
 
     code:  <<HERE
     !bash
@@ -435,7 +435,7 @@ set shebang to define a language. Here are some examples:
     HERE
 
 
-* ruby
+## ruby
 
     code: <<CODE
     !ruby
@@ -1063,20 +1063,20 @@ Dsl code:
 
 Output:
 
-        # foo/bar start
-        # 1
-        # 2
-        # 3
-        # 100
-        # foo/bar end
+    # foo/bar start
+    # 1
+    # 2
+    # 3
+    # 100
+    # foo/bar end
 
-        # FOO/BAR start
-        # 100
-        # 10
-        # 20
-        # 30
-        # FOO/BAR end
-
+    # FOO/BAR start
+    # 100
+    # 10
+    # 20
+    # 30
+    # FOO/BAR end
+    
 
 ## Restoring search context
         
@@ -1110,7 +1110,7 @@ Dsl code:
 
 ## Range expressions caveats
 
-### Range expressions can't verify continuous lists.
+Range expressions can't verify continuous lists.
 
 That means range expression only verifies that there are _some set_ of lines inside some range.
 It is not necessary should be continuous.
