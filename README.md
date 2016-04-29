@@ -416,7 +416,7 @@ Internally once dsl code gets parsed it is "turned" into regular Perl code:
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-When use perl expressions be aware of:
+When use Perl expressions be aware of:
 
 * Perl expressions are executed by Perl eval function in context of `package main`, please be aware of that.
 
@@ -551,7 +551,7 @@ Updated check list:
     bar value
 
 
-Generators could produce not only check expressions but validators, perl expressions and ... generators.
+Generators could produce not only check expressions but code expressions and ... another generators.
 
 This is fictional example.
 
@@ -702,7 +702,7 @@ Results:
 
 Use text blocks if you want to _represent_ multiline checks.
 
-## Multilines in perl expressions, validators and generators
+## Multilines in code expressions, generators and validators
 
 Perl expressions, validators and generators could contain multilines expressions
 
