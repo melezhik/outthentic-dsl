@@ -152,10 +152,9 @@ Returns validation results as arrayref containing { type, status, message } hash
 
 Client is a external program using dsl API. Existed outthentic clients:
 
-* [swat](https://github.com/melezhik/swat) - web application testing tool
+* [Swat](https://github.com/melezhik/swat) - web application testing tool
 
-* [outthentic](https://github.com/melezhik/outthentic) - generic testing tool
-
+* [Outthentic](https://github.com/melezhik/outthentic) -  multipurpose scenarios framework
 
 More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
@@ -178,9 +177,9 @@ Outthentic dsl code comprises following entities:
 
 * Code expressions
 
-* Validator expressions
-
 * Generator expressions
+
+* Validator expressions
 
 # Check expressions
 
@@ -396,7 +395,7 @@ Dsl code:
 
 Code expressions are just a pieces of 'some language code' you may inline and execute **during parsing** process.
 
-By default if *language* is no set Perl language is used. Here is example:
+By default, if *language* is no set Perl language is assumed. Here is example:
 
 Dsl code:
 
@@ -423,28 +422,25 @@ When use perl expressions be aware of:
 
 * Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to know more about Perl eval function.
 
-One may use other languages in code expressions. Use should use \`here' document style to insert your code and
+One may use other languages in code expressions. Use should use \`here' document style ( see [multiline expressions](#Multiline expressions) section ) to insert your code and
 set shebang to define a language. Here are some examples:
 
 
 * bash 
 
     code:  <<HERE
-
     !bash
-    echo '# hello I am Outthentic'
 
+    echo '# hello I am Outthentic'
     HERE
 
 
 * ruby
 
     code: <<CODE
-
     !ruby
 
-    say '# hello I am Outthentic';
-
+    puts '# hello I am Outthentic'
     CODE
 
 # Asserts
@@ -461,15 +457,19 @@ Asserts almost always are created dynamically with generators. See next section.
     
 # Generators
 
-Generators is the way to _generate new outthentic entries on the fly_.
+* Generators is the way to _generate new outthentic entries on the fly_.
 
-Generator expressions like Perl expressions are just a piece of Perl code.
+* Generator expressions like code expressions are just a piece of code to be executed.
 
-The only requirement for generator code - it should return _reference to array of strings_.
+* The only requirement for generator code - it should return _new outthentic entities_.
 
-Strings in array returned by generator code _represent_ a _new_ outthentic entities.
+* If you use Perl in generator expressions ( which is by default ) - last statement in your
+code should return reference to array of strings. Strings in array would _represent_ a _new_ outthentic entities.
 
-A new outthentic entries are passed back to parser and executed immediately.
+* If you use not Perl language in generator expressions to produce new outthentic entities you should print them
+into **stdout**. See examples below.
+
+* A new outthentic entries are passed back to parser and executed immediately.
 
 Generators expressions start with \`:generator' marker.
 
@@ -493,9 +493,7 @@ Dsl code:
     CODE
 
 
-New dsl code:
-
-    # final check list:
+Updated check list:
 
     Say
     HELLO
@@ -504,7 +502,26 @@ New dsl code:
     again
 
 
-Here is more complicated example.
+
+If you use not Perl in generator expressions, you have to print entries into stdout instead of returning
+and array reference like in Perl. Here is more examples for other languages:
+
+
+    generator: <<CODE
+    !bash
+      echo say
+      echo hello
+      echo again
+    CODE
+
+    generator: <<CODE
+    !ruby
+      puts 'say'
+      puts 'hello'
+      puts 'again'
+    CODE
+
+Here is more complicated example using Perl.
 
 Dsl code:
 
@@ -514,12 +531,19 @@ Dsl code:
     # and plain string check expressions:
 
     generator: <<CODE    
-    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     
-    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
+    my %d = { 
+      'foo' => 'foo value', 
+      'bar' => 'bar value' 
+    };     
+    [ 
+      map  { 
+        ( "# $_", "$data{$_}" )  
+      } keys %d 
+    ]
     CODE
 
 
-New dsl code:
+Updated check list:
 
     # foo
     foo value
@@ -553,9 +577,6 @@ Dsl code:
     }
     CODE
 
-Result - verified
-
-
 Generators are commonly used to create an asserts.
 
 Input:
@@ -568,7 +589,7 @@ Dsl code:
     number: (\d+)
 
     generator: <<CODE
-    #!ruby
+    !ruby
       puts "assert: #{capture()[0] == 10}, you've got 10!"  
     CODE
 
@@ -1289,53 +1310,6 @@ Output:
     # 2 4 6 8
     # 1 3
     # 0 0 0
-
-
-
-## Inline code from other languages
-
-WARNING!!! Don't use these features in production unless this message is removed.
-
-One may use various languages in code and generators expressions. Here are examples.
-
-### bash 
-
-    generator:  <<HERE
-
-    !/bin/bash
-    echo OK
-
-    HERE
-
-    code: <<HERE
-    mkdir -p /tmp/foo   
-    HERE
-
-### perl6
-
-    generator: <<PERL6
-
-    !/usr/bin/perl6
-
-    say 'OK';
-
-    PERL6
-
-### ruby
-
-    generator:  <<CODE
-    !/usr/bin/ruby
-
-    puts 'OK'
-
-    CODE
-
-    generator:  <<<CODE
-    !ruby
-
-    puts 'OK'
-
-    CODE
 
 
 # Author
