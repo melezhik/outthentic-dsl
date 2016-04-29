@@ -1332,6 +1332,6 @@ Alternative outthentic dsl introduction could be found here - [intro.md](https:/
 
 # Thanks
 
-* to God as - *For the LORD giveth wisdom: out of his mouth cometh knowledge and understanding. (Proverbs 2:6)*
+* To God as the One Who inspires me to do my job!
 
 
