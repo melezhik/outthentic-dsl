@@ -1417,11 +1417,11 @@ parser will remain in a `text block' mode till the end of the file, which is pro
 
 Dsl code:
 
-        begin:
-            here we begin
-            and till the very end of test
+    begin:
+        here we begin
+        and till the very end of test
     
-            we are in `text block` mode
+        we are in `text block` mode
 
 
 =head1 Code expressions

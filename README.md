@@ -385,12 +385,12 @@ parser will remain in a \`text block' mode till the end of the file, which is pr
 
 Dsl code:
 
-        begin:
-            here we begin
-            and till the very end of test
-
-            we are in `text block` mode
-
+    begin:
+        here we begin
+        and till the very end of test
+    
+        we are in `text block` mode
+    
 # Code expressions
 
 Code expressions are just a pieces of 'some language code' you may inline and execute **during parsing** process.
