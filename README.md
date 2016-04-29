@@ -4,15 +4,11 @@ Outthentic::DSL
 
 # SYNOPSIS
 
-Language to validate text output.
+Language to verify text output.
 
 # Install
 
     $ cpanm Outthentic::DSL
-
-# Informal introduction
-
-Alternative outthentic dsl introduction could be found [here](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
 
 # Glossary
 
@@ -30,11 +26,11 @@ Examples:
 * http headers
 * another program languages code
 
-## Outthentic dsl
+## Outthentic DSL
 
 * Is a language to verify _arbitrary_ plain text
 
-* Outthentic dsl is both imperative and declarative language
+* Outthentic DSL is both imperative and declarative language
 
 ### Declarative way
 
@@ -42,12 +38,13 @@ You define rules ( check expressions ) to describe expected content.
 
 ### Imperative way
 
-You define a process of verification using custom perl code ( validators, generators, code expressions  ).
+You _extend_ a process of verification using regular programming languages - like Perl, Bash and Ruby, see
+examples below.
 
 
-## dsl code
+## DSL code
 
-A  program code written on outthentic dsl language to verify text input.
+A  program code written on outthentic DSL language to verify text input.
 
 ## Search context
 
@@ -57,11 +54,11 @@ But default search context is the same as original input text stream.
 
 Search context could be however changed in some conditions.
 
-## dsl parser
+## DSL parser
 
-dsl parser is the program which:
+DSL parser is the program which:
 
-* parses dsl code
+* parses DSL code
 
 * parses text input
 
@@ -142,7 +139,7 @@ Perform verification process.
 
 Obligatory parameter is:
 
-* a path to file with dsl code
+* a path to file with DSL code
 
 ### results  
 
@@ -150,7 +147,7 @@ Returns validation results as arrayref containing { type, status, message } hash
 
 ## Outthentic clients
 
-Client is a external program using dsl API. Existed outthentic clients:
+Client is a external program using DSL API. Existed outthentic clients:
 
 * [Swat](https://github.com/melezhik/swat) - web application testing tool
 
@@ -158,11 +155,11 @@ Client is a external program using dsl API. Existed outthentic clients:
 
 More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
 
-# dsl code syntax
+# DSL code syntax
 
-Outthentic dsl code comprises following entities:
+Outthentic DSL code comprises following entities:
 
-* Check expressions:
+## Check expressions:
 
     * plain     strings
     * regular   expressions
@@ -171,15 +168,15 @@ Outthentic dsl code comprises following entities:
     * asserts   expressions
     * range     expressions
 
-* Comments
+## Comments
 
-* Blank lines
+## Blank lines
 
-* Code expressions
+## Code expressions
 
-* Generator expressions
+## Generator expressions
 
-* Validator expressions
+## Validator expressions
 
 # Check expressions
 
@@ -189,19 +186,18 @@ Here is a simple example:
 
 Input text:
 
-
     HELLO
     HELLO WORLD
     My birth day is: 1977-04-16
 
 
-Dsl code:
+DSL code:
 
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-Results:
+Results - verified:
 
     +--------+------------------------------+
     | status | message                      |
@@ -221,7 +217,7 @@ There are two basic types of check expressions:
 
 Plain text expressions are just a lines should be _included_ at input text stream.
 
-Dsl code:
+DSL code:
         
         I am ok
         HELLO Outthentic
@@ -230,23 +226,23 @@ Input text:
 
     I am ok , really
     HELLO Outthentic !!!
- 
-Result - verified
 
+Results: verified
+ 
 Plain text expressions are case sensitive:
 
 Input text:
 
     I am OK
  
-Result - not verified
+Results: not verified
 
     
 # Regular expressions
 
 Similarly to plain text matching, you may require that input lines match some regular expressions:
 
-Dsl code:
+DSL code:
 
     regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
     regexp: Name: \w+ # name
@@ -291,22 +287,22 @@ See ["captures"](#captures) section for full explanation of a captures mechanism
 
 Comments and blank lines don't impact verification process but one could use them to improve code readability.
 
-## Comments
+# Comments
 
 Comment lines start with \`#' symbol, comments chunks are ignored by parser.
 
 
-Dsl code:
+DSL code:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
     Hello World # or could be added for the existed expression to the right, like here
 
-## Blank lines
+# Blank lines
 
 Blank lines are ignored as well.
 
-Dsl code:
+DSL code:
 
     # every story has the beginning
     The beginning of a story
@@ -320,7 +316,7 @@ But you **can't ignore** blank lines in a \`text block' context ( see \`text blo
 
 Use \`:blank_line' marker to match blank lines.
 
-Dsl code:
+DSL code:
 
     # :blank_line marker matches blank lines
     # this is especially useful
@@ -332,12 +328,11 @@ Dsl code:
         :blank_line
     end:
 
-## Text blocks
+# Text blocks
 
 Sometimes it is very helpful to match against a \`sequence of lines' like here.
 
-
-Dsl code:
+DSL code:
 
     # this text block
     # consists of 5 strings
@@ -383,7 +378,7 @@ Markers should not be followed by any text at the same line.
 Be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else 
 parser will remain in a \`text block' mode till the end of the file, which is probably not you want:
 
-Dsl code:
+DSL code:
 
     begin:
         here we begin
@@ -397,7 +392,7 @@ Code expressions are just a pieces of 'some language code' you may inline and ex
 
 By default, if *language* is no set Perl language is assumed. Here is example:
 
-Dsl code:
+DSL code:
 
     # Perl expression 
     # between two check expressions
@@ -410,7 +405,7 @@ Output:
 
     hello I am Outthentic
 
-Internally once dsl code gets parsed it is "turned" into regular Perl code:
+Internally once DSL code gets parsed it is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
@@ -447,7 +442,7 @@ set shebang to define a language. Here are some examples:
 
 Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
 
-Dsl code
+DSL code
 
     assert: 0 'this is not true'
     assert: 1 'this is true'
@@ -475,7 +470,7 @@ Generators expressions start with \`:generator' marker.
 
 Here is simple example.
 
-Dsl code:
+DSL code:
 
     # original check list
 
@@ -523,7 +518,7 @@ and array reference like in Perl. Here is more examples for other languages:
 
 Here is more complicated example using Perl.
 
-Dsl code:
+DSL code:
 
 
     # this generator generates
@@ -563,7 +558,7 @@ Input Text:
     AAAA
     AAAAA
 
-Dsl code:
+DSL code:
 
     generator:  <<CODE
     sub next_number {                       
@@ -583,7 +578,7 @@ Input:
 
     number: 10
 
-Dsl code:
+DSL code:
 
 
     number: (\d+)
@@ -612,7 +607,7 @@ A Perl code inside validator block should _return_ array reference.
 
 Validators a kind of check expressions with check logic _expressed_ in program code. Here is examples:
 
-Dsl code:
+DSL code:
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
@@ -640,7 +635,7 @@ Input text:
     jan     2
 
 
-Dsl code:
+DSL code:
 
 
     # let's capture name and age chunks
@@ -674,7 +669,7 @@ Example.
     string
     here
 
-Dsl code:
+DSL code:
 
 
     # check list
@@ -688,7 +683,7 @@ Dsl code:
 
 
 
-Results:
+Results - not verified:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -767,11 +762,12 @@ Input text:
 
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
-    code:                                   \
-        for my $c (@{captures}){            \
-            print "name:", $c->[0], "\n";   \
-            print "age:", $c->[1], "\n";    \
-        }    
+    code: << CODE                                 
+        for my $c (@{captures}){            
+            print "name:", $c->[0], "\n";   
+            print "age:", $c->[1], "\n";    
+        }
+    CODE
 
 Data accessible via captures():
 
@@ -782,43 +778,25 @@ Data accessible via captures():
     ]
 
 
-Then captured data usually good fit for validators extra checks.
+Then captured data usually good fit for assert checks.
 
-Dsl code
+DSL code
 
 
-    validator: << CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ($total == 72 ), "total age of my family" ];
-
+    generator: << CODE
+    !ruby
+    total=0                 
+    captures().each do |c|
+        total+=c[0]
+    end           
+    puts "assert: #{total == 72} 'total age of my family'"
     CODE
 
 ## captures() function
 
-captures() function returns an array reference holding all chunks captured during _latest regular expression check_.
+captures() function returns an array reference holding all the chunks captured during _latest regular expression check_.
 
-Here some more examples.
-
-Dsl code:
-
-    # check if stdout contains numbers,
-    # then calculate total amount
-    # and check if it is greater then 10
-
-    regexp: (\d+)
-
-    validator:  <<CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ( $total > 10 ) "total amount is greater than 10" ]
-
-    CODE
-
+Here is another example:
 
     # check if stdout contains lines
     # with date formatted as date: YYYY-MM-DD
@@ -826,13 +804,15 @@ Dsl code:
 
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
 
-    validator:  <<CODE
+    generator:  <<CODE
     use DateTime;                       
     my $c = captures()->[0];            
     my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
     my $yesterday = DateTime->now->subtract( days =>  1 );                        
-
-    [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
+    my $true_or_false = (DateTime->compare($dt, $yesterday) == 0);
+    [ 
+        "assert: $true_or_false first day found is - $dt and this is a yesterday"
+    ];
 
     CODE
 
@@ -842,13 +822,13 @@ capture() function returns a _first element_ of captures array.
 
 it is useful when you need data _related_ only  _first_ successfully matched line.
 
-Dsl code:
+DSL code:
 
     # check if  text contains numbers
     # a first number should be greater then ten
 
     regexp: (\d+)
-    validator: [ ( capture()->[0] >  10 ), " first number is greater than 10 " ];
+    generator: [ "assert: ".( capture()->[0] >  10 )." first number is greater than 10 " ]
 
 # Search context modificators
 
@@ -882,7 +862,7 @@ Text input:
 
     That is it!
 
-Dsl code:
+DSL code:
 
     # I need one of 3 colors:
 
@@ -908,7 +888,7 @@ These are:
 
 * thus next plain string checks expression will be executed against new search context
 
-Results:
+Results - verified:
 
     +--------+------------------------------------------------+
     | status | message                                        |
@@ -987,7 +967,7 @@ Input text:
     </table>
 
 
-Dsl code:
+DSL code:
 
     # between expression:
     between: <table.*> <\/table>
@@ -1024,7 +1004,7 @@ Input text:
 
     BAR
 
-Dsl code:
+DSL code:
 
     between: foo bar
 
@@ -1091,7 +1071,7 @@ Input text:
     bar
 
 
-Dsl code:
+DSL code:
 
     between foo bar
 
@@ -1130,7 +1110,7 @@ Input text:
     bar
 
 
-Dsl code:
+DSL code:
 
     between: foo bar
         1
@@ -1176,7 +1156,7 @@ Input text:
         000
     bar
 
-Dsl code:
+DSL code:
 
 
     begin:
@@ -1224,7 +1204,7 @@ Streams are _applicable_ for text blocks and range expressions.
 
 Let's rewrite last example.
 
-Dsl code:
+DSL code:
 
     begin:
 
@@ -1287,7 +1267,7 @@ Input text:
     bar
 
 
-Dsl code:
+DSL code:
 
     between: foo bar
 
@@ -1328,7 +1308,7 @@ This program is free software; you can redistribute it and/or modify it under th
 
 # See also
 
-Alternative outthentic dsl introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
+Alternative outthentic DSL introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
 
 # Thanks
 

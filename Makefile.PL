@@ -3,7 +3,7 @@ use inc::Module::Install;
 # Define metadata
 name           'Outthentic-DSL';
 
-abstract       'outthentic DSL - smart text validator';
+abstract       'Language to verify text output';
 
 all_from       'lib/Outthentic/DSL.pm';
 

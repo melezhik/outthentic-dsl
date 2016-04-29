@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.1.2';
 
 use Carp;
 use Data::Dumper;
@@ -834,17 +834,12 @@ Outthentic::DSL
 
 =head1 SYNOPSIS
 
-Language to validate text output.
+Language to verify text output.
 
 
 =head1 Install
 
     $ cpanm Outthentic::DSL
-
-
-=head1 Informal introduction
-
-Alternative outthentic dsl introduction could be found L<here|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
 
 
 =head1 Glossary
@@ -896,7 +891,7 @@ another program languages code
 =back
 
 
-=head2 Outthentic dsl
+=head2 Outthentic DSL
 
 =over
 
@@ -908,7 +903,7 @@ Is a language to verify I<arbitrary> plain text
 
 =item *
 
-Outthentic dsl is both imperative and declarative language
+Outthentic DSL is both imperative and declarative language
 
 
 
@@ -922,12 +917,13 @@ You define rules ( check expressions ) to describe expected content.
 
 =head3 Imperative way
 
-You define a process of verification using custom perl code ( validators, generators, code expressions  ).
+You I<extend> a process of verification using regular programming languages - like Perl, Bash and Ruby, see
+examples below.
 
 
-=head2 dsl code
+=head2 DSL code
 
-A  program code written on outthentic dsl language to verify text input.
+A  program code written on outthentic DSL language to verify text input.
 
 
 =head2 Search context
@@ -939,15 +935,15 @@ But default search context is the same as original input text stream.
 Search context could be however changed in some conditions.
 
 
-=head2 dsl parser
+=head2 DSL parser
 
-dsl parser is the program which:
+DSL parser is the program which:
 
 =over
 
 =item *
 
-parses dsl code
+parses DSL code
 
 
 
@@ -1088,7 +1084,7 @@ Obligatory parameter is:
 
 =item *
 
-a path to file with dsl code
+a path to file with DSL code
 
 
 =back
@@ -1102,7 +1098,7 @@ Returns validation results as arrayref containing { type, status, message } hash
 
 =head2 Outthentic clients
 
-Client is a external program using dsl API. Existed outthentic clients:
+Client is a external program using DSL API. Existed outthentic clients:
 
 =over
 
@@ -1123,83 +1119,34 @@ L<Outthentic|https://github.com/melezhik/outthentic> -  multipurpose scenarios f
 More clients wanted :) , please L<write me|mailto:melezhik@gmail.com> if you have one!
 
 
-=head1 dsl code syntax
+=head1 DSL code syntax
 
-Outthentic dsl code comprises following entities:
-
-=over
-
-=item *
-
-Check expressions:
-
-=over
-
-=item *
-
-plain     strings
+Outthentic DSL code comprises following entities:
 
 
-=item *
+=head2 Check expressions:
 
-regular   expressions
-
-
-=item *
-
-text      blocks
-
-
-=item *
-
-within    expressions
+    * plain     strings
+    * regular   expressions
+    * text      blocks
+    * within    expressions
+    * asserts   expressions
+    * range     expressions
 
 
-=item *
-
-asserts   expressions
+=head2 Comments
 
 
-=item *
-
-range     expressions
+=head2 Blank lines
 
 
-=back
+=head2 Code expressions
 
 
-
-=item *
-
-Comments
+=head2 Generator expressions
 
 
-
-=item *
-
-Blank lines
-
-
-
-=item *
-
-Code expressions
-
-
-
-=item *
-
-Generator expressions
-
-
-
-=item *
-
-Validator expressions
-
-
-
-=back
+=head2 Validator expressions
 
 
 =head1 Check expressions
@@ -1214,12 +1161,12 @@ Input text:
     HELLO WORLD
     My birth day is: 1977-04-16
 
-Dsl code:
+DSL code:
 
     HELLO
     regexp: \d\d\d\d-\d\d-\d\d
 
-Results:
+Results - verified:
 
     +--------+------------------------------+
     | status | message                      |
@@ -1251,7 +1198,7 @@ L<regular expressions|#regular-expressions>.
 
 Plain text expressions are just a lines should be I<included> at input text stream.
 
-Dsl code:
+DSL code:
 
         I am ok
         HELLO Outthentic
@@ -1261,7 +1208,7 @@ Input text:
     I am ok , really
     HELLO Outthentic !!!
 
-Result - verified
+Results: verified
 
 Plain text expressions are case sensitive:
 
@@ -1269,14 +1216,14 @@ Input text:
 
     I am OK
 
-Result - not verified
+Results: not verified
 
 
 =head1 Regular expressions
 
 Similarly to plain text matching, you may require that input lines match some regular expressions:
 
-Dsl code:
+DSL code:
 
     regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
     regexp: Name: \w+ # name
@@ -1322,22 +1269,22 @@ See L<"captures"|#captures> section for full explanation of a captures mechanism
 Comments and blank lines don't impact verification process but one could use them to improve code readability.
 
 
-=head2 Comments
+=head1 Comments
 
 Comment lines start with `#' symbol, comments chunks are ignored by parser.
 
-Dsl code:
+DSL code:
 
     # comments could be represented at a distinct line, like here
     The beginning of story
     Hello World # or could be added for the existed expression to the right, like here
 
 
-=head2 Blank lines
+=head1 Blank lines
 
 Blank lines are ignored as well.
 
-Dsl code:
+DSL code:
 
     # every story has the beginning
     The beginning of a story
@@ -1351,7 +1298,7 @@ But you B<can't ignore> blank lines in a `text block' context ( see `text blocks
 
 Use `:blank_line' marker to match blank lines.
 
-Dsl code:
+DSL code:
 
     # :blank_line marker matches blank lines
     # this is especially useful
@@ -1364,11 +1311,11 @@ Dsl code:
     end:
 
 
-=head2 Text blocks
+=head1 Text blocks
 
 Sometimes it is very helpful to match against a `sequence of lines' like here.
 
-Dsl code:
+DSL code:
 
     # this text block
     # consists of 5 strings
@@ -1415,7 +1362,7 @@ Markers should not be followed by any text at the same line.
 Be aware if you leave "dangling" `begin:' marker without closing `end': somewhere else 
 parser will remain in a `text block' mode till the end of the file, which is probably not you want:
 
-Dsl code:
+DSL code:
 
     begin:
         here we begin
@@ -1430,7 +1377,7 @@ Code expressions are just a pieces of 'some language code' you may inline and ex
 
 By default, if I<language> is no set Perl language is assumed. Here is example:
 
-Dsl code:
+DSL code:
 
     # Perl expression 
     # between two check expressions
@@ -1442,7 +1389,7 @@ Output:
 
     hello I am Outthentic
 
-Internally once dsl code gets parsed it is "turned" into regular Perl code:
+Internally once DSL code gets parsed it is "turned" into regular Perl code:
 
     execute_check_expression("Once upon a time");
     eval 'print "Lived a boy called Outthentic"';
@@ -1492,7 +1439,7 @@ set shebang to define a language. Here are some examples:
 
 Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
 
-Dsl code
+DSL code
 
     assert: 0 'this is not true'
     assert: 1 'this is true'
@@ -1548,7 +1495,7 @@ Generators expressions start with `:generator' marker.
 
 Here is simple example.
 
-Dsl code:
+DSL code:
 
     # original check list
     
@@ -1592,7 +1539,7 @@ and array reference like in Perl. Here is more examples for other languages:
 
 Here is more complicated example using Perl.
 
-Dsl code:
+DSL code:
 
     # this generator generates
     # comment lines
@@ -1629,7 +1576,7 @@ Input Text:
     AAAA
     AAAAA
 
-Dsl code:
+DSL code:
 
     generator:  <<CODE
     sub next_number {                       
@@ -1649,7 +1596,7 @@ Input:
 
     number: 10
 
-Dsl code:
+DSL code:
 
     number: (\d+)
     
@@ -1693,7 +1640,7 @@ second element - is a helpful message
 
 Validators a kind of check expressions with check logic I<expressed> in program code. Here is examples:
 
-Dsl code:
+DSL code:
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
@@ -1718,7 +1665,7 @@ Input text:
     julia   32
     jan     2
 
-Dsl code:
+DSL code:
 
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
@@ -1764,7 +1711,7 @@ Example.
     string
     here
 
-Dsl code:
+DSL code:
 
     # check list
     # consists of
@@ -1775,7 +1722,7 @@ Dsl code:
     here
     regexp: Multiline \n string \n here
 
-Results:
+Results - not verified:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -1866,11 +1813,12 @@ Input text:
     
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
-    code:                                   \
-        for my $c (@{captures}){            \
-            print "name:", $c->[0], "\n";   \
-            print "age:", $c->[1], "\n";    \
-        }    
+    code: << CODE                                 
+        for my $c (@{captures}){            
+            print "name:", $c->[0], "\n";   
+            print "age:", $c->[1], "\n";    
+        }
+    CODE
 
 Data accessible via captures():
 
@@ -1880,57 +1828,41 @@ Data accessible via captures():
         ['jan',     2  ]
     ]
 
-Then captured data usually good fit for validators extra checks.
+Then captured data usually good fit for assert checks.
 
-Dsl code
+DSL code
 
-    validator: << CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ($total == 72 ), "total age of my family" ];
-    
+    generator: << CODE
+    !ruby
+    total=0                 
+    captures().each do |c|
+        total+=c[0]
+    end           
+    puts "assert: #{total == 72} 'total age of my family'"
     CODE
 
 
 =head2 captures() function
 
-captures() function returns an array reference holding all chunks captured during I<latest regular expression check>.
+captures() function returns an array reference holding all the chunks captured during I<latest regular expression check>.
 
-Here some more examples.
+Here is another example:
 
-Dsl code:
-
-    # check if stdout contains numbers,
-    # then calculate total amount
-    # and check if it is greater then 10
-    
-    regexp: (\d+)
-    
-    validator:  <<CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ( $total > 10 ) "total amount is greater than 10" ]
-    
-    CODE
-    
-    
     # check if stdout contains lines
     # with date formatted as date: YYYY-MM-DD
     # and then check if first date found is yesterday
     
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
     
-    validator:  <<CODE
+    generator:  <<CODE
     use DateTime;                       
     my $c = captures()->[0];            
     my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
     my $yesterday = DateTime->now->subtract( days =>  1 );                        
-    
-    [ ( DateTime->compare($dt, $yesterday) == 0 ),"first day found is - $dt and this is a yesterday" ];
+    my $true_or_false = (DateTime->compare($dt, $yesterday) == 0);
+    [ 
+        "assert: $true_or_false first day found is - $dt and this is a yesterday"
+    ];
     
     CODE
 
@@ -1941,13 +1873,13 @@ capture() function returns a I<first element> of captures array.
 
 it is useful when you need data I<related> only  I<first> successfully matched line.
 
-Dsl code:
+DSL code:
 
     # check if  text contains numbers
     # a first number should be greater then ten
     
     regexp: (\d+)
-    validator: [ ( capture()->[0] >  10 ), " first number is greater than 10 " ];
+    generator: [ "assert: ".( capture()->[0] >  10 )." first number is greater than 10 " ]
 
 
 =head1 Search context modificators
@@ -1993,7 +1925,7 @@ Text input:
     
     That is it!
 
-Dsl code:
+DSL code:
 
     # I need one of 3 colors:
     
@@ -2037,7 +1969,7 @@ thus next plain string checks expression will be executed against new search con
 
 =back
 
-Results:
+Results - verified:
 
     +--------+------------------------------------------------+
     | status | message                                        |
@@ -2111,7 +2043,7 @@ Input text:
         </tr>
     </table>
 
-Dsl code:
+DSL code:
 
     # between expression:
     between: <table.*> <\/table>
@@ -2148,7 +2080,7 @@ Input text:
     
     BAR
 
-Dsl code:
+DSL code:
 
     between: foo bar
     
@@ -2214,7 +2146,7 @@ Input text:
         hello
     bar
 
-Dsl code:
+DSL code:
 
     between foo bar
     
@@ -2251,7 +2183,7 @@ Input text:
         c
     bar
 
-Dsl code:
+DSL code:
 
     between: foo bar
         1
@@ -2299,7 +2231,7 @@ Input text:
         000
     bar
 
-Dsl code:
+DSL code:
 
     begin:
     
@@ -2344,7 +2276,7 @@ Streams are I<applicable> for text blocks and range expressions.
 
 Let's rewrite last example.
 
-Dsl code:
+DSL code:
 
     begin:
     
@@ -2403,7 +2335,7 @@ Input text:
         0
     bar
 
-Dsl code:
+DSL code:
 
     between: foo bar
     
@@ -2446,7 +2378,7 @@ This program is free software; you can redistribute it and/or modify it under th
 
 =head1 See also
 
-Alternative outthentic dsl introduction could be found here - L<intro.md|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
+Alternative outthentic DSL introduction could be found here - L<intro.md|https://github.com/melezhik/outthentic-dsl/blob/master/intro.md>
 
 
 =head1 Thanks
