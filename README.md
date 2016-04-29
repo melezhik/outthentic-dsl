@@ -8,7 +8,7 @@ Language to validate text output.
 
 # Install
 
-    cpanm Outthentic::DSL
+    $ cpanm Outthentic::DSL
 
 # Informal introduction
 
@@ -161,7 +161,7 @@ More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you hav
 
 # dsl code syntax
 
-Outthentic dsl code comprises following basic entities:
+Outthentic dsl code comprises following entities:
 
 * Check expressions:
 
@@ -169,15 +169,16 @@ Outthentic dsl code comprises following basic entities:
     * regular   expressions
     * text      blocks
     * within    expressions
+    * asserts   expressions
     * range     expressions
-    * asserts
-    * validator expressions
 
 * Comments
 
 * Blank lines
 
-* Perl expressions
+* Code expressions
+
+* Validator expressions
 
 * Generator expressions
 
@@ -391,11 +392,11 @@ Dsl code:
 
             we are in `text block` mode
 
-# Perl expressions
+# Code expressions
 
-Perl expressions are just a pieces of Perl code to _get evaled_ during parsing process. 
+Code expressions are just a pieces of 'some language code' you may inline and execute **during parsing** process.
 
-This is how it works.
+By default if *language* is no set Perl language is used. Here is example:
 
 Dsl code:
 
@@ -416,97 +417,39 @@ Internally once dsl code gets parsed it is "turned" into regular Perl code:
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-One of the use case for Perl expressions is to store [\`captures'](#captures) data.
-
-Dsl code:
-
-    regexp: my name is (\w+) and my age is (\d+)
-    code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
-    code: print $data->{name}, "\n";
-    code: print $data->{age}, "\n";
-
-Input text:
-
-    my name is Alexey and my age is 38
-
-Output:
-
-    Alexey
-    38
-
-Additional comments on perl expressions:
+When use perl expressions be aware of:
 
 * Perl expressions are executed by Perl eval function in context of `package main`, please be aware of that.
 
 * Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to know more about Perl eval function.
 
-# Validators
-
-WARNING!!! You should prefer asserts over validators. Validators feature will be deprecated soon!
-
-Validator expressions like Perl expressions are just a piece of Perl code. 
-
-Validators start with \`validator:' marker
-
-A Perl code inside validator block should _return_ array reference. Once code is executed a returned array structure
-treated as:
-
-* first element - is a status number ( perl true or false )
-* second element - is a helpful message 
-
-Validators a kind of check expressions with check logic _expressed_ in validator code.
-
-Examples.
-
-Dsl code:
-
-    # this is always true
-    validator: [ 10>1 , 'ten is bigger then one' ]
-
-    # and this is not
-    validator: [ 1>10, 'one is bigger then ten'  ]
-
-    # this one depends on previous check
-    regexp: credit card number: (\d+)
-    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
+One may use other languages in code expressions. Use should use \`here' document style to insert your code and
+set shebang to define a language. Here are some examples:
 
 
-    # and this could be any
-    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
-    
+* bash 
 
-Validators are very efficient when gets combined with [\`captures expressions'](#captures)
+    code:  <<HERE
 
-This is a simple example.
+    !bash
+    echo '# hello I am Outthentic'
 
-Input text:
-
-
-    # my family ages list
-    alex    38
-    julia   32
-    jan     2
+    HERE
 
 
-Dsl code:
+* ruby
 
+    code: <<CODE
 
-    # let's capture name and age chunks
-    regexp: /(\w+)\s+(\d+)/
+    !ruby
 
-    validator: <<CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ( $total == 72 ), "total age" ] 
+    say '# hello I am Outthentic';
 
     CODE
 
 # Asserts
 
 Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
-
 
 Dsl code
 
@@ -627,6 +570,68 @@ Dsl code:
     generator: <<CODE
     #!ruby
       puts "assert: #{capture()[0] == 10}, you've got 10!"  
+    CODE
+
+
+# Validators
+
+WARNING!!! You should prefer asserts over validators. Validators feature will be deprecated soon!
+
+Validator expressions are perl code expressions used for dynamic verification.
+
+Validator expressions start with \`validator:' marker.
+
+A Perl code inside validator block should _return_ array reference. 
+
+* Once code is executed a returned array structure treated as:
+
+  * first element - is a status number ( Perl true or false )
+
+  * second element - is a helpful message 
+
+Validators a kind of check expressions with check logic _expressed_ in program code. Here is examples:
+
+Dsl code:
+
+    # this is always true
+    validator: [ 10>1 , 'ten is bigger then one' ]
+
+    # and this is not
+    validator: [ 1>10, 'one is bigger then ten'  ]
+
+    # this one depends on previous check
+    regexp: credit card number: (\d+)
+    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
+
+
+    # and this could be any
+    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
+    
+
+Validators are often used with the [\`captures expressions'](#captures). This is another example.
+
+Input text:
+
+
+    # my family ages list
+    alex    38
+    julia   32
+    jan     2
+
+
+Dsl code:
+
+
+    # let's capture name and age chunks
+    regexp: /(\w+)\s+(\d+)/
+
+    validator: <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
+    [ ( $total == 72 ), "total age" ] 
+
     CODE
 
 
