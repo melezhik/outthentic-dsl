@@ -13,7 +13,7 @@ Language to validate text output.
 
 =head1 Install
 
-    cpanm Outthentic::DSL
+    $ cpanm Outthentic::DSL
 
 
 =head1 Informal introduction
@@ -282,13 +282,13 @@ Client is a external program using dsl API. Existed outthentic clients:
 
 =item *
 
-L<swat|https://github.com/melezhik/swat> - web application testing tool
+L<Swat|https://github.com/melezhik/swat> - web application testing tool
 
 
 
 =item *
 
-L<outthentic|https://github.com/melezhik/outthentic> - generic testing tool
+L<Outthentic|https://github.com/melezhik/outthentic> -  multipurpose scenarios framework
 
 
 
@@ -299,7 +299,7 @@ More clients wanted :) , please L<write me|mailto:melezhik@gmail.com> if you hav
 
 =head1 dsl code syntax
 
-Outthentic dsl code comprises following basic entities:
+Outthentic dsl code comprises following entities:
 
 =over
 
@@ -331,12 +331,12 @@ within    expressions
 
 =item *
 
-range     expressions
+asserts   expressions
 
 
 =item *
 
-validator expressions
+range     expressions
 
 
 =back
@@ -357,13 +357,19 @@ Blank lines
 
 =item *
 
-Perl expressions
+Code expressions
 
 
 
 =item *
 
 Generator expressions
+
+
+
+=item *
+
+Validator expressions
 
 
 
@@ -592,11 +598,11 @@ Dsl code:
             we are in `text block` mode
 
 
-=head1 Perl expressions
+=head1 Code expressions
 
-Perl expressions are just a pieces of Perl code to I<get evaled> during parsing process. 
+Code expressions are just a pieces of 'some language code' you may inline and execute B<during parsing> process.
 
-This is how it works.
+By default, if I<language> is no set Perl language is assumed. Here is example:
 
 Dsl code:
 
@@ -616,25 +622,7 @@ Internally once dsl code gets parsed it is "turned" into regular Perl code:
     eval 'print "Lived a boy called Outthentic"';
     execute_check_expression("Lived a boy called Outthentic");
 
-One of the use case for Perl expressions is to store L<`captures'|#captures> data.
-
-Dsl code:
-
-    regexp: my name is (\w+) and my age is (\d+)
-    code: $main::data{name} = capture()->[0]; $main::data{age} = capture()->[1]; 
-    code: print $data->{name}, "\n";
-    code: print $data->{age}, "\n";
-
-Input text:
-
-    my name is Alexey and my age is 38
-
-Output:
-
-    Alexey
-    38
-
-Additional comments on perl expressions:
+When use Perl expressions be aware of:
 
 =over
 
@@ -652,87 +640,93 @@ Follow L<http://perldoc.perl.org/functions/eval.html|http://perldoc.perl.org/fun
 
 =back
 
-
-=head1 Validators
-
-Validator expressions like Perl expressions are just a piece of Perl code. 
-
-Validators start with `validator:' marker
-
-A Perl code inside validator block should I<return> array reference. Once code is executed a returned array structure
-treated as:
+One may use other languages in code expressions. Use should use `here' document style ( see L<multiline expressions|#Multiline> section ) to insert your code and
+set shebang to define a language. Here are some examples:
 
 =over
 
 =item *
 
-first element - is a status number ( perl true or false )
+bash 
+
+code:  <<HERE
+!bash
+
+echo '# hello I am Outthentic'
+HERE
+
 
 
 =item *
 
-second element - is a helpful message 
+ruby
+
+code: <<CODE
+!ruby
+
+puts '# hello I am Outthentic'
+CODE
+
 
 
 =back
 
-Validators a kind of check expressions with check logic I<expressed> in validator code.
 
-Examples.
+=head1 Asserts
 
-Dsl code:
+Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
 
-    # this is always true
-    validator: [ 10>1 , 'ten is bigger then one' ]
-    
-    # and this is not
-    validator: [ 1>10, 'one is bigger then ten'  ]
-    
-    # this one depends on previous check
-    regexp: credit card number: (\d+)
-    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
-    
-    
-    # and this could be any
-    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
+Dsl code
 
-Validators are very efficient when gets combined with L<`captures expressions'|#captures>
+    assert: 0 'this is not true'
+    assert: 1 'this is true'
 
-This is a simple example.
-
-Input text:
-
-    # my family ages list
-    alex    38
-    julia   32
-    jan     2
-
-Dsl code:
-
-    # let's capture name and age chunks
-    regexp: /(\w+)\s+(\d+)/
-    
-    validator: <<CODE
-    my $total=0;                        
-    for my $c (@{captures()}) {         
-        $total+=$c->[0];                
-    }                                   
-    [ ( $total == 72 ), "total age" ] 
-    
-    CODE
+Asserts almost always are created dynamically with generators. See next section.
 
 
 =head1 Generators
 
+=over
+
+=item *
+
 Generators is the way to I<generate new outthentic entries on the fly>.
 
-Generator expressions like Perl expressions are just a piece of Perl code.
 
-The only requirement for generator code - it should return I<reference to array of strings>.
 
-Strings in array returned by generator code I<represent> a I<new> outthentic entities.
+=item *
+
+Generator expressions like code expressions are just a piece of code to be executed.
+
+
+
+=item *
+
+The only requirement for generator code - it should return I<new outthentic entities>.
+
+
+
+=item *
+
+If you use Perl in generator expressions ( which is by default ) - last statement in your
+code should return reference to array of strings. Strings in array would I<represent> a I<new> outthentic entities.
+
+
+
+=item *
+
+If you use not Perl language in generator expressions to produce new outthentic entities you should print them
+into B<stdout>. See examples below.
+
+
+
+=item *
 
 A new outthentic entries are passed back to parser and executed immediately.
+
+
+
+=back
 
 Generators expressions start with `:generator' marker.
 
@@ -747,19 +741,40 @@ Dsl code:
      
     # this generator creates 3 new check expressions:
     
-    generator: [ qw{ say hello again } ]
+    generator: <<CODE
+    [ 
+      'say', 
+      'hello', 
+      'again'
+    ]
+    CODE
 
-New dsl code:
+Updated check list:
 
-    # final check list:
-    
     Say
     HELLO
     say
     hello
     again
 
-Here is more complicated example.
+If you use not Perl in generator expressions, you have to print entries into stdout instead of returning
+and array reference like in Perl. Here is more examples for other languages:
+
+    generator: <<CODE
+    !bash
+      echo say
+      echo hello
+      echo again
+    CODE
+    
+    generator: <<CODE
+    !ruby
+      puts 'say'
+      puts 'hello'
+      puts 'again'
+    CODE
+
+Here is more complicated example using Perl.
 
 Dsl code:
 
@@ -768,18 +783,25 @@ Dsl code:
     # and plain string check expressions:
     
     generator: <<CODE    
-    my %d = { 'foo' => 'foo value', 'bar' => 'bar value' };     
-    [ map  { ( "# $_", "$data{$_}" )  } keys %d ]
+    my %d = { 
+      'foo' => 'foo value', 
+      'bar' => 'bar value' 
+    };     
+    [ 
+      map  { 
+        ( "# $_", "$data{$_}" )  
+      } keys %d 
+    ]
     CODE
 
-New dsl code:
+Updated check list:
 
     # foo
     foo value
     # bar
     bar value
 
-Generators could produce not only check expressions but validators, perl expressions and ... generators.
+Generators could produce not only check expressions but code expressions and ... another generators.
 
 This is fictional example.
 
@@ -805,7 +827,94 @@ Dsl code:
     }
     CODE
 
-Result - verified
+Generators are commonly used to create an asserts.
+
+Input:
+
+    number: 10
+
+Dsl code:
+
+    number: (\d+)
+    
+    generator: <<CODE
+    !ruby
+      puts "assert: #{capture()[0] == 10}, you've got 10!"  
+    CODE
+
+
+=head1 Validators
+
+WARNING!!! You should prefer asserts over validators. Validators feature will be deprecated soon!
+
+Validator expressions are perl code expressions used for dynamic verification.
+
+Validator expressions start with `validator:' marker.
+
+A Perl code inside validator block should I<return> array reference. 
+
+=over
+
+=item *
+
+Once code is executed a returned array structure treated as:
+
+
+
+=item *
+
+first element - is a status number ( Perl true or false )
+
+
+
+=item *
+
+second element - is a helpful message 
+
+
+
+=back
+
+Validators a kind of check expressions with check logic I<expressed> in program code. Here is examples:
+
+Dsl code:
+
+    # this is always true
+    validator: [ 10>1 , 'ten is bigger then one' ]
+    
+    # and this is not
+    validator: [ 1>10, 'one is bigger then ten'  ]
+    
+    # this one depends on previous check
+    regexp: credit card number: (\d+)
+    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
+    
+    
+    # and this could be any
+    validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
+
+Validators are often used with the L<`captures expressions'|#captures>. This is another example.
+
+Input text:
+
+    # my family ages list
+    alex    38
+    julia   32
+    jan     2
+
+Dsl code:
+
+    # let's capture name and age chunks
+    regexp: /(\w+)\s+(\d+)/
+    
+    validator: <<CODE
+    my $total=0;                        
+    for my $c (@{captures()}) {         
+        $total+=$c->[0];                
+    }                                   
+    [ ( $total == 72 ), "total age" ] 
+    
+    CODE
 
 
 =head1 Multiline expressions
@@ -864,7 +973,7 @@ Results:
 Use text blocks if you want to I<represent> multiline checks.
 
 
-=head2 Multilines in perl expressions, validators and generators
+=head2 Multilines in code expressions, generators and validators
 
 Perl expressions, validators and generators could contain multilines expressions
 
@@ -1503,55 +1612,6 @@ Output:
     # 0 0 0
 
 
-=head2 Inline code from other languages
-
-WARNING!!! Don't use these features in production unless this message is removed.
-
-One may use various languages in code and generators expressions. Here are examples.
-
-
-=head3 bash 
-
-    generator:  <<HERE
-    
-    !/bin/bash
-    echo OK
-    
-    HERE
-    
-    code: <<HERE
-    mkdir -p /tmp/foo   
-    HERE
-
-
-=head3 perl6
-
-    generator: <<PERL6
-    
-    !/usr/bin/perl6
-    
-    say 'OK';
-    
-    PERL6
-
-
-=head3 ruby
-
-    generator:  <<CODE
-    !/usr/bin/ruby
-    
-    puts 'OK'
-    
-    CODE
-    
-    generator:  <<<CODE
-    !ruby
-    
-    puts 'OK'
-    
-    CODE
-
-
 =head1 Author
 
 L<Aleksei Melezhik|mailto:melezhik@gmail.com>
@@ -1580,7 +1640,7 @@ Alternative outthentic dsl introduction could be found here - L<intro.md|https:/
 
 =item *
 
-to God as - I<For the LORD giveth wisdom: out of his mouth cometh knowledge and understanding. (Proverbs 2:6)>
+To God as the One Who inspires me to do my job!
 
 
 =back
