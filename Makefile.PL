@@ -9,7 +9,10 @@ all_from       'lib/Outthentic/DSL.pm';
 
 # Specific dependencies
 
+requires    'JSON';
+
 license     'perl';
+
 repository  'https://github.com/melezhik/outthentic-dsl';
 
 WriteAll;
