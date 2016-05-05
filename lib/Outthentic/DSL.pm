@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.1.3';
+our $VERSION = '0.1.4';
 
 use Carp;
 use Data::Dumper;
@@ -361,8 +361,11 @@ sub validate {
         }
 
         if ($l=~ /^\s*assert:\s(\S+)\s+(.*)$/) {
-            $self->add_debug_result("assert found: $1,$2") if $self->{debug_mod} >= 2;
-            $self->add_result({ status => $1 , message => $2 });
+            my $status = $1; my $message = $2;
+            $self->add_debug_result("assert found: $status , $message") if $self->{debug_mod} >= 2;
+            $status = 0 if $status eq 'false'; # ruby to perl conversion
+            $status = 1 if $status eq 'true'; # ruby to perl conversion
+            $self->add_result({ status => $status , message => $message });
             next LINE;
         }
 
