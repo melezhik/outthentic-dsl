@@ -1524,7 +1524,7 @@ Updated check list:
     again
 
 If you use not Perl in generator expressions, you have to print entries into stdout instead of returning
-and array reference like in Perl. Here is more examples for other languages:
+an array reference like in Perl. Here are some generators examples for other languages:
 
     generator: <<CODE
     !bash
