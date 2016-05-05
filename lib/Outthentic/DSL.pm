@@ -542,7 +542,7 @@ sub handle_code {
               }
 
             }else{
-              $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+              $ext_runner = $self->{languages}->{$language} if $self->{languages}->{$language};
               $ext_runner.=' '.$source_file;
             }
 
@@ -673,7 +673,7 @@ sub handle_generator {
                 }
   
               }else{
-                $ext_runner.= ' '.$self->{languages}->{$language} if $self->{languages}->{$language};
+                $ext_runner = $self->{languages}->{$language} if $self->{languages}->{$language};
                 $ext_runner.=' '.$source_file;
               }
   
