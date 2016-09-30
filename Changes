@@ -1,4 +1,8 @@
-0.1.4
+0.1.5 
+
+* added some unit test at t/*
+
+0.1.4 2016-05-05
 
 * asserts - Ruby true|false to Perl 1|0 conversion
 * code and generator handlers changed - external runner modified to allow run Ruby stories with/wo bundler

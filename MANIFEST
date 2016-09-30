@@ -20,4 +20,5 @@ META.yml
 README.md
 README.pod
 t/00.t
+t/01-plain-text.t
 updatepod.bash
