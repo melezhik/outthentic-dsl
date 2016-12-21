@@ -18,6 +18,7 @@ sub change_context {
     #warn Dumper($succ);
 
     my $new_ctx  = []; # new context
+
     if (scalar @{$succ}){
 
        for my $c (@{$succ}){
@@ -34,7 +35,7 @@ sub change_context {
 
 sub update_stream {
 
-     print "\n\nxxxx start of text block update stream \n \n \n" if $ENV{OUTH_DBG}; 
+    print "\n\nxxxx start of text block update stream \n \n \n" if $ENV{OUTH_DBG}; 
 
     my $self        = shift;
     my $cur_ctx     = shift; # current search context
@@ -83,9 +84,6 @@ sub update_stream {
         }
     }
 
-    #warn 100;
-    #warn Dumper($succ);
-    #print Dumper($self->{chains});
     #warn Dumper([sort { $a <=> $b } keys %live_chains]) if $ENV{OUTH_DBG};
 
     # delete failed chains

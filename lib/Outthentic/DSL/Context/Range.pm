@@ -1,5 +1,6 @@
 package Outthentic::DSL::Context::Range;
 
+use strict;
 
 sub new { 
 
@@ -31,7 +32,7 @@ sub change_context {
     my $bound_l = $self->{bound_l};
     my $bound_r = $self->{bound_r};
 
-    my @dc = ();
+    my @new_ctx = (); # new context
     my @chunk;
 
     my $inside = 0;
@@ -40,51 +41,60 @@ sub change_context {
     $self->{ranges} ||= []; # this is initial ranges object
     $self->{bad_ranges} ||={};  
 
-    my $a_indx;
+    my $a_index;
     my $b_index;
 
-
-    for my $c (@{$cur_ctx}){
-
-
-        if ( $inside and $c->[0] !~ $bound_r ){
-            push @chunk, $c;
-            next;
-        }
+    SUCC: for my $c (@{$cur_ctx}){
 
         if ( $inside and $c->[0] =~ $bound_r  ){
 
 
-            push @dc, @chunk;
-
-            push @dc, ["#dsl_note: end range"];
-
-            @chunk = ();
-
-            $inside = 0;
-
-            $b_index = $c->[1];
-
-            if ($self->{chains}->{$a_index}){
-
-            }else{
-                $self->{chains}->{$a_index} = [];
-                push @{$self->{ranges}}, [$a_index, $b_index];
-            }
-            next;
+          push @new_ctx, @chunk;
+  
+          push @new_ctx, ["#dsl_note: end range"];
+  
+          @chunk = ();
+  
+          $inside = 0;
+  
+          $b_index = $c->[1];
+  
+          unless ($self->{chains}->{$a_index}){
+              $self->{chains}->{$a_index} = [];
+              push @{$self->{ranges}}, [$a_index, $b_index];
+          }
+  
+          for my $j (@chunk) {
+            push @new_ctx, $j;
+          }
+  
+          @chunk = ();
+  
+          next SUCC;
         }
 
+        if ($inside){
 
-        if ($c->[0] =~ $bound_l and ! $self->{bad_ranges}->{$c->[1]}){
+           push @chunk, $c;
+
+        } elsif ( $c->[0] =~ $bound_l and ! defined($self->{bad_ranges}->{$c->[1]})){
+
             $inside = 1;
             $a_index = $c->[1];
+
             push @chunk, ["#dsl_note: start range"];
-            next;
+
+            next SUCC;
         }
 
     }
 
-    return [@dc];
+    if ($ENV{OUTH_DBG}){
+      for my $c (@new_ctx){
+        print "[OTX_DEBUG] @{$c}"
+      }
+    }
+    return [@new_ctx];
 }
 
 
@@ -97,28 +107,25 @@ sub update_stream {
     my $succ        = shift; # latest succeeded items
     my $stream_ref  = shift; # reference to stream object to update
 
+    my %live_ranges;
+ 
     my $inside = 0;
 
-    $self->{chains} ||= {}; # this is initial chain object
-    $self->{seen} ||= {};
-    $i = 0;
+    $self->{chains} ||= {}; # this is initial chains object
+    $self->{seen}   ||= {};
 
-    my %keep_ranges;
 
     for my $c (@{$succ}){
-       # warn $c->[0]; 
+
        for my $r (@{$self->{ranges}}){
+
             my $a_index = $r->[0];
+
             my $b_index = $r->[1];
-            #warn "kkk $a_index ... $b_index";
-            #warn ($c->[0]);
-            #warn ($c->[1]-1);
-            #warn "----";
+
             if ($c->[1] > $a_index and $c->[1] < $b_index  ){
-                push @{$self->{chains}->{$a_index}}, $c unless $self->{seen}->{$c->[1]};
-                $self->{seen}->{$c->[1]}=1;
-                $keep_ranges{$a_index}=1;
-                #warn "OK!";
+                push @{$self->{chains}->{$a_index}}, $c unless $self->{seen}->{$c->[1]}++;
+                $live_ranges{$a_index} = 1;
             }
 
         }
@@ -127,22 +134,19 @@ sub update_stream {
 
     ${$stream_ref} = {};
 
-    for my $r (@{$self->{ranges}}){
-        my $rid = $r->[0];
-        if ($keep_ranges{$rid}){
-            #warn "good range: $rid";
-            ${$stream_ref}->{$rid} = [ sort { $a->[1] <=> $b->[1] } @{$self->{chains}->{$rid}} ];
-        }else{
-            #warn "bad range: $rid";
-            $self->{bad_ranges}->{$rid} = 1;
-            delete ${$self->{chains}}{$rid};
-        }
+    my @k = sort { $b <=> $b } keys %{$self->{chains}};
+
+    for my $cid ( @k ) {
+
+      if ( exists $live_ranges{$cid} ) {
+        ${$stream_ref}->{$cid} = [ sort { $a->[1] <=> $b->[1] } @{$self->{chains}->{$cid}} ];
+      } else {
+        delete ${$self->{chains}}{$cid};
+        $self->{bad_ranges}->{$cid} = 1;
+      }
 
     }
 
-
-    #use Data::Dumper;
-    #warn Dumper(">>>>".($self->{bad_ranges}));
 }
 
 1;
