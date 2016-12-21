@@ -1,6 +1,6 @@
 0.1.5 
 
-* added some unit test at t/*
+* backport fixes for DSL/Context/TextBlock.pm && DSL/Context/Range.pm from Perl6 Outhentix::DSL
 
 0.1.4 2016-05-05
 

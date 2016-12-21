@@ -17,18 +17,17 @@ sub change_context {
     #warn Dumper($cur_ctx);
     #warn Dumper($succ);
 
-    my $next_chunk  = [];
+    my $new_ctx  = []; # new context
     if (scalar @{$succ}){
 
        for my $c (@{$succ}){
-            my $next_i = $c->[1];
-            push @$next_chunk, $orig_ctx->[$next_i];
+            push @$new_ctx, $orig_ctx->[$c->[1]] if defined($orig_ctx->[$c->[1]]);
         }
     }else{
-        $next_chunk = $cur_ctx; 
+        $new_ctx = $cur_ctx; 
     }
 
-    $next_chunk;
+    $new_ctx;
 
 }
 
@@ -43,46 +42,54 @@ sub update_stream {
 
     use Data::Dumper;
 
-    my @keep_chains;
+    my %live_chains = ();
 
 
-    if (scalar @{$succ}){
+    if (scalar @{$succ}) {
 
-       unless ($self->{chains}){
+       unless ($self->{chains}){ # chain initialization
             for my $c ( @{$succ} ){
+                print "[OTX_DEBUG] init chain $c->[1] ( starting value $c->[0] )...\n" if $ENV{OUTH_DBG};
                 $self->{chains}->{$c->[1]} = [$c];
-                ${$stream_ref}->{$c->[1]} =  [$c];
             }
        };
 
 
        for my $c (@{$succ}){
-            my $kc;
-            my $next_i = $c->[1];
-            for my $cid (keys %{$self->{chains}}){
-                if ( $self->{chains}->{$cid}->[-1]->[1] == $next_i-1 ){
-                    $kc = $cid;
-                    push @keep_chains, $cid;
+            CHAIN: for my $cid (sort { $a <=> $b } keys %{$self->{chains}}){
+                next CHAIN if $live_chains{$cid};
+                
+                if ( $self->{chains}->{$cid}->[-1]->[1] == $c->[1]-1 ){
+                  $live_chains{$cid} = 1;
+                  push @{$self-{chains}->{$cid}}, $c;
+                  print "[OTX_DEBUG] push $c->[0] to chain $cid  ...\n" if $ENV{OUTH_DBG};
+                  last CHAIN;
+                }elsif  ( $self->{chains}->{$cid}->[-1]->[1] == $c->[1] ) {
+                  $live_chains{$cid} = 1;
+                  print "[OTX_DEBUG] keep chain $cid  ...\n" if $ENV{OUTH_DBG};
+                  last CHAIN;
                 }
             }
-            push @{$self->{chains}->{$kc}}, $c if $kc; 
         }
     }
 
     #warn 100;
     #warn Dumper($succ);
     #warn Dumper($self->{chains});
-    #warn Dumper(\@keep_chains);
+    #warn Dumper([sort { $a <=> $b } keys %live_chains]) if $ENV{OUTH_DBG};
 
-    # remove unsuccessfull chains
+    # delete failed chains
 
     ${$stream_ref} = {};
 
-    for my $cid ( @keep_chains ){
-        ${$stream_ref}->{$cid} = $self->{chains}->{$cid};
-    }        
+     for my $cid (sort { $a <=> $b } keys %{$self->{chains}}){
+      if (exists $live_chains{$cid}) {        
+          ${$stream_ref}->{$cid} = $self->{chains}->{$cid};
+      } else {
+          delete @{$self->{chains}}{$cid};
+      }
+    }
 
-    
 }
 
 
