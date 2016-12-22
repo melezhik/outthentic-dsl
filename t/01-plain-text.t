@@ -9,7 +9,7 @@ my $otx = Outthentic::DSL->new({
   output => 'OK'
 });
 
-$otx->validate(['OK']);
+$otx->validate('OK');
 
-ok(1, "OK validated");
+#ok(1, "OK validated");
 

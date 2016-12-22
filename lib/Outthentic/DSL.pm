@@ -299,7 +299,16 @@ sub validate {
     my $here_str_mode = 0;
     my $here_str_marker;
 
-    my @lines = ( ref $check_list  ) ? @{$check_list} : ( split "\n", $check_list ); 
+    my @lines;
+    if (  -f $check_list ){
+      open my $ff, $check_list or die "can't open file check_list to read: $!";
+      while (my $ii = <$ff>){
+        push @lines, $ii;
+      }
+      close $ff;
+    } else {
+     @lines = ( ref $check_list  ) ? @{$check_list} : ( split "\n", $check_list ); 
+    }
 
     LINE: for my $l ( @lines ) {
 
@@ -590,64 +599,83 @@ sub handle_generator {
 
 }
 
+sub handle_simple {
+
+  my $self    = shift;
+  my $pattern = shift;
+  my $check_type = shift;  
+
+  my $msg;
+
+  my $lshort =  $self->_short_string($pattern);
+
+  my $reset_context = 0;
+
+  if ($self->{within_mode}) {
+
+      $self->{within_mode} = 0;
+
+      $reset_context = 1;
+
+      my $msg;
+
+      if ($self->{last_check_status}){
+        $msg = "'".($self->_short_string($self->{last_match_line}))."' match '".$lshort."'"
+      } else {
+        $msg = "text match '".$lshort."'"
+      }
+
+
+  } else {
+
+      if ($self->{block_mode}){
+        $msg = "[b] text match '$lshort'";
+      } else {
+        $msg = "text match '$lshort'"
+      }
+  }
+
+
+  $self->check_line($pattern,$check_type, $msg);
+
+  $self->reset_context if $reset_context; 
+
+  $self->debug("$check_type check DONE. >>> <<<$pattern>>>") if $self->{debug_mode} >= 3;
+
+}
+
 sub handle_regexp {
 
-    my $self = shift;
-    my $re = shift;
+    my $self  = shift;
+    my $re    = shift;
     
-    my $m;
-
-    my $reset_context = 0;
-
-    if ($self->{within_mode}){
-
-        $self->{within_mode} = 0; 
-        $reset_context = 1;
-
-        if ($self->{last_check_status}){
-            my $lml =  $self->_short_string($self->{last_match_line});
-            $m = "'$lml' match /$re/";
-        } else {
-            $m = "output match /$re/";
-        }
-    } else {
-        $m = "output match /$re/";
-        $m = "[b] $m" if $self->{block_mode};
-    }
-
-
-    $self->check_line($re, 'regexp', $m);
-
-    $self->reset_context if $reset_context; 
-
-    $self->debug("regexp OK. $re") if $self->{debug_mod} >= 3;
-
+    $self->handle_simple($re, 'regexp');
 
 }
 
 sub handle_within {
 
-    my $self = shift;
-    my $re = shift;
+    my $self    = shift;
+    my $pattern = shift;
 
-    my $m;
+    my $msg;
 
-    if ($self->{within_mode}){
-        if ($self->{last_check_status}){
-            my $lml =  $self->_short_string($self->{last_match_line});
-            $m = "'$lml' match /$re/";
-        } else {
-            $m = "output match /$re/";
-        }
+    if ($self->{within_mode}) {
+      if ($self->{last_check_status}){
+        $msg = "'".($self->_short_string($self->{last_match_line}))."' match  /$pattern/"
+      } else {
+        $msg = "text match /$pattern/"
+      }
+
     }else{
-        $m = "output match /$re/";
+        $msg = "text match /$pattern/";
     }
 
     $self->{within_mode} = 1;
 
-    $self->check_line($re, 'regexp', $m);
+    $self->check_line($pattern,'regexp', $msg);
 
-    $self->debug("within OK. $re") if $self->{debug_mod} >= 3;
+    $self->debug("within check DONE. >>> <<<$pattern>>>") if $self->{debug_mode} >= 3;
     
 }
 
@@ -656,32 +684,8 @@ sub handle_plain {
     my $self = shift;
     my $l = shift;
 
-    my $m;
-    my $lshort =  $self->_short_string($l);
-    my $reset_context = 0;
+    $self->handle_simple($l, 'default');
 
-    if ($self->{within_mode}){
-        
-        $self->{within_mode} = 0;
-        $reset_context = 1;
-
-        if ($self->{last_check_status}){
-            my $lml =  $self->_short_string($self->{last_match_line});
-            $m = "'$lml' match '$lshort'";
-        } else{
-            $m = "output match '$lshort'";
-        }
-    }else{
-        $m = "output match '$lshort'";
-        $m = "[b] $m" if $self->{block_mode};
-    }
-
-
-    $self->check_line($l, 'default', $m);
-
-    $self->reset_context if $reset_context; 
-
-    $self->debug("plain OK. $l") if $self->{debug_mod} >= 3;
 }
 
 
