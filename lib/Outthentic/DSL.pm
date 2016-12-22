@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.2.2';
 
 use Carp;
 use Data::Dumper;
@@ -160,6 +160,8 @@ sub check_line {
     my $message = shift;
 
     my $status = 0;
+
+    s/\s+$// for $pattern;
 
     $self->reset_captures;
 
@@ -620,18 +622,34 @@ sub handle_simple {
       my $msg;
 
       if ($self->{last_check_status}){
-        $msg = "'".($self->_short_string($self->{last_match_line}))."' match '".$lshort."'"
+        if ($check_type eq 'regexp'){
+          $msg = "'".($self->_short_string($self->{last_match_line}))."' match /$lshort/"
+        } else {
+          $msg = "'".($self->_short_string($self->{last_match_line}))."' has '".$lshort."'"
+        }
       } else {
-        $msg = "text match '".$lshort."'"
+        if ($check_type eq 'regexp'){
+          $msg = "text match /$lshort/"
+        } else {
+          $msg = "text has '".$lshort."'"
+        }
       }
 
 
   } else {
 
       if ($self->{block_mode}){
-        $msg = "[b] text match '$lshort'";
+        if ($check_type eq 'regexp'){
+          $msg = "[b] text match /$lshort/";
+        } else {
+          $msg = "[b] text has '".$lshort."'";
+        }
       } else {
-        $msg = "text match '$lshort'"
+        if ($check_type eq 'regexp'){
+          $msg = "text match /$lshort/";
+        } else {
+          $msg = "text has '".$lshort."'";
+        }
       }
   }
 
@@ -697,6 +715,9 @@ sub _short_string {
 
     s{\r}[]g for $str;
     s{\r}[]g for $sstr;
+
+    s/\s+$// for $sstr;
+    s/\s+$// for $str;
     
     return $sstr < $str ? "$sstr ..." : $sstr; 
 

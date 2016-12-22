@@ -1,3 +1,7 @@
+0.2.2 2016-12-22
+
+* fix for regexps / plain check with trailing spaces
+
 0.2.1 2016-12-22
 
 * fix for inc/Module/Install.pm missed
