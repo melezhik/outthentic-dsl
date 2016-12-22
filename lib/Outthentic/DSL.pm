@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.1.6';
+our $VERSION = '0.2.0';
 
 use Carp;
 use Data::Dumper;
@@ -489,10 +489,11 @@ sub handle_code {
 
     my $self = shift;
     my $code = shift;
+    my $results;
 
     unless (ref $code){
 
-        eval "package main; $code;";
+        $results = eval "package main; $code;";
         confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
         $self->debug("code OK. single line. code: $code") if $self->{debug_mod} >= 3;
 
@@ -512,7 +513,7 @@ sub handle_code {
 
               shift @$code;
               my $code_to_eval = join "\n", @$code;
-              eval "package main; $code_to_eval";
+              $results = eval "package main; $code_to_eval";
               confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
               $self->debug("code OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
@@ -569,7 +570,7 @@ sub handle_code {
         }else{
 
           my $code_to_eval = join "\n", @$code;
-          eval "package main; $code_to_eval";
+          $results = eval "package main; $code_to_eval";
           confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
           $self->debug("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
 
@@ -577,31 +578,15 @@ sub handle_code {
 
     }
 
+    return $results;
 }
 
 sub handle_validator {
 
     my $self = shift;
     my $code = shift;
-
-    unless (ref $code){
-
-        my $r = eval "package main; $code;";
-        confess "eval error; sub:handle_validator; code:$code\nerror: $@" if $@;
-        confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
-        $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->debug("validator OK. single line. code: $code") if $self->{debug_mod} >= 2;
-
-    } else {
-        my $i = 0;
-        my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
-        my $code_to_eval = join "\n", @$code;
-        my $r = eval "package main; $code_to_eval";
-        confess "eval error; sub:handle_validator; code:\n$code_to_print\nerror: $@" if $@;
-        confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
-        $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->debug("validator OK. multiline. code: $code_to_eval") if $self->{debug_mod} >= 2;
-    }
+    my $r = $self->handle_code($code);
+    $self->add_result({ status => $r->[0] , message => $r->[1] });
 
 }
 

@@ -1,6 +1,6 @@
-0.1.5 
+0.2.0 
 
-* backport fixes for DSL/Context/TextBlock.pm && DSL/Context/Range.pm from Perl6 Outhentix::DSL
+* backported fixes and merged refactored code from Outhentix::DSL
 
 0.1.4 2016-05-05
 
