@@ -98,7 +98,7 @@ Outthentic::DSL provides program api for client applications:
 
     my $outh = Outthentic::DSL->new('input_text');
 
-    $outh->validate('/file/with/check/expressions/','input text');
+    $outh->validate($check_expressions_string,'input text');
 
 
     for my $r ( @{$outh->results}){
@@ -139,7 +139,7 @@ Perform verification process.
 
 Obligatory parameter is:
 
-* a path to file with DSL code
+* a string with check expressions written in DSL
 
 ### results  
 
