@@ -291,29 +291,17 @@ sub check_line {
 
 sub validate {
 
-    my $self                    = shift;
-    my $filepath_or_array_ref  = shift;
-    my @lines;
+    my $self        = shift;
+    my $check_list  = shift;
 
     my $block_type;
     my @multiline_block;
     my $here_str_mode = 0;
     my $here_str_marker;
 
-    if ( ref($filepath_or_array_ref) eq 'ARRAY') {
-        @lines = @$filepath_or_array_ref;
-        $self->debug("[VLD] checklist as arrayref") if $self->{debug_mod} >= 2;;
-    }else{
-        return unless $filepath_or_array_ref;
-        open my $fh, $filepath_or_array_ref or confess $!;
-        while (my $l = <$fh>){
-            push @lines, $l
-        }
-        close $fh;
-        $self->debug("[VLD] checklist as filepath") if $self->{debug_mod} >= 2;;
-    }
+    my @lines = ( ref $check_list  ) ? @{$check_list} : ( split "\n", $check_list ); 
 
-    LINE: for my $l (@lines) {
+    LINE: for my $l ( @lines ) {
 
         chomp $l;
 
@@ -491,7 +479,7 @@ sub handle_code {
     my $code = shift;
     my $results;
 
-    unless (ref $code){
+    if (! ref $code) {
 
         $results = eval "package main; $code;";
         confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
@@ -503,13 +491,13 @@ sub handle_code {
 
         my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
 
-        if ($code->[0]=~s/^\!(.*)//){
+        if ($code->[0]=~s/^\!(.*)//) {
 
           my $ext_runner = $1;
 
           my $language = (split /\\/, $ext_runner)[-1];
 
-          if ($language eq 'perl'){
+          if ($language eq 'perl') {
 
               shift @$code;
               my $code_to_eval = join "\n", @$code;
@@ -517,7 +505,7 @@ sub handle_code {
               confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
               $self->debug("code OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
-          }else{
+          } else {
 
             my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
 
@@ -536,13 +524,14 @@ sub handle_code {
               if ($self->{languages}->{$language}){
                 $ext_runner = "bash -c '".($self->{languages}->{$language})." && source $source_file'";
               }else{
-                $ext_runner = "bash -c 'source $source_file'";
+                  $ext_runner = "bash -c 'source $source_file'";
               }
 
-            }else{
+            } else {
               $ext_runner = $self->{languages}->{$language} if $self->{languages}->{$language};
               $ext_runner.=' '.$source_file;
             }
+
 
             my $st = system("$ext_runner 2>$source_file.err 1>$source_file.out");  
 
@@ -553,32 +542,32 @@ sub handle_code {
             $self->debug("code OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
 
             open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
-
-            while (my $s = <EXT_OUT>){
-              print $s;
-            }
-
+            $results = join "", <EXT_OUT>;
             close EXT_OUT;
 
-              unless ($ENV{outth_dls_keep_ext_source_code}){
-                unlink("$source_file.out");
-                unlink("$source_file.err");
-                unlink("$source_file");
-              }
-          }
+            unless ($ENV{outth_dls_keep_ext_source_code}) {
+              unlink("$source_file.out");
+              unlink("$source_file.err");
+              unlink("$source_file");
+            }
+        } 
 
-        }else{
 
-          my $code_to_eval = join "\n", @$code;
-          $results = eval "package main; $code_to_eval";
-          confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-          $self->debug("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
 
-        }
+      } else {
 
-    }
+        my $code_to_eval = join "\n", @$code;
+        $results = eval "package main; $code_to_eval";
+        confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
+        $self->debug("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
 
-    return $results;
+      }
+
+
+  }
+
+  return $results;
+
 }
 
 sub handle_validator {
@@ -595,102 +584,9 @@ sub handle_generator {
     my $self = shift;
     my $code = shift;
 
-    unless (ref $code){
-
-        my $arr_ref = eval "package main; $code";
-        confess "eval error; sub:handle_generator; code:$code\nerror: $@" if $@;
-        confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-        $self->debug("generator OK. single line. code: $code") if $self->{debug_mod} >= 3;
-        $self->validate($arr_ref);
-
-
-    } else {
-
-      my $i = 0;
-
-      my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
-
-        if ($code->[0]=~s/^\!(.*)//){
-  
-          my $ext_runner = $1;
-
-          my $language = (split /\\/, $ext_runner)[-1];
-
-          if ($language eq 'perl'){
-
-              shift @$code;
-
-              my $code_to_eval = join "\n", @$code;
-              my $code_to_print = join "\n", map { my $v=$_; $i++; "[$i] $v" }  @$code;
-
-              my $arr_ref = eval "package main; $code_to_eval";
-
-              confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-              confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-
-              $self->debug("generator OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
-
-              $self->validate($arr_ref);
-          
-          } else {
-
-              my $source_file = File::Temp->new( DIR => $self->{cache_dir} , UNLINK => 0 );
-    
-              shift @$code;
-    
-              my $code_to_eval = join "\n", @$code;
-    
-              open SOURCE_CODE, '>', $source_file or die "can't open source code file $source_file to write: $!";
-    
-              print SOURCE_CODE $code_to_eval;
-    
-              close SOURCE_CODE;
-    
-              if ($language eq 'bash'){
-  
-                if ($self->{languages}->{$language}){
-                  $ext_runner = "bash -c '".($self->{languages}->{$language})." && source $source_file'";
-                }else{
-                  $ext_runner = "bash -c 'source $source_file'";
-                }
-  
-              }else{
-                $ext_runner = $self->{languages}->{$language} if $self->{languages}->{$language};
-                $ext_runner.=' '.$source_file;
-              }
-  
-              my $st = system("$ext_runner 2>$source_file.err 1>$source_file.out");  
-  
-              if ($st != 0){
-                confess "$ext_runner failed, see $source_file.err for detailes";
-              }
-    
-              $self->debug("generator OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
-    
-              $self->validate("$source_file.out");
-            
-              unless ($ENV{outth_dls_keep_ext_source_code}){
-                unlink("$source_file.out");
-                unlink("$source_file.err");
-                unlink("$source_file");
-              }
-    
-          }
-
-        }else {
-
-          my $code_to_eval = join "\n", @$code;
-          my $arr_ref = eval " package main; $code_to_eval";
-
-          confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
-          confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-
-          $self->debug("generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
-          $self->validate($arr_ref);
-  
-      }
-
-    }
+    $self->validate(
+      $self->handle_code($code)
+    )
 
 }
 
