@@ -725,7 +725,7 @@ Example:
     $sth->execute();                                                    \
     my $results = $sth->fetchall_arrayref;                              \
 
-    [ map { $_->[0] } @${results} ]
+    [ map { $_->[0] } @${results} ]                                     \
 
 
 ### HERE documents expressions 

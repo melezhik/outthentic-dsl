@@ -30,7 +30,7 @@ sub add_result {
         
 }
 
-sub add_debug_result {
+sub debug {
 
     my $self = shift;
     my $item = shift;
@@ -84,7 +84,7 @@ sub create_context {
         $l=":blank_line" unless $l=~/\S/;
         push @original_context, [$l, $i];
 
-        $self->add_debug_result("[oc] [$l, $i]") if $self->{debug_mod} >= 2;
+        $self->debug("[oc] [$l, $i]") if $self->{debug_mod} >= 2;
 
     }
 
@@ -92,7 +92,7 @@ sub create_context {
 
     $self->{current_context} = [@original_context];
 
-    $self->add_debug_result('context populated') if $self->{debug_mod} >= 2;
+    $self->debug('context populated') if $self->{debug_mod} >= 2;
 
 
     $self->{has_context} = 1;
@@ -100,6 +100,18 @@ sub create_context {
 
 }
 
+
+sub reset_context {
+
+    my $self = shift;
+
+    $self->{current_context} = $self->{original_context};
+
+    $self->debug('reset search context') if $self->{debug_mod} >= 2;
+
+    $self->{context_modificator} = Outthentic::DSL::Context::Default->new();
+
+}
 
 sub reset_captures {
 
@@ -115,17 +127,6 @@ sub reset_succeeded {
 
 }
 
-sub reset_context {
-
-    my $self = shift;
-
-    $self->{current_context} = $self->{original_context};
-
-    $self->add_debug_result('reset search context') if $self->{debug_mod} >= 2;
-
-    $self->{context_modificator} = Outthentic::DSL::Context::Default->new();
-
-}
 
 sub stream {
 
@@ -137,7 +138,7 @@ sub stream {
         $stream[$i]=[];
         for my $c (@{$self->{stream}->{$cid}}){
             push @{$stream[$i]}, $c->[0];
-            $self->add_debug_result("[stream {$cid}] $c->[0]") if $self->{debug_mod} >= 2;
+            $self->debug("[stream {$cid}] $c->[0]") if $self->{debug_mod} >= 2;
         }
         $i++;
     }
@@ -160,14 +161,13 @@ sub check_line {
 
     my $status = 0;
 
-
     $self->reset_captures;
 
     my @captures = ();
 
     $self->create_context;
 
-    $self->add_debug_result("[lookup] $pattern ...") if $self->{debug_mod} >= 2;
+    $self->debug("[lookup] $pattern ...") if $self->{debug_mod} >= 2;
 
     my @original_context   = @{$self->{original_context}};
     my @context_new        = ();
@@ -179,12 +179,12 @@ sub check_line {
         $self->{succeeded}
     );
 
-    $self->add_debug_result("context modificator applied: ".(ref $self->{context_modificator})) 
+    $self->debug("context modificator applied: ".(ref $self->{context_modificator})) 
         if $self->{debug_mod} >=2;
         
     if ( $self->{debug_mod} >= 2 ) {
         for my $dcl (@$dc){ 
-            $self->add_debug_result("[dc] $dcl->[0]");
+            $self->debug("[dc] $dcl->[0]");
         } 
 
     };
@@ -196,7 +196,8 @@ sub check_line {
         for my $c (@{$dc}){
 
             my $ln = $c->[0];
-            next if $ln =~/#dsl_note:/;
+
+            next if $ln =~/#dsl_note:/; # skip debug entries
 
             if ( index($ln,$pattern) != -1){
                 $status = 1;
@@ -244,13 +245,13 @@ sub check_line {
             $i++;
             for my $cp (@{$cpp}){
                 $j++;
-                $self->add_debug_result("CAP[$i,$j]: $cp");
+                $self->debug("CAP[$i,$j]: $cp");
             }
             $j=0;
         }
 
         for my $s (@{$self->{succeeded}}){
-            $self->add_debug_result("SUCC: $s->[0]");
+            $self->debug("SUCC: $s->[0]");
         }
     }
 
@@ -260,7 +261,7 @@ sub check_line {
       open CAPTURES, '>', $self->{cache_dir}.'/captures.json' 
         or confess "can't open ".($self->{cache_dir})."captures.json to write $!";
       print CAPTURES encode_json($self->{captures});
-      $self->add_debug_result("CAPTURES saved at ".$self->{cache_dir}.'/captures.json')
+      $self->debug("CAPTURES saved at ".$self->{cache_dir}.'/captures.json')
         if $self->{debug_mod} >= 1;
       close CAPTURES;
     }
@@ -268,10 +269,10 @@ sub check_line {
     # update context
     if ( $self->{within_mode} and $status ){
         $self->{current_context} = [@context_new];
-        $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
+        $self->debug('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }elsif ( $self->{within_mode} and ! $status ){
         $self->{current_context} = []; # empty context if within expression has not passed 
-        $self->add_debug_result('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
+        $self->debug('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
     }
 
     $self->add_result({ status => $status , message => $message });
@@ -290,16 +291,18 @@ sub check_line {
 
 sub validate {
 
-    my $self = shift;
-
-    my $filepath_or_array_ref = shift;
-
+    my $self                    = shift;
+    my $filepath_or_array_ref  = shift;
     my @lines;
-    my @multiline_chunk;
-    my $chunk_type;
+
+    my $block_type;
+    my @multiline_block;
+    my $here_str_mode = 0;
+    my $here_str_marker;
 
     if ( ref($filepath_or_array_ref) eq 'ARRAY') {
-        @lines = @$filepath_or_array_ref
+        @lines = @$filepath_or_array_ref;
+        $self->debug("[VLD] checklist as arrayref") if $self->{debug_mod} >= 2;;
     }else{
         return unless $filepath_or_array_ref;
         open my $fh, $filepath_or_array_ref or confess $!;
@@ -307,185 +310,179 @@ sub validate {
             push @lines, $l
         }
         close $fh;
+        $self->debug("[VLD] checklist as filepath") if $self->{debug_mod} >= 2;;
     }
 
-    my $multiline_mode;
-
-    LINE: for my $l (@lines){
+    LINE: for my $l (@lines) {
 
         chomp $l;
 
-        $self->add_debug_result("[dsl] $l") if $self->{debug_mod} >= 2;
+        $self->debug("[type] ".($block_type || 'not set') ) if $self->{debug_mod} >= 2;
+
+        $self->debug("[dsl] $l") if $self->{debug_mod} >= 2;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
         next LINE if $l=~ /^\s*#(.*)/; # skip comments
         
-        if ($multiline_mode){
-            if ($l=~s/^$multiline_mode$//){
-              $multiline_mode = undef; 
-              $self->add_debug_result("multiline_mode off") if $self->{debug_mod} >= 2;
-            }
-        }
+        if ($here_str_mode && $l=~s/^$here_str_marker\s*$//) {
 
-        if ($l=~ /^\s*begin:\s*$/) { # begin of text block
-            confess "you can't switch to text block mode when within mode is enabled" 
-                if $self->{within_mode};
+          $here_str_mode = 0;
+
+          $self->debug("here string mode off") if $self->{debug_mod} >= 2;
+
+        } elsif ( $block_type && ( $l=~s/\\\s*$// or $here_str_mode )) { # multiline block
+
+           # this is multiline block or here string,
+           # accumulate lines until meet line not ending with '\' ( for multiline blocks )
+           # or here string end marker ( for here stings )
+
+           $self->debug("\tpush $l to $block_type ...") if $self->{debug_mod}  >= 2;
+
+           push @multiline_block, $l;
+
+
+        } elsif ( $l=~/^\s*begin:\s*$/) { # begining  of the text block
+
+            $self->flush_multiline_block( \$block_type, \@multiline_block ) if $block_type;
+
+            die "you can't switch to text block mode when within mode is enabled" if $self->{within_mode};
 
             $self->{context_modificator} = Outthentic::DSL::Context::TextBlock->new();
 
-            $self->add_debug_result('begin text block') if $self->{debug_mod} >= 2;
+            $self->debug('text block start') if $self->{debug_mod} >= 2;
+
             $self->{block_mode} = 1;
 
-            $self->reset_succeeded;
+            $self->reset_succeeded();
 
-            next LINE;
-        }
-
-        if ($l=~ /^\s*end:\s*$/) { # end of text block
+        } elsif ($l=~/^\s*end:\s*$/) { # end of the text block
 
             $self->{block_mode} = 0;
 
-            $self->reset_context;
+            $self->reset_context();
 
-            $self->add_debug_result('end text block') if $self->{debug_mod} >= 2;
+            $self->debug('text block end') if $self->{debug_mod} >= 2;
 
-            next LINE;
-        }
+        } elsif ($l=~/^\s*reset_context\:\s*$/) {
 
-        if ($l=~ /^\s*reset_context:\s*$/) {
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
-            $self->reset_context;
+            $self->reset_context();
 
-            next LINE;
-        }
+        } elsif ($l=~/^\s*assert\:\s+(\d+)\s+(.*)/) {
 
-        if ($l=~ /^\s*assert:\s(\S+)\s+(.*)$/) {
             my $status = $1; my $message = $2;
-            $self->add_debug_result("assert found: $status , $message") if $self->{debug_mod} >= 2;
-            $status = 0 if $status eq 'false'; # ruby to perl conversion
-            $status = 1 if $status eq 'true'; # ruby to perl conversion
-            $self->add_result({ status => $status , message => $message });
-            next LINE;
-        }
 
-        if ($l=~ /^\s*between:\s+(.*)/) { # set new context
-            
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
+
+            $self->debug("assert found: $status | $message") if $self->{debug_mod} >= 2;
+
+            $status = 0 if $status eq 'false'; # ruby to perl5 conversion
+
+            $status = 1 if $status eq 'true'; # ruby to perl5 conversion
+
+            $self->add_result({ status => $status , message => $message });
+
+        } elsif ($l=~/^\s*between\:\s+(.*)/) { # range context
+
+
+            die "you can't switch to range context mode when within mode is enabled"  if $self->{within_mode};
+            die "you can't switch to range context mode when block mode is enabled"   if $self->{block_mode};
+
+            my $pattern = $1;
+
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
+
             $self->{context_modificator} = Outthentic::DSL::Context::Range->new($1);
 
-            confess "you can't set context modificator when within mode is enabled" 
-                if $self->{within_mode};
 
-            confess "you can't set context modificator when text block mode is enabled" 
-                if $self->{block_mode};
+        } elsif ($l=~/^\s*(code|generator|validator):\s*(.*)/)  {
 
-            next LINE;
-        }
+            my $my_block_type = $1;
 
-        # validate unterminated multiline chunks
-        if ($l=~/^\s*(regexp|code|generator|within|validator):\s*.*/){
-            confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" 
-              if defined($chunk_type);
-        }
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
-        if ($l=~/^\s*code:\s*(.*)/){ # `code' line
+            my $code = $2;
 
-            my $code = $1;
+            if ( $code=~s/.*\\\s*$// ) {
 
-            if ($code=~s/\\\s*$//){
-                 push @multiline_chunk, $code;
-                 $chunk_type = 'code';
-                 next LINE; # this is multiline chunk, accumulate lines until meet '\' line
-            }elsif($code=~s/<<(\S+)//){
-                $multiline_mode = $1;
-                $chunk_type = 'code';
-                $self->add_debug_result("code: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
-                next LINE;
-            }else{
-                undef $chunk_type;
-                $self->handle_code($code);
+                 # this is multiline block, accumulate lines until meet '\' line
+                 $block_type = $my_block_type;
+                 push @multiline_block, $code;
+
+                 $self->debug("$block_type block start.") if $self->{debug_mod}  >= 2;
+
+            } elsif ( $code=~s/<<(\S+)// ) {
+
+                $block_type = $my_block_type;
+
+                $here_str_mode = 1;
+
+                $here_str_marker = $1;
+
+                $self->debug("$block_type block start. heredoc marker: $here_str_marker") if $self->{debug_mod}  >= 2;
+
+
+            } else {
+
+                $self->debug("one-line $my_block_type found: $code") if $self->{debug_mod}  >= 2;
+
+                $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
+
+                no strict 'refs';
+
+                my $name = "handle_"; 
+
+                $name.=$my_block_type;
+
+                &$name($self,$code);
+
+
             }
 
-        }elsif($l=~/^\s*validator:\s*(.*)/){ # `validator' line
+        } elsif ($l=~/^\s*regexp\:\s*(.*)/) { # `regexp' line
 
-            my $code = $1;
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
-            if ($code=~s/\\\s*$//){
-                 push @multiline_chunk, $code;
-                 $chunk_type = 'validator';
-                 next LINE; # this is multiline chunk, accumulate lines until meet '\' line
+            my $re = $1;
 
-            }elsif($code=~s/<<(\S+)//){
-                $multiline_mode = $1;
-                $chunk_type = 'validator';
-                $self->add_debug_result("validator: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
-                next LINE;
-            }else{
-                $self->handle_validator($code);
-            }
-
-        }elsif($l=~/^\s*generator:\s*(.*)/){ # `generator' line
-
-            my $code = $1;
-
-            if ($code=~s/\\\s*$//){
-                 push @multiline_chunk, $code;
-                 $chunk_type = 'generator';
-                 next LINE; # this is multiline chunk, accumulate lines until meet '\' line
-
-            }elsif($code=~s/<<(\S+)//){
-                $multiline_mode = $1;
-                $chunk_type = 'generator';
-                $self->add_debug_result("generator: multiline_mode on. marker: $multiline_mode") if $self->{debug_mod} >= 2;
-                next LINE;
-            }else{
-                $self->handle_generator($code);
-            }
-
-        }elsif($l=~/^\s*regexp:\s*(.*)/){ # `regexp' line
-
-            my $re=$1;
             $self->handle_regexp($re);
 
-        }elsif($l=~/^\s*within:\s*(.*)/){
+        } elsif ($l=~/^\s*within\:\s*(.*)/) {
 
-            confess "you can't switch to within mode when text block mode is enabled" 
-                if $self->{block_mode};
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
-            my $re=$1;
+            die "you can't switch to within mode when text block mode is enabled" if $self->{block_mode};
+
+            my $re = $1;
+
             $self->handle_within($re);
 
-        }elsif(defined($chunk_type)){ # multiline 
+        } else { # `plain string' line
 
-             if ($l=~s/\\\s*$// or $multiline_mode ) {
+            $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
-                push @multiline_chunk, $l;
-                next LINE; # this is multiline chunk, accumulate lines until meet '\' line
+            $l=~s/\s+\#.*//;
 
-             }else {
+            $l=~s/^\s+//;
 
-                # the end of multiline chunk
-                no strict 'refs';
-                my $name = "handle_"; 
-                $name.=$chunk_type;
-                push @multiline_chunk, $l;
-                &$name($self,\@multiline_chunk);
-
-                # flush mulitline chunk data:
-                undef $chunk_type;
-                @multiline_chunk = ();
-
-            }
-       }else{ # `plain string' line
-
-            s{\s+#.*}[], s{\s+$}[], s{^\s+}[] for $l;
             $self->handle_plain($l);
 
         }
     }
 
-    confess "unterminated multiline $chunk_type found, last line: $multiline_chunk[-1]" if defined($chunk_type);
+    $self->flush_multiline_block( \$block_type, \@multiline_block) if $block_type;
 
+}
+
+sub flush_multiline_block {
+  my $self = shift;
+  my $block_type_ref = shift;
+  my $mutliline_block_ref = shift;
+  
+  $$block_type_ref = undef;
+  $mutliline_block_ref = [];
 }
 
 sub handle_code {
@@ -497,7 +494,7 @@ sub handle_code {
 
         eval "package main; $code;";
         confess "eval error; sub:handle_code; code:$code\nerror: $@" if $@;
-        $self->add_debug_result("code OK. single line. code: $code") if $self->{debug_mod} >= 3;
+        $self->debug("code OK. single line. code: $code") if $self->{debug_mod} >= 3;
 
     } else {
 
@@ -517,7 +514,7 @@ sub handle_code {
               my $code_to_eval = join "\n", @$code;
               eval "package main; $code_to_eval";
               confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-              $self->add_debug_result("code OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
+              $self->debug("code OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
           }else{
 
@@ -552,7 +549,7 @@ sub handle_code {
               confess "$ext_runner failed, see $source_file.err for detailes";
             }
 
-            $self->add_debug_result("code OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
+            $self->debug("code OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
 
             open EXT_OUT, "$source_file.out" or die "can't open file $source_file.out to read: $!";
 
@@ -574,7 +571,7 @@ sub handle_code {
           my $code_to_eval = join "\n", @$code;
           eval "package main; $code_to_eval";
           confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
-          $self->add_debug_result("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->debug("code OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
 
         }
 
@@ -593,7 +590,7 @@ sub handle_validator {
         confess "eval error; sub:handle_validator; code:$code\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("validator OK. single line. code: $code") if $self->{debug_mod} >= 2;
+        $self->debug("validator OK. single line. code: $code") if $self->{debug_mod} >= 2;
 
     } else {
         my $i = 0;
@@ -603,7 +600,7 @@ sub handle_validator {
         confess "eval error; sub:handle_validator; code:\n$code_to_print\nerror: $@" if $@;
         confess "not valid return from validator, should be ARRAYREF. got: @{[ref $r]}" unless ref($r) eq 'ARRAY' ;
         $self->add_result({ status => $r->[0] , message => $r->[1] });
-        $self->add_debug_result("validator OK. multiline. code: $code_to_eval") if $self->{debug_mod} >= 2;
+        $self->debug("validator OK. multiline. code: $code_to_eval") if $self->{debug_mod} >= 2;
     }
 
 }
@@ -618,7 +615,7 @@ sub handle_generator {
         my $arr_ref = eval "package main; $code";
         confess "eval error; sub:handle_generator; code:$code\nerror: $@" if $@;
         confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
-        $self->add_debug_result("generator OK. single line. code: $code") if $self->{debug_mod} >= 3;
+        $self->debug("generator OK. single line. code: $code") if $self->{debug_mod} >= 3;
         $self->validate($arr_ref);
 
 
@@ -646,7 +643,7 @@ sub handle_generator {
               confess "eval error; sub:handle_code; code:\n$code_to_print\nerror: $@" if $@;
               confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
 
-              $self->add_debug_result("generator OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
+              $self->debug("generator OK. inline(perl). $code_to_eval") if $self->{debug_mod} >= 3;
 
               $self->validate($arr_ref);
           
@@ -683,7 +680,7 @@ sub handle_generator {
                 confess "$ext_runner failed, see $source_file.err for detailes";
               }
     
-              $self->add_debug_result("generator OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
+              $self->debug("generator OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
     
               $self->validate("$source_file.out");
             
@@ -703,7 +700,7 @@ sub handle_generator {
           confess "eval error; sub:handle_generator; code:\n$code_to_print\nerror: $@" if $@;
           confess "not valid return from generator, should be ARRAYREF. got: @{[ref $arr_ref]}" unless ref($arr_ref) eq 'ARRAY' ;
 
-          $self->add_debug_result("generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
+          $self->debug("generator OK. multiline. $code_to_eval") if $self->{debug_mod} >= 3;
           $self->validate($arr_ref);
   
       }
@@ -742,7 +739,7 @@ sub handle_regexp {
 
     $self->reset_context if $reset_context; 
 
-    $self->add_debug_result("regexp OK. $re") if $self->{debug_mod} >= 3;
+    $self->debug("regexp OK. $re") if $self->{debug_mod} >= 3;
 
 
 }
@@ -769,7 +766,7 @@ sub handle_within {
 
     $self->check_line($re, 'regexp', $m);
 
-    $self->add_debug_result("within OK. $re") if $self->{debug_mod} >= 3;
+    $self->debug("within OK. $re") if $self->{debug_mod} >= 3;
     
 }
 
@@ -803,7 +800,7 @@ sub handle_plain {
 
     $self->reset_context if $reset_context; 
 
-    $self->add_debug_result("plain OK. $l") if $self->{debug_mod} >= 3;
+    $self->debug("plain OK. $l") if $self->{debug_mod} >= 3;
 }
 
 
