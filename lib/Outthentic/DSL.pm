@@ -241,15 +241,15 @@ sub check_line {
 
     if ( $self->{debug_mod} >= 2 ){
 
-        my $i = -1;
-        my $j = -1;
+        my $i = 1;
+        my $j = 1;
         for my $cpp (@captures){
-            $i++;
             for my $cp (@{$cpp}){
-                $j++;
                 $self->debug("CAP[$i,$j]: $cp");
+                $j++;
             }
-            $j=0;
+            $i++;
+            $j=1;
         }
 
         for my $s (@{$self->{succeeded}}){
@@ -316,9 +316,7 @@ sub validate {
 
         chomp $l;
 
-        $self->debug("[type] ".($block_type || 'not set') ) if $self->{debug_mod} >= 2;
-
-        $self->debug("[dsl] $l") if $self->{debug_mod} >= 2;
+        $self->debug("[dsl::$block_type] $l") if $self->{debug_mod} >= 2;
 
         next LINE unless $l =~ /\S/; # skip blank lines
 
@@ -329,7 +327,8 @@ sub validate {
           $here_str_mode = 0;
 
           $self->debug("here string mode off") if $self->{debug_mod} >= 2;
-          $self->debug("flushing block") if $self->{debug_mod} >= 2;
+
+          $self->debug("flushing $block_type block") if $self->{debug_mod} >= 2;
 
           no strict 'refs';
 
@@ -345,7 +344,7 @@ sub validate {
 
         } 
 
-        if ( $block_type and $l=~/^\s*(code|generator|validator):/ ){
+        if ( $block_type and $l!~/\\\s*$/ and ! $here_str_mode  ){
 
           no strict 'refs';
 
@@ -353,7 +352,24 @@ sub validate {
 
           $name.=$block_type;
 
-          $self->debug("flushing block") if $self->{debug_mod} >= 2;
+          $self->debug("flushing $block_type block") if $self->{debug_mod} >= 2;
+
+          &$name($self, [ @multiline_block ] );
+
+          undef @multiline_block; undef $block_type;
+
+
+        }
+
+        if ( $block_type and $l=~/^\s*(code|generator|validator):\s*(.*)/ and ! $here_str_mode  ){
+
+          no strict 'refs';
+
+          my $name = "handle_"; 
+
+          $name.=$block_type;
+
+          $self->debug("flushing $block_type block") if $self->{debug_mod} >= 2;
 
           &$name($self, [ @multiline_block ] );
 
@@ -367,8 +383,6 @@ sub validate {
            # this is multiline block or here string,
            # accumulate lines until meet line not ending with '\' ( for multiline blocks )
            # or here string end marker ( for here stings )
-
-           $self->debug("\tpush $l to $block_type block ...") if $self->{debug_mod}  >= 2;
 
            push @multiline_block, $l;
 
@@ -445,8 +459,8 @@ sub validate {
                  my $first_line = $1; 
                  push @multiline_block, $first_line;
 
-                 $self->debug("$block_type block start.") if $self->{debug_mod}  >= 2;
-                 $self->debug("first line: <<<$first_line>>>.") if $self->{debug_mod}  >= 2;
+                 $self->debug("starting $block_type block") if $self->{debug_mod}  >= 2;
+                 $self->debug("first line in block: <<<$first_line>>>") if $self->{debug_mod}  >= 2;
 
             } elsif ( $code=~s/<<(\S+)// ) {
 
@@ -468,6 +482,8 @@ sub validate {
                 my $name = "handle_"; 
 
                 $name.=$my_block_type;
+
+                $self->debug("flushing one-line $block_type block") if $self->{debug_mod} >= 2;
 
                 &$name($self,$code);
 
@@ -505,7 +521,7 @@ sub validate {
 
       my $name = "handle_"; 
 
-      $self->debug("flushing block") if $self->{debug_mod} >= 2;
+      $self->debug("flushing $block_type block") if $self->{debug_mod} >= 2;
 
       $name.=$block_type;
 
