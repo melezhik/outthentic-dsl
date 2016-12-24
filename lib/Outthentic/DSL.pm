@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.4';
+our $VERSION = '0.2.5';
 
 use Carp;
 use Data::Dumper;
@@ -329,6 +329,7 @@ sub validate {
           $here_str_mode = 0;
 
           $self->debug("here string mode off") if $self->{debug_mod} >= 2;
+          $self->debug("flushing block") if $self->{debug_mod} >= 2;
 
           no strict 'refs';
 
@@ -342,21 +343,9 @@ sub validate {
 
           next LINE;
 
-        } elsif ( $block_type && ( $l=~s/\\\s*$// or $here_str_mode )) { # multiline block
-
-           # this is multiline block or here string,
-           # accumulate lines until meet line not ending with '\' ( for multiline blocks )
-           # or here string end marker ( for here stings )
-
-           $self->debug("\tpush $l to $block_type ...") if $self->{debug_mod}  >= 2;
-
-           push @multiline_block, $l;
-
-           next LINE;
-
         } 
 
-        if ( $block_type ){
+        if ( $block_type and $l=~/^\s*(code|generator|validator):/ ){
 
           no strict 'refs';
 
@@ -364,12 +353,29 @@ sub validate {
 
           $name.=$block_type;
 
+          $self->debug("flushing block") if $self->{debug_mod} >= 2;
+
           &$name($self, [ @multiline_block ] );
 
           undef @multiline_block; undef $block_type;
 
 
         }
+
+        if ( $block_type && ( $l=~s/\\\s*$// or $here_str_mode )) { # multiline block
+
+           # this is multiline block or here string,
+           # accumulate lines until meet line not ending with '\' ( for multiline blocks )
+           # or here string end marker ( for here stings )
+
+           $self->debug("\tpush $l to $block_type block ...") if $self->{debug_mod}  >= 2;
+
+           push @multiline_block, $l;
+
+           next LINE;
+
+        } 
+
 
 
         if ( $l=~/^\s*begin:\s*$/) { # begining  of the text block
@@ -394,12 +400,12 @@ sub validate {
 
             $self->debug('text block end') if $self->{debug_mod} >= 2;
 
-        } elsif ($l=~/^\s*reset_context\:\s*$/) {
+        } elsif ($l=~/^\s*reset_context:\s*$/) {
 
             do { undef @multiline_block; undef $block_type } if $block_type; 
             $self->reset_context();
 
-        } elsif ($l=~/^\s*assert\:\s+(\d+)\s+(.*)/) {
+        } elsif ($l=~/^\s*assert:\s+(\d+)\s+(.*)/) {
 
             my $status = $1; my $message = $2;
 
@@ -413,7 +419,7 @@ sub validate {
 
             $self->add_result({ status => $status , message => $message });
 
-        } elsif ($l=~/^\s*between\:\s+(.*)/) { # range context
+        } elsif ($l=~/^\s*between:\s+(.*)/) { # range context
 
 
             die "you can't switch to range context mode when within mode is enabled"  if $self->{within_mode};
@@ -430,17 +436,17 @@ sub validate {
 
             my $my_block_type = $1;
 
-            do { undef @multiline_block; undef $block_type } if $block_type; 
-
             my $code = $2;
 
-            if ( $code=~s/.*\\\s*$// ) {
+            if ( $code=~s/(.*)\\\s*$// ) {
 
                  # this is multiline block, accumulate lines until meet '\' line
                  $block_type = $my_block_type;
-                 push @multiline_block, $code;
+                 my $first_line = $1; 
+                 push @multiline_block, $first_line;
 
                  $self->debug("$block_type block start.") if $self->{debug_mod}  >= 2;
+                 $self->debug("first line: <<<$first_line>>>.") if $self->{debug_mod}  >= 2;
 
             } elsif ( $code=~s/<<(\S+)// ) {
 
@@ -457,8 +463,6 @@ sub validate {
 
                 $self->debug("one-line $my_block_type found: $code") if $self->{debug_mod}  >= 2;
 
-                do { undef @multiline_block; undef $block_type } if $block_type; 
-
                 no strict 'refs';
 
                 my $name = "handle_"; 
@@ -470,18 +474,14 @@ sub validate {
 
             }
 
-        } elsif ($l=~/^\s*regexp\:\s*(.*)/) { # `regexp' line
-
-            do { undef @multiline_block; undef $block_type } if $block_type; 
+        } elsif ($l=~/^\s*regexp:\s*(.*)/) { # `regexp' line
 
             my $re = $1;
 
             $self->handle_regexp($re);
 
-        } elsif ($l=~/^\s*within\:\s*(.*)/) {
+        } elsif ($l=~/^\s*within:\s*(.*)/) {
 
-            do { undef @multiline_block; undef $block_type } if $block_type; 
-  
             die "you can't switch to within mode when text block mode is enabled" if $self->{block_mode};
 
             my $re = $1;
@@ -489,8 +489,6 @@ sub validate {
             $self->handle_within($re);
 
         } else { # `plain string' line
-
-            do { undef @multiline_block; undef $block_type } if $block_type; 
 
             $l=~s/\s+\#.*//;
 
@@ -506,6 +504,8 @@ sub validate {
       no strict 'refs';
 
       my $name = "handle_"; 
+
+      $self->debug("flushing block") if $self->{debug_mod} >= 2;
 
       $name.=$block_type;
 
