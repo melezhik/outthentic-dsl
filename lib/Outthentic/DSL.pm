@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.3';
+our $VERSION = '0.2.4';
 
 use Carp;
 use Data::Dumper;
@@ -340,6 +340,8 @@ sub validate {
 
           undef @multiline_block; undef $block_type;
 
+          next LINE;
+
         } elsif ( $block_type && ( $l=~s/\\\s*$// or $here_str_mode )) { # multiline block
 
            # this is multiline block or here string,
@@ -350,8 +352,27 @@ sub validate {
 
            push @multiline_block, $l;
 
+           next LINE;
 
-        } elsif ( $l=~/^\s*begin:\s*$/) { # begining  of the text block
+        } 
+
+        if ( $block_type ){
+
+          no strict 'refs';
+
+          my $name = "handle_"; 
+
+          $name.=$block_type;
+
+          &$name($self, [ @multiline_block ] );
+
+          undef @multiline_block; undef $block_type;
+
+
+        }
+
+
+        if ( $l=~/^\s*begin:\s*$/) { # begining  of the text block
 
             do { undef @multiline_block; undef $block_type } if $block_type; 
 
@@ -480,7 +501,20 @@ sub validate {
         }
     }
 
-    do { undef @multiline_block; undef $block_type } if $block_type; 
+    if ( $block_type ){
+
+      no strict 'refs';
+
+      my $name = "handle_"; 
+
+      $name.=$block_type;
+
+      &$name($self, [ @multiline_block ] );
+
+      undef @multiline_block; undef $block_type;
+
+
+    }
 
 }
 

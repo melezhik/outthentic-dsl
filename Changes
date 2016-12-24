@@ -1,3 +1,11 @@
+0.2.4 2016-12-24
+
+* fixed issues for multiline expressions in validate parser ( second iteration )
+
+0.2.3 2016-12-23
+
+* fixed issues for multiline expressions in validate parser
+
 0.2.2 2016-12-22
 
 * fix for regexps / plain check with trailing spaces
