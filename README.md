@@ -648,9 +648,9 @@ Asserts almost always to be created dynamically with generators. See the next se
 * If you use Perl in generator expressions ( which is by default ) - last statement in your
 code should be one of three :
 
-** reference to array of strings, every string should _represent_ a _new_ Outthentic entity
-** string to represent a _new_ Outthentic entities, this could be multiline string
-** path to file with check expressions - new outthentic entities 
+  ** reference to array of strings, every string should _represent_ a _new_ Outthentic entity
+  ** string to represent a _new_ Outthentic entities, this could be multiline string
+  ** path to file with check expressions - new outthentic entities 
 
 Usually you will choose first two options:
 
