@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.6';
+our $VERSION = '0.2.7';
 
 use Carp;
 use Data::Dumper;
@@ -809,7 +809,7 @@ Outthentic::DSL - language to verify (un)structured text.
 
 =head1 Developing
 
-    $ git clone https://travis-ci.org/melezhik/outthentic-dsl 
+    $ git clone https://github.com/melezhik/outthentic-dsl.git 
     $ cd outthentic-dsl
     $ perl Makefile.PL && make && make install
 
@@ -2617,7 +2617,7 @@ I'll document these variables later. Here is just a list:
 
 =item *
 
-OUTI<KEEP>SOURCE_FILES
+OUT_KEEP_SOURCE_FILES
 
 
 =item *

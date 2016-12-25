@@ -12,7 +12,7 @@ Outthentic::DSL - language to verify (un)structured text.
 
 # Developing
 
-    $ git clone https://travis-ci.org/melezhik/outthentic-dsl 
+    $ git clone https://github.com/melezhik/outthentic-dsl.git 
     $ cd outthentic-dsl
     $ perl Makefile.PL && make && make install
 
@@ -1505,7 +1505,7 @@ Output:
 
 I'll document these variables later. Here is just a list:
 
-* OUT_KEEP_SOURCE_FILES
+* OUT\_KEEP\_SOURCE\_FILES
 * OTX_DEBUG
 
 # Author
