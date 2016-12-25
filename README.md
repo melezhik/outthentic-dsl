@@ -553,9 +553,9 @@ DSL code:
 
     begin:
         here we begin
-        and till the very end of test
-    
-        we are in `text block` mode
+        and till the very end 
+        of this text
+        we remain in `text block` mode
     
 # Code expressions
 
@@ -563,27 +563,28 @@ Code expressions are just a pieces of 'some language code' you may inline and ex
 
 By default, if *language* is no set Perl6 language is assumed. Here is example:
 
-    use v6;
-    
+
     use Outthentic::DSL;
     
-    my $otx = Outthentic::DSL.new( text => 'hello' );
+    my $otx = Outthentic::DSL->new('hello');
     
-    $otx.validate(q:to/CHECK/);
+    $otx->validate(<<'CHECK');
       hello
-      code: say "hi there!"
+      code: print "hi there!\n";
     CHECK
-    
-    say $otx.results;
+
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
     
 Output:
 
-    [{message => text match 'hello ...', status => True, type => check-expression}]
-
+    hi there!
+    true    text has 'hello'
+    
 As you may notice code expression here has no impact on verification process, this trivial example just shows
 that you may inline some programming languages code into Outthentic DSL. See [generators](#generators) section on
-how dynamically create new check expressions using common programming languages. 
-
+how dynamically create new check expressions using common programming languages.
 
 You may use other languages in code expressions, not only Perl6. 
 
@@ -645,7 +646,15 @@ Asserts almost always to be created dynamically with generators. See the next se
 * The only requirement for generator code - it should return _new Outthentic entities_.
 
 * If you use Perl in generator expressions ( which is by default ) - last statement in your
-code should return reference to array of strings. Strings in array would _represent_ a _new_ Outthentic entities.
+code should be one of three :
+
+** reference to array of strings, every string should _represent_ a _new_ Outthentic entity
+** string to represent a _new_ Outthentic entities, this could be multiline string
+** path to file with check expressions - new outthentic entities 
+
+Usually you will choose first two options:
+
+Strings in array would _represent_ a _new_ Outthentic entities.
 
 * If you use not Perl language in generator expressions to produce new Outthentic entities you should print them
 into **stdout**. See examples below.
