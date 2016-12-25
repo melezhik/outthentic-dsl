@@ -4,11 +4,17 @@ Outthentic::DSL
 
 # SYNOPSIS
 
-Language to verify text output.
+Outthentic::DSL - language to verify (un)structured text.
 
 # Install
 
     $ cpanm Outthentic::DSL
+
+# Developing
+
+    $ git clone https://travis-ci.org/melezhik/outthentic-dsl 
+    $ cd outthentic-dsl
+    $ perl Makefile.PL && make && make install
 
 # Glossary
 
@@ -28,7 +34,7 @@ Examples:
 
 ## Outthentic DSL
 
-* Is a language to verify _arbitrary_ plain text
+* Is a language to verify _arbitrary_ text
 
 * Outthentic DSL is both imperative and declarative language
 
@@ -38,21 +44,19 @@ You define rules ( check expressions ) to describe expected content.
 
 ### Imperative way
 
-You _extend_ a process of verification using regular programming languages - like Perl, Bash and Ruby, see
-examples below.
-
+You _extend_ a process of verification using regular programming languages - like Perl6, Perl5, Bash and Ruby, see examples below.
 
 ## DSL code
 
-A  program code written on outthentic DSL language to verify text input.
+A program code written on Outthentic DSL language to verify text input.
 
 ## Search context
 
-Verification process is carried out in a given _context_.
+Verification process is taken in a  _context_.
 
-But default search context is the same as original input text stream. 
+By default search context _is equal_ to an original text input stream.
 
-Search context could be however changed in some conditions.
+However a search context might be changed in some situations ( see within, text blocks and ranges expressions ).
 
 ## DSL parser
 
@@ -62,8 +66,7 @@ DSL parser is the program which:
 
 * parses text input
 
-* verifies text input ( line by line ) against check expressions ( line by line )
-
+* verifies text input ( line by line ) against a check expressions ( line by line )
 
 ## Verification process
 
@@ -71,67 +74,104 @@ Verification process consists of matching lines of text input against check expr
 
 This is schematic description of the process:
 
+    For every check expression in a check expressions list:
+        * Mark this check step in `unknown' state.
+        * For every line in input text:
+            * Verify if it matches check expression. If line matches then mark step in `succeeded' state.
+            * Next line.
+        End of lines loop.
+        * If the check step marked in `unknown' state, then mark it in `failed' state.  
+        * Next check expression.
+    End of expressions loop.
 
-    For every check expression in check expressions list.
-        Mark this check step as in unknown state.
-        For every line in input text.
-            Does line match check expression? Check step is marked as succeeded.
-            Next line.
-        End of loop.
-        Is this check step marked in unknown state? Mark this check step as in failed state.  
-        Next check expression.
-    End of loop.
-    Are all check steps succeeded? Input text is verified.
-    Vise versa - input text is not verified.
-    
-A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope. 
+    Check if all check steps are succeeded. If so then input text is considered verified, else - not verified.
 
-For the sake of readability a _fake_ results presentation layout is used in this document. 
+A final _presentation_ of verification results should be implemented in a certain [client](#clients) _using_ [parser api](#parser-api) and not being defined at this scope.  
+
 
 ## Parser API
 
-Outthentic::DSL provides program api for client applications:
+Outthentic::DSL provides program API for _client applications_. 
 
-    use Test::More qw{no_plan};
+This is example of verification some text against 2 lines;
 
     use Outthentic::DSL;
-
-    my $outh = Outthentic::DSL->new('input_text');
-
-    $outh->validate($check_expressions_string,'input text');
-
-
-    for my $r ( @{$outh->results}){
-        ok($r->{status}, $r->{message}) if $r->{type} eq 'check_expression';
-        diag($r->{message}) if $r->{type} eq 'debug';
-
+    
+    my $otx = Outthentic::DSL->new(<<HERE, { debug_mod => 0 });
+        Hello
+        My name is Outthentic!
+    HERE
+    
+    $otx->validate(<<'CHECK');
+        Hello
+        regexp: My\s+name\s+is\s+\S+
+    CHECK
+    
+    print "status\tcheck\n";
+    print "==========================\n";
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
     }
+    
+Output:
 
+    status  check
+    ==========================
+    true    text has 'Hello'
+    true    text match /My\s+name\s+is\s+\S+/
+    
+    
 Methods list:
 
 ### new
 
-This is constructor, create Outthentic::DSL instance. 
+This is constructor to create an Outthentic::DSL instance. 
 
-Obligatory parameters is:
+Obligatory parameters are:
 
-* input text string 
+* text
 
-Optional parameters is passed as hashref:
+input text to get verified
 
-* match_l - truncate matching strings to {match_l} bytes
+    Outthentic::DSL->new("Hi! Welcome to my birthday party.\nLet's have a fun" );
 
-Default value is \`40'
+Optional parameters are passed as hash:
+
+* match_l - truncate check expressions to a `match_l` bytes when generating results
+
+This is useful when debugging long check expressions:
+
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL->new( 'A'x99 , { match_l  => 9 });
+    
+    $otx->validate('A'x99);
+    
+    print "status\tcheck\n";
+    print "==========================\n";
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
+        
+Output:
+
+    status  check
+    ==========================
+    true    text has 'AAAAAAAAA'
+    
+Default value is `40`.
 
 * debug_mod - enable debug mode
 
-    * Possible values is 0,1,2,3.
+    * Possible values is one of: `0,1,2,3,4`
 
-    * Set to 1 or 2 or 3 if you want to see some debug information in validation results.
+    * Set to 1 or 2 or 3 or 4 if you want to see some debug information appeared at console.
 
-    * Increasing debug_mod value means more low level information appeared.
+    * Increasing debug_mod value results in more low level information appeared.
 
-    * Default value is \`0' - means do not create debug messages.
+    * Default value is `0` - means do not emit debug messages.
 
 ### validate
 
@@ -139,48 +179,57 @@ Perform verification process.
 
 Obligatory parameter is:
 
-* a string with check expressions written in DSL
+* a string with DSL code
+
+Example:
+
+    $otx->validate(<<'CHECK');
+
+      # there should be digits
+      regexp: \d
+      # and greetings
+      regexp: hello \s+ \w+
+
+    CHECK
 
 ### results  
 
-Returns validation results as arrayref containing { type, status, message } hashrefs.
+Returns validation results as array containing { type, status, message } hashes.
 
 ## Outthentic clients
 
-Client is a external program using DSL API. Existed outthentic clients:
+Client is a external program using DSL API. Existed Outthentic clients:
 
 * [Swat](https://github.com/melezhik/swat) - web application testing tool
 
 * [Outthentic](https://github.com/melezhik/outthentic) -  multipurpose scenarios framework
 
-More clients wanted :) , please [write me](mailto:melezhik@gmail.com) if you have one!
-
 # DSL code syntax
 
 Outthentic DSL code comprises following entities:
 
-## Check expressions:
+* Comments
+
+* Blank lines
+
+* Check expressions:
 
     * plain     strings
     * regular   expressions
     * text      blocks
     * within    expressions
     * asserts   expressions
+    * validator expressions
     * range     expressions
 
-## Comments
 
-## Blank lines
+* Code expressions
 
-## Code expressions
-
-## Generator expressions
-
-## Validator expressions
+* Generator expressions
 
 # Check expressions
 
-Check expressions define patterns to match input text stream. 
+Check expressions define patterns to match against an input text stream. 
 
 Here is a simple example:
 
@@ -197,7 +246,7 @@ DSL code:
     regexp: \d\d\d\d-\d\d-\d\d
 
 
-Results - verified:
+Result: verified
 
     +--------+------------------------------+
     | status | message                      |
@@ -215,7 +264,7 @@ There are two basic types of check expressions:
 
 # Plain text expressions 
 
-Plain text expressions are just a lines should be _included_ at input text stream.
+Plain text expressions define a lines an input text to contain.
 
 DSL code:
         
@@ -224,10 +273,17 @@ DSL code:
 
 Input text:
 
-    I am ok , really
+    I am ok, really
     HELLO Outthentic !!!
 
-Results: verified
+Result: verified
+
+    +--------+------------------------------+
+    | status | message                      |
+    +--------+------------------------------+
+    | OK     | matches "I am ok"            |
+    | OK     | matches HELLO Outthentic      |
+    +--------+------------------------------+
  
 Plain text expressions are case sensitive:
 
@@ -235,23 +291,32 @@ Input text:
 
     I am OK
  
-Results: not verified
+Result: not verified
 
+    +--------+------------------------------+
+    | status | message                      |
+    +--------+------------------------------+
+    | FAIL   | matches "I am OK"            |
+    +--------+------------------------------+
     
 # Regular expressions
 
-Similarly to plain text matching, you may require that input lines match some regular expressions:
+Similarly to plain text matching, you may require that input lines match some regular expressions.
+
+This should be [Perl Regular Expressions](http://perldoc.perl.org/perlre.html).
+
+Example:
 
 DSL code:
 
-    regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
-    regexp: Name: \w+ # name
-    regexp: App Version Number: \d+\.\d+\.\d+ # version number
+    regexp: \d\d\d\d \- \d\d \- \d\d # date in format of YYYY-MM-DD
+    regexp: 'Name:' \s+ \w+ # name
+    regexp: 'App Version Number:' \s+ \d+\.\d+\.\d+ # version number
 
 Input text:
 
     2001-01-02
-    Name: outthentic
+    Name: Outthentic
     App Version Number: 1.1.10
  
 Result - verified
@@ -259,38 +324,58 @@ Result - verified
  
 # One or many?
 
-Parser does not care about _how many times_ a given check expression is matched in input text.
+* Parser does not care about _how many times_ check expression matches an input text.
 
-If at least one line in a text match the check expression - _this check_ is considered as succeeded.
+* If at least _one line_ in a text matches the check expression - _this check_ is considered as successful.
 
-Parser  _accumulate_ all matching lines for given check expression, so they could be processed.
+* If you use _capturing_ regex expressions, parser  _accumulates_ all captured data to make it possible further proccessing.
 
-Input text:
+Example:
 
-    1 - for one
-    2 - for two
-    3 - for three       
+    use Outthentic::DSL;
+    use Data::Dumper;
+    
+    my $otx = Outthentic::DSL->new(<<'HERE');
+        1 - for one
+        2 - for two
+        3 - for three
+    HERE
+    
+    $otx->validate(<<'CHECK');
+    
+    regexp: (\d+)\s+-\s+for\s+(\w+)
+    
+    CHECK
 
-    regexp: (\d+) for (\w+)
-    code: for my $c( @{captures()}) {  print $c->[0], "/", $c->[1], "\n"}
+    print Dumper($otx->{captures});
 
 Output:
 
-    1/one
-    2/two
-    3/three
+    [
+      [
+        '1',
+        'one'
+      ],
+      [
+        '2',
+        'two'
+      ],
+      [
+        '3',
+        'three'
+      ]
+    ]
+    
 
-
-See ["captures"](#captures) section for full explanation of a captures mechanism:
+See ["captures"](#captures) section for full explanation of a captures mechanism.
 
 # Comments, blank lines and text blocks
 
-Comments and blank lines don't impact verification process but one could use them to improve code readability.
+Comments and blank lines don't impact verification process but you may use them for the sake of DSL code readability.
 
 # Comments
 
-Comment lines start with \`#' symbol, comments chunks are ignored by parser.
-
+Comment lines start with `#` symbol, comments are ignored by parser.
 
 DSL code:
 
@@ -312,9 +397,9 @@ DSL code:
     # end has the end
     The end of a story
 
-But you **can't ignore** blank lines in a \`text block' context ( see \`text blocks' subsection ).
+But you **can't ignore** blank lines in a _text blocks_, see [text blocks](#text-blocks) subsection for details.
 
-Use \`:blank_line' marker to match blank lines.
+Use `:blank_line` marker to match blank lines inside text blocks.
 
 DSL code:
 
@@ -330,7 +415,7 @@ DSL code:
 
 # Text blocks
 
-Sometimes it is very helpful to match against a \`sequence of lines' like here.
+Sometimes you need to match a text against a _sequence of lines_ like in code below.
 
 DSL code:
 
@@ -344,7 +429,7 @@ DSL code:
         that string followed by
         another one
         # regexps patterns:
-        regexp: with (this|that)
+        regexp: 'with' \s+  'this' | 'that'
         # and the last one in a block
         at the very end
     end:
@@ -369,14 +454,14 @@ Input text:
 
 Result - not verified
 
-\`begin:' \`end:' markers decorate \`text blocks' content. 
+`begin:`, `end:` markers decorate text blocks content. 
 
 Markers should not be followed by any text at the same line.
 
 ## Don't forget to close the block ...
 
-Be aware if you leave "dangling" \`begin:' marker without closing \`end': somewhere else 
-parser will remain in a \`text block' mode till the end of the file, which is probably not you want:
+Be aware if you leave "dangling" `begin:` marker without closing `end:` parser will remain in a _text block_ mode 
+till the end of the file, which is probably not you want:
 
 DSL code:
 
@@ -390,43 +475,50 @@ DSL code:
 
 Code expressions are just a pieces of 'some language code' you may inline and execute **during parsing** process.
 
-By default, if *language* is no set Perl language is assumed. Here is example:
+By default, if *language* is no set Perl6 language is assumed. Here is example:
 
-DSL code:
-
-    # Perl expression 
-    # between two check expressions
-    Once upon a time
-    code: print "hello I am Outthentic"
-    Lived a boy called Outthentic
-
-
+    use v6;
+    
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL.new( text => 'hello' );
+    
+    $otx.validate(q:to/CHECK/);
+      hello
+      code: say "hi there!"
+    CHECK
+    
+    say $otx.results;
+    
 Output:
 
-    hello I am Outthentic
+    [{message => text match 'hello ...', status => True, type => check-expression}]
 
-Internally once DSL code gets parsed it is "turned" into regular Perl code:
+As you may notice code expression here has no impact on verification process, this trivial example just shows
+that you may inline some programming languages code into Outthentic DSL. See [generators](#generators) section on
+how dynamically create new check expressions using common programming languages. 
 
-    execute_check_expression("Once upon a time");
-    eval 'print "Lived a boy called Outthentic"';
-    execute_check_expression("Lived a boy called Outthentic");
 
-When use Perl expressions be aware of:
+You may use other languages in code expressions, not only Perl6. 
 
-* Perl expressions are executed by Perl eval function in context of `package main`, please be aware of that.
+Use `here` document style ( see [multiline expressions](#Multiline expressions) section ) and proper shebang to
+insert code written in otther languages. Here are some examples:
 
-* Follow [http://perldoc.perl.org/functions/eval.html](http://perldoc.perl.org/functions/eval.html) to know more about Perl eval function.
 
-One may use other languages in code expressions. Use should use \`here' document style ( see [multiline expressions](#Multiline expressions) section ) to insert your code and
-set shebang to define a language. Here are some examples:
+## perl5
 
+    code:  <<HERE
+    !perl
+
+    print 'hi there!'
+    HERE
 
 ## bash 
 
     code:  <<HERE
     !bash
 
-    echo '# hello I am Outthentic'
+    echo 'hi there!'
     HERE
 
 
@@ -435,79 +527,85 @@ set shebang to define a language. Here are some examples:
     code: <<CODE
     !ruby
 
-    puts '# hello I am Outthentic'
+    puts 'hi there!'
     CODE
 
 # Asserts
 
-Asserts are simple statements with one of two values : true|false, a second assert parameter is just a description.
+Asserts expressions conists of assert value, and description - a short string to describe assert.
+
+Assert value should be _something_ to be treated as false or true, here some examples:
 
 DSL code
+    
+    # you may have assert expressions as is
+    # then assert value should be Perl6 value to be treated as true or false
+    # 
+    assert: 0 'this is not true in Perl6'
+    assert: 1 'this is true in Perl6'
+    assert: True 'True is for true in Perl6'
+    assert: False 'False is for false in Perl6'
 
-    assert: 0 'this is not true'
-    assert: 1 'this is true'
 
-Asserts almost always are created dynamically with generators. See next section.
+Asserts almost always to be created dynamically with generators. See the next section.
  
     
 # Generators
 
-* Generators is the way to _generate new outthentic entries on the fly_.
+* Generators is the way to _generate new Outthentic entities on the fly_.
 
 * Generator expressions like code expressions are just a piece of code to be executed.
 
-* The only requirement for generator code - it should return _new outthentic entities_.
+* The only requirement for generator code - it should return _new Outthentic entities_.
 
 * If you use Perl in generator expressions ( which is by default ) - last statement in your
-code should return reference to array of strings. Strings in array would _represent_ a _new_ outthentic entities.
+code should return reference to array of strings. Strings in array would _represent_ a _new_ Outthentic entities.
 
-* If you use not Perl language in generator expressions to produce new outthentic entities you should print them
+* If you use not Perl language in generator expressions to produce new Outthentic entities you should print them
 into **stdout**. See examples below.
 
-* A new outthentic entries are passed back to parser and executed immediately.
+* A new Outthentic entities are passed back to parser and executed immediately.
 
-Generators expressions start with \`:generator' marker.
+Generators expressions start with `generator:` marker.
 
 Here is simple example.
 
-DSL code:
+    use v6;
+    
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL.new( text => 'HELLO', debug-mode => 0 );
+    
+    $otx.validate(q:to/CHECK/);
+      generator: [ 'H', 'E', 'L', 'O' ];
+    CHECK
+    
+    say $otx.results;
+    
+Output:
 
-    # original check list
+    [{message => text match 'H ...', status => True, type => check-expression} {message => text match 'E ...', status => True, type => check-expression} {message => text match 'L ...', status => True, type => check-expression} {message => text match 'O ...', status => True, type => check-expression}]
 
+If you use not Perl6 langauge to generate expressions, you have to print entries into stdout instead of returning
+an array. Here are some generators examples for other languages:
+
+
+Original check expressions list:
+    
     Say
     HELLO
- 
-    # this generator creates 3 new check expressions:
+    
+This generator creates 3 new check expressions:
 
-    generator: <<CODE
-    [ 
-      'say', 
-      'hello', 
-      'again'
-    ]
-    CODE
-
-
-Updated check list:
-
-    Say
-    HELLO
-    say
-    hello
-    again
-
-
-
-If you use not Perl in generator expressions, you have to print entries into stdout instead of returning
-an array reference like in Perl. Here are some generators examples for other languages:
-
-
+    
     generator: <<CODE
     !bash
       echo say
       echo hello
       echo again
     CODE
+
+Or if you prefer Ruby:
 
     generator: <<CODE
     !ruby
@@ -516,27 +614,43 @@ an array reference like in Perl. Here are some generators examples for other lan
       puts 'again'
     CODE
 
-Here is more complicated example using Perl.
+Updated check list:
+
+    Say
+    HELLO
+    say
+    hello
+    again
+    
+
+Here is more complicated example using Perl6 language.
 
 DSL code:
-
 
     # this generator generates
     # comment lines
     # and plain string check expressions:
 
-    generator: <<CODE    
-    my %d = { 
-      'foo' => 'foo value', 
-      'bar' => 'bar value' 
-    };     
-    [ 
-      map  { 
-        ( "# $_", "$data{$_}" )  
-      } keys %d 
-    ]
+    use v6;
+    
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL.new( text => q:to/HERE/, debug-mode => 0 );
+      foo value
+      bar value
+    HERE
+    
+    $otx.validate(q:to/CHECK/);
+    
+        generator: <<CODE
+        my %d = 'foo' => 'foo value', 'bar' => 'bar value';
+        %d.keys.flatmap: -> $k { ["#$k",  %d{$k}]    }
+    
     CODE
-
+    CHECK
+    
+    say $otx.results;
+    
 
 Updated check list:
 
@@ -545,8 +659,13 @@ Updated check list:
     # bar
     bar value
 
+Output:
+
+    [{message => text match 'bar value ...', status => True, type => check-expression} {message => text match 'foo value ...', status => True, type => check-expression}]
 
 Generators could produce not only check expressions but code expressions and ... another generators.
+
+So ... use your imagination power! ...
 
 This is fictional example.
 
@@ -561,14 +680,14 @@ Input Text:
 DSL code:
 
     generator:  <<CODE
+    !perl
+
     sub next_number {                       
         my $i = shift;                       
         $i++;                               
-        return [] if $i>=5;                 
-        [                                   
-            'regexp: ^'.('A' x $i).'$'      
-            "generator: next_number($i)"     
-        ]  
+        return if $i>=5;                 
+            print 'regexp: ^'.('A' x $i).'$',"\n";      
+            print "generator: next_number($i)","\n";     
     }
     CODE
 
@@ -580,12 +699,11 @@ Input:
 
 DSL code:
 
-
     number: (\d+)
 
     generator: <<CODE
     !ruby
-      puts "assert: #{capture()[0] == 10}, you've got 10!"  
+        puts "assert: #{capture()[0] == 10}, you've got 10!"  
     CODE
 
 
@@ -595,7 +713,7 @@ WARNING!!! You should prefer asserts over validators. Validators feature will be
 
 Validator expressions are perl code expressions used for dynamic verification.
 
-Validator expressions start with \`validator:' marker.
+Validator expressions start with `validator:` marker.
 
 A Perl code inside validator block should _return_ array reference. 
 
@@ -617,17 +735,16 @@ DSL code:
 
     # this one depends on previous check
     regexp: credit card number: (\d+)
-    validator: [ captures()->[0]-[0] == '0101010101', 'I know your secrets!'  ]
+    validator: [ captures()[0][0] == '0101010101', 'I know your secrets!'  ]
 
 
     # and this could be any
     validator: [ int(rand(2)) > 1, 'I am lucky!'  ]
     
 
-Validators are often used with the [\`captures expressions'](#captures). This is another example.
+Validators are often used in conjunction with the [captures expressions](#captures). This is another example.
 
 Input text:
-
 
     # my family ages list
     alex    38
@@ -673,8 +790,9 @@ DSL code:
 
 
     # check list
+    # always
     # consists of
-    # single line entries
+    # single line expressions
 
     Multiline
     string
@@ -683,7 +801,7 @@ DSL code:
 
 
 
-Results - not verified:
+Result - not verified:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -710,7 +828,7 @@ There are two ways to write multiline expressions:
 
 ### Back slash delimiters
 
-\`\' delimiters breaks a single line text on a multi lines.
+`\` delimiters breaks a single line text on a multi lines.
 
 Example:
 
@@ -725,7 +843,7 @@ Example:
     $sth->execute();                                                    \
     my $results = $sth->fetchall_arrayref;                              \
 
-    [ map { $_->[0] } @${results} ]                                     \
+    [ map { $_->[0] } @${results} ]
 
 
 ### HERE documents expressions 
@@ -845,7 +963,6 @@ However there are two search context modificators to change this behavior:
 
 * range expressions
 
-
 ## Within expressions
 
 Within expression acts like regular expression - checks text against given patterns 
@@ -907,7 +1024,7 @@ Here more examples:
     # we only need a dates in 2000 year
     2000-
 
-Within expressions could be sequential, which effectively means using \`&&' logical operators for within expressions:
+Within expressions could be sequential, which effectively means using `&&` logical operators for within expressions:
 
 
     # try to find a date string in following format
@@ -1060,7 +1177,7 @@ Output:
 
 ## Restoring search context
         
-And finally to restore search context use \`reset\_context:' statement.
+And finally to restore search context use `reset\_context:` statement.
 
 Input text:
 
@@ -1187,7 +1304,7 @@ Output:
 
 Notice something interesting? Output direction has been inverted.
 
-The reason for this is outthentic check expression works in "line by line scanning" mode 
+The reason for this is Outthentic check expression works in "line by line scanning" mode 
 when text input gets verified line by line against given check expression. 
 
 Once all lines are matched they get dropped into one heap without preserving original "group context". 
@@ -1291,6 +1408,19 @@ Output:
     # 1 3
     # 0 0 0
 
+# Examples
+
+Some code examples mostly mentioned at this documentation could be found at `examples/` directory.
+
+But examing unit tests code under `t/` could be also very useful.
+
+
+# Environment variables
+
+I'll document these variables later. Here is just a list:
+
+* OTX_DEBUG (1,2,3,4)
+* OTX_STREAM_DEBUG (set|not set)
 
 # Author
 
@@ -1298,17 +1428,17 @@ Output:
 
 # Home page
 
-https://github.com/melezhik/outthentic-dsl
+https://github.com/melezhik/Outthentic-dsl
 
 # COPYRIGHT
 
-Copyright 2015 Alexey Melezhik.
+Copyright 2016 Alexey Melezhik.
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 # See also
 
-Alternative outthentic DSL introduction could be found here - [intro.md](https://github.com/melezhik/outthentic-dsl/blob/master/intro.md)
+Alternative Outthentic DSL introduction could be found here - [intro.md](https://github.com/melezhik/Outthentic-dsl/blob/master/intro.md)
 
 # Thanks
 

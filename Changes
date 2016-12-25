@@ -1,3 +1,8 @@
+0.2.6
+
+* documentation release ( made a lot of improvements )
+* added examples/ directory with explanatory code
+
 0.2.5 2016-12-24
 
 * fixed issues for multiline expressions in validate parser ( third iteration )
