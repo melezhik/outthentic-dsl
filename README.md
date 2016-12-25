@@ -233,29 +233,35 @@ Check expressions define patterns to match against an input text stream.
 
 Here is a simple example:
 
-Input text:
+    use Outthentic::DSL;
 
-    HELLO
-    HELLO WORLD
-    My birth day is: 1977-04-16
+    my $otx = Outthentic::DSL->new(<<'HERE');
+      HELLO
+      HELLO WORLD
+      My birth day is: 1977-04-16
+    HERE
+
+    $otx->validate(<<'CHECK');
+      HELLO
+      regexp: \d\d\d\d-\d\d-\d\d
+    CHECK
+
+    print "status\tcheck\n";
+    print "==========================\n";
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
+  
+Output:
 
 
-DSL code:
+    status  check
+    ==========================
+    true    text has 'HELLO'
+    true    text match /\d\d\d\d-\d\d-\d\d/
 
-    HELLO
-    regexp: \d\d\d\d-\d\d-\d\d
-
-
-Result: verified
-
-    +--------+------------------------------+
-    | status | message                      |
-    +--------+------------------------------+
-    | OK     | matches "HELLO"              |
-    | OK     | matches /\d\d\d\d-\d\d-\d\d/ |
-    +--------+------------------------------+
-
-
+    
 There are two basic types of check expressions:
 
 * [plain text expressions](#plain-text-expressions) 
@@ -266,38 +272,58 @@ There are two basic types of check expressions:
 
 Plain text expressions define a lines an input text to contain.
 
-DSL code:
-        
-        I am ok
-        HELLO Outthentic
+    use Outthentic::DSL;
 
-Input text:
+    my $otx = Outthentic::DSL->new(<<'HERE');
+      I am ok, really
+      HELLO Outthentic !!!
+    HERE
 
-    I am ok, really
-    HELLO Outthentic !!!
+    $otx->validate(<<'CHECK');
+      I am ok
+      HELLO Outthentic
+    CHECK
 
-Result: verified
+    print "status\tcheck\n";
+    print "==========================\n";
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
 
-    +--------+------------------------------+
-    | status | message                      |
-    +--------+------------------------------+
-    | OK     | matches "I am ok"            |
-    | OK     | matches HELLO Outthentic      |
-    +--------+------------------------------+
+Output:
+
+    status  check
+    ==========================
+    true    text has 'I am ok'
+    true    text has 'HELLO Outthentic'
+    
  
 Plain text expressions are case sensitive:
 
-Input text:
+    use Outthentic::DSL;
 
-    I am OK
- 
-Result: not verified
+    my $otx = Outthentic::DSL->new(<<'HERE');
+      I am ok
+    HERE
 
-    +--------+------------------------------+
-    | status | message                      |
-    +--------+------------------------------+
-    | FAIL   | matches "I am OK"            |
-    +--------+------------------------------+
+    $otx->validate(<<'CHECK');
+      I am OK
+    CHECK
+
+    print "status\tcheck\n";
+    print "==========================\n";
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
+
+
+Output:
+    
+    status  check
+    ==========================
+    false   text has 'I am OK'
     
 # Regular expressions
 
