@@ -494,6 +494,10 @@ sub validate {
 
             my $re = $1;
 
+            $re=~s/\s+#.*//;
+
+            $re=~s/^\s+//;
+
             $self->handle_regexp($re);
 
         } elsif ($l=~/^\s*within:\s*(.*)/) {
@@ -502,11 +506,15 @@ sub validate {
 
             my $re = $1;
 
+            $re=~s/\s+#.*//;
+
+            $re=~s/^\s+//;
+
             $self->handle_within($re);
 
         } else { # `plain string' line
 
-            $l=~s/\s+\#.*//;
+            $l=~s/\s+#.*//;
 
             $l=~s/^\s+//;
 

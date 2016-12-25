@@ -2,6 +2,8 @@
 
 * documentation release ( made a lot of improvements )
 * added examples/ directory with explanatory code
+* fix for comments in the end of regexps and plain checks
+
 
 0.2.5 2016-12-24
 

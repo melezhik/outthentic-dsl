@@ -333,21 +333,30 @@ This should be [Perl Regular Expressions](http://perldoc.perl.org/perlre.html).
 
 Example:
 
-DSL code:
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL->new(<<'HERE');
+      2001-01-02
+      Name: Outthentic
+      App Version Number: 1.1.10
+    HERE
+    
+    $otx->validate(<<'CHECK');
+      regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
+      regexp: Name:\s+\w+ # name
+      regexp: App Version Number:\s+\d+\.\d+\.\d+ # version number
+    CHECK
+    
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
+    
+Output:
 
-    regexp: \d\d\d\d \- \d\d \- \d\d # date in format of YYYY-MM-DD
-    regexp: 'Name:' \s+ \w+ # name
-    regexp: 'App Version Number:' \s+ \d+\.\d+\.\d+ # version number
-
-Input text:
-
-    2001-01-02
-    Name: Outthentic
-    App Version Number: 1.1.10
- 
-Result - verified
-
- 
+    true    text match /\d\d\d\d-\d\d-\d\d/
+    true    text match /Name:\s+\w+/
+    true    text match /App Version Number:\s+\d+\.\d+\.\d+/
+     
 # One or many?
 
 * Parser does not care about _how many times_ check expression matches an input text.
@@ -443,42 +452,93 @@ DSL code:
 
 Sometimes you need to match a text against a _sequence of lines_ like in code below.
 
-DSL code:
+    use Outthentic::DSL;
+    
+    my $otx = Outthentic::DSL->new(<<'HERE');
+      this string followed by
+      that string followed by
+      another one string
+      with that string
+      at the very end.
+    HERE
 
-    # this text block
-    # consists of 5 strings
-    # going consecutive
+    $otx->validate(<<'CHECK');
 
-    begin:
-        # plain strings
-        this string followed by
+      # this text block
+      # consists of 5 strings
+      # going consecutive
+  
+      begin:
+          # plain strings
+          this string followed by
+          that string followed by
+          another one
+          # regexps patterns:
+          regexp: with\s+(this|that)
+          # and the last one in a block
+          at the very end
+      end:
+  
+    CHECK
+
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
+
+
+Output:
+
+
+    true    [b] text has 'this string followed by'
+    true    [b] text has 'that string followed by'
+    true    [b] text has 'another one'
+    true    [b] text match /with\s+(this|that)/
+    true    [b] text has 'at the very end'
+
+
+A negative example:
+
+    
+    my $otx = Outthentic::DSL->new(<<'HERE');
         that string followed by
-        another one
-        # regexps patterns:
-        regexp: 'with' \s+  'this' | 'that'
-        # and the last one in a block
-        at the very end
-    end:
+        this string followed by
+        another one string
+        with that string
+        at the very end.
+    HERE
 
-Input text:
+    $otx->validate(<<'CHECK');
 
-    this string followed by
-    that string followed by
-    another one string
-    with that string
-    at the very end.
+      # this text block
+      # consists of 5 strings
+      # going consecutive
+  
+      begin:
+          # plain strings
+          this string followed by
+          that string followed by
+          another one
+          # regexps patterns:
+          regexp: with\s+(this|that)
+          # and the last one in a block
+          at the very end
+      end:
+  
+    CHECK
 
-Result - verified
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
 
-Input text:
+Ouput:
 
-    that string followed by
-    this string followed by
-    another one string
-    with that string
-    at the very end.
 
-Result - not verified
+    true    [b] text has 'this string followed by'
+    false   [b] text has 'that string followed by'
+    true    [b] text has 'another one'
+    true    [b] text match /with\s+(this|that)/
+    true    [b] text has 'at the very end'
+    
 
 `begin:`, `end:` markers decorate text blocks content. 
 
