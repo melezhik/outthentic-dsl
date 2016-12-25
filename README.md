@@ -44,7 +44,7 @@ You define rules ( check expressions ) to describe expected content.
 
 ### Imperative way
 
-You _extend_ a process of verification using regular programming languages - like Perl6, Perl5, Bash and Ruby, see examples below.
+You _extend_ a process of verification using regular programming languages - like Perl, Bash and Ruby, see examples below.
 
 ## DSL code
 
@@ -363,7 +363,7 @@ Output:
 
 * If at least _one line_ in a text matches the check expression - _this check_ is considered as successful.
 
-* If you use _capturing_ regex expressions, parser  _accumulates_ all captured data to make it possible further proccessing.
+* If you use _capturing_ regex expressions, parser  _accumulates_ all captured data to make it possible further processing.
 
 Example:
 
@@ -473,7 +473,7 @@ Sometimes you need to match a text against a _sequence of lines_ like in code be
           this string followed by
           that string followed by
           another one
-          # regexps patterns:
+          # regexp patterns:
           regexp: with\s+(this|that)
           # and the last one in a block
           at the very end
@@ -518,7 +518,7 @@ A negative example:
           this string followed by
           that string followed by
           another one
-          # regexps patterns:
+          # regex patterns:
           regexp: with\s+(this|that)
           # and the last one in a block
           at the very end
@@ -530,7 +530,7 @@ A negative example:
         print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
     }
 
-Ouput:
+Output:
 
 
     true    [b] text has 'this string followed by'
@@ -561,7 +561,7 @@ DSL code:
 
 Code expressions are just a pieces of 'some language code' you may inline and execute **during parsing** process.
 
-By default, if *language* is no set Perl6 language is assumed. Here is example:
+By default, if *language* is no set Perl language is assumed. Here is example:
 
 
     use Outthentic::DSL;
@@ -586,10 +586,10 @@ As you may notice code expression here has no impact on verification process, th
 that you may inline some programming languages code into Outthentic DSL. See [generators](#generators) section on
 how dynamically create new check expressions using common programming languages.
 
-You may use other languages in code expressions, not only Perl6. 
+You may use other languages in code expressions, not only Perl. 
 
 Use `here` document style ( see [multiline expressions](#Multiline expressions) section ) and proper shebang to
-insert code written in otther languages. Here are some examples:
+insert code written in other languages. Here are some examples:
 
 
 ## perl5
@@ -619,19 +619,19 @@ insert code written in otther languages. Here are some examples:
 
 # Asserts
 
-Asserts expressions conists of assert value, and description - a short string to describe assert.
+Asserts expressions consists of assert value, and description - a short string to describe assert.
 
-Assert value should be _something_ to be treated as false or true, here some examples:
+Assert value should be _something_ to be treated as false or true in Perl, here is examples:
 
 DSL code
     
     # you may have assert expressions as is
-    # then assert value should be Perl6 value to be treated as true or false
+    # then assert value should be Perl value to be treated as true or false
     # 
-    assert: 0 'this is not true in Perl6'
-    assert: 1 'this is true in Perl6'
-    assert: True 'True is for true in Perl6'
-    assert: False 'False is for false in Perl6'
+    assert: 0     this is not true in Perl
+    assert: 1     this is true in Perl
+    assert: "OK"  none empty string is for true in Perl
+    assert: ""    empty string is for false in Perl
 
 
 Asserts almost always to be created dynamically with generators. See the next section.
@@ -792,13 +792,9 @@ DSL code:
     }
     CODE
 
-Generators are commonly used to create an asserts.
+Generators are commonly used to create an asserts. 
 
-Input:
-
-    number: 10
-
-DSL code:
+This is short example for Ruby language:
 
     number: (\d+)
 
@@ -825,8 +821,6 @@ A Perl code inside validator block should _return_ array reference.
   * second element - is a helpful message 
 
 Validators a kind of check expressions with check logic _expressed_ in program code. Here is examples:
-
-DSL code:
 
     # this is always true
     validator: [ 10>1 , 'ten is bigger then one' ]
@@ -855,7 +849,6 @@ Input text:
 
 DSL code:
 
-
     # let's capture name and age chunks
     regexp: /(\w+)\s+(\d+)/
 
@@ -875,20 +868,19 @@ DSL code:
 
 When parser parses check expressions it does it in a _single line mode_ :
 
-* a check expression is always single line string
+* check expression is always single line string
 
 * input text is parsed in line by line mode, thus every line is validated against a single line check expression
 
-Example.
+Here is example.
 
-    # Input text
+Input text:
 
     Multiline
     string
     here
 
 DSL code:
-
 
     # check list
     # always
@@ -901,8 +893,7 @@ DSL code:
     regexp: Multiline \n string \n here
 
 
-
-Result - not verified:
+Results:
 
     +--------+---------------------------------------+
     | status | message                               |
@@ -922,7 +913,7 @@ Perl expressions, validators and generators could contain multilines expressions
 
 There are two ways to write multiline expressions:
 
-* using `\` delimiters to split multiline string to many chunks
+* using back slash delimiters to split multiline string to many chunks
 
 * using HERE documents expressions 
 
@@ -944,7 +935,7 @@ Example:
     $sth->execute();                                                    \
     my $results = $sth->fetchall_arrayref;                              \
 
-    [ map { $_->[0] } @${results} ]
+    [ map { $_->[0] } @${results} ]                                     \
 
 
 ### HERE documents expressions 
@@ -957,14 +948,14 @@ Is alternative to make your multiline code more readable:
 
     generator: <<CODE
 
-    use DBI;                                                            
-    my $dbh = DBI->connect("dbi:SQLite:dbname=t/data/test.db","","");   
-    my $sth = $dbh->prepare("SELECT name from users");                  
-    $sth->execute();                                                    
-    my $results = $sth->fetchall_arrayref;                              
-
-    [ map { $_->[0] } @${results} ]
-
+      use DBI;                                                            
+      my $dbh = DBI->connect("dbi:SQLite:dbname=t/data/test.db","","");   
+      my $sth = $dbh->prepare("SELECT name from users");                  
+      $sth->execute();                                                    
+      my $results = $sth->fetchall_arrayref;                              
+  
+      [ map { $_->[0] } @${results} ]
+  
     CODE
 
 # Captures
@@ -997,18 +988,17 @@ Data accessible via captures():
     ]
 
 
-Then captured data usually good fit for assert checks.
+Usually captured data is good candidates for assert checks.
 
-DSL code
-
+DSL code:
 
     generator: << CODE
     !ruby
-    total=0                 
-    captures().each do |c|
+      total=0                 
+      captures().each do |c|
         total+=c[0]
-    end           
-    puts "assert: #{total == 72} 'total age of my family'"
+      end           
+      puts "assert: #{total == 72} 'total age of my family'"
     CODE
 
 ## captures() function
@@ -1024,15 +1014,14 @@ Here is another example:
     regexp: date: (\d\d\d\d)-(\d\d)-(\d\d)
 
     generator:  <<CODE
-    use DateTime;                       
-    my $c = captures()->[0];            
-    my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
-    my $yesterday = DateTime->now->subtract( days =>  1 );                        
-    my $true_or_false = (DateTime->compare($dt, $yesterday) == 0);
-    [ 
+      use DateTime;                       
+      my $c = captures()->[0];            
+      my $dt = DateTime->new( year => $c->[0], month => $c->[1], day => $c->[2]  ); 
+      my $yesterday = DateTime->now->subtract( days =>  1 );                        
+      my $true_or_false = (DateTime->compare($dt, $yesterday) == 0);
+      [ 
         "assert: $true_or_false first day found is - $dt and this is a yesterday"
-    ];
-
+      ];
     CODE
 
 ## capture() function
@@ -1106,7 +1095,7 @@ These are:
 
 * thus next plain string checks expression will be executed against new search context
 
-Results - verified:
+Results:
 
     +--------+------------------------------------------------+
     | status | message                                        |
@@ -1114,8 +1103,6 @@ Results - verified:
     | OK     | matches /color: (red|green|blue)/              |
     | OK     | /color: (red|green|blue)/ matches green        |
     +--------+------------------------------------------------+
-
-
 
 Here more examples:
 
@@ -1511,17 +1498,15 @@ Output:
 
 # Examples
 
-Some code examples mostly mentioned at this documentation could be found at `examples/` directory.
-
-But examing unit tests code under `t/` could be also very useful.
-
+* Some code examples mostly mentioned at this documentation could be found at `examples/` directory.
+* A plenty of other  [examples](https://github.com/melezhik/outthentic/tree/master/examples) could be found at Outthentic module
 
 # Environment variables
 
 I'll document these variables later. Here is just a list:
 
-* OTX_DEBUG (1,2,3,4)
-* OTX_STREAM_DEBUG (set|not set)
+* OUT_KEEP_SOURCE_FILES
+* OTX_DEBUG
 
 # Author
 
