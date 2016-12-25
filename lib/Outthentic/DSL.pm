@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.5';
+our $VERSION = '0.2.6';
 
 use Carp;
 use Data::Dumper;
@@ -2598,12 +2598,12 @@ Output:
 
 =item *
 
-Some code examples mostly mentioned at this documentation could be found at C<examples/> directory.
+Some code examples mostly mentioned at this documentation could be found at C<examples/> directory
 
 
 =item *
 
-A plenty of other  L<examples|https://github.com/melezhik/outthentic/tree/master/examples> could be found at Outthentic module
+A plenty of other L<examples|https://github.com/melezhik/outthentic/tree/master/examples> could be found at Outthentic module
 
 
 =back

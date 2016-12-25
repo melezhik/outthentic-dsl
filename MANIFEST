@@ -1,5 +1,17 @@
 blogs/01.md
 Changes
+examples/captures.pl
+examples/code-expression.pl
+examples/generator.pl
+examples/hello-world.pl
+examples/match_l.pl
+examples/perl-generator.pl
+examples/plain-and-regexp-check.pl
+examples/plain-check-case-sensetive.pl
+examples/plain-check.pl
+examples/regex-check.pl
+examples/text-block-fail.pl
+examples/text-block-pass.pl
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm

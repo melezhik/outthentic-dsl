@@ -1498,8 +1498,8 @@ Output:
 
 # Examples
 
-* Some code examples mostly mentioned at this documentation could be found at `examples/` directory.
-* A plenty of other  [examples](https://github.com/melezhik/outthentic/tree/master/examples) could be found at Outthentic module
+* Some code examples mostly mentioned at this documentation could be found at `examples/` directory
+* A plenty of other [examples](https://github.com/melezhik/outthentic/tree/master/examples) could be found at Outthentic module
 
 # Environment variables
 
