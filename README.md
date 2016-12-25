@@ -655,7 +655,7 @@ code should be one of three:
 
 Usually first two options most convenient way.
 
-* If you use *none Perl* language in generator expressions to produce new Outthentic entities you should print them
+* If you use languages other than *Perl* to produce new Outthentic entities you should print them 
 into **stdout**. See examples below.
 
 A new Outthentic entities are passed back to parser and executed immediately.
@@ -684,8 +684,8 @@ Output:
     true    text has 'O'
     
 
-If you use not Perl6 langauge to generate expressions, you have to print entries into stdout instead of returning
-an array. Here are some generators examples for other languages:
+If you use other languages to generate expressions, 
+you just need to print entries into stdout. Here are some generators examples for other languages:
 
 
 Original check expressions list:
@@ -721,7 +721,7 @@ Updated check list:
     again
     
 
-Here is more complicated example using Perl6 language.
+Here is more complicated example using Perl language.
 
 DSL code:
 
