@@ -645,41 +645,44 @@ Asserts almost always to be created dynamically with generators. See the next se
 
 * The only requirement for generator code - it should return _new Outthentic entities_.
 
-* If you use Perl in generator expressions ( which is by default ) - last statement in your
-code should be one of three :
 
-  ** reference to array of strings, every string should _represent_ a _new_ Outthentic entity
-  ** string to represent a _new_ Outthentic entities, this could be multiline string
-  ** path to file with check expressions - new outthentic entities 
+If you use Perl in generator expressions ( which is by default ) - last statement in your
+code should be one of three:
 
-Usually you will choose first two options:
+1. reference to array of strings where every string should _represent_ a _new_ Outthentic entity
+2. string to represent a _new_ Outthentic entities, this could be multiline string
+3. path to file with check expressions - new outthentic entities 
 
-Strings in array would _represent_ a _new_ Outthentic entities.
+Usually first two options most convenient way.
 
-* If you use not Perl language in generator expressions to produce new Outthentic entities you should print them
+* If you use *none Perl* language in generator expressions to produce new Outthentic entities you should print them
 into **stdout**. See examples below.
 
-* A new Outthentic entities are passed back to parser and executed immediately.
+A new Outthentic entities are passed back to parser and executed immediately.
 
 Generators expressions start with `generator:` marker.
 
 Here is simple example.
 
-    use v6;
-    
     use Outthentic::DSL;
     
-    my $otx = Outthentic::DSL.new( text => 'HELLO', debug-mode => 0 );
+    my $otx = Outthentic::DSL->new('HELLO');
     
-    $otx.validate(q:to/CHECK/);
+    $otx->validate(<<'CHECK');
       generator: [ 'H', 'E', 'L', 'O' ];
     CHECK
-    
-    say $otx.results;
+
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
     
 Output:
 
-    [{message => text match 'H ...', status => True, type => check-expression} {message => text match 'E ...', status => True, type => check-expression} {message => text match 'L ...', status => True, type => check-expression} {message => text match 'O ...', status => True, type => check-expression}]
+    true    text has 'H'
+    true    text has 'E'
+    true    text has 'L'
+    true    text has 'O'
+    
 
 If you use not Perl6 langauge to generate expressions, you have to print entries into stdout instead of returning
 an array. Here are some generators examples for other languages:
