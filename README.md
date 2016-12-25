@@ -655,7 +655,7 @@ code should be one of three:
 
 Usually first two options most convenient way.
 
-* If you use languages other than *Perl* to produce new Outthentic entities you should print them 
+If you use languages *other than Perl* to produce new Outthentic entities you should print them 
 into **stdout**. See examples below.
 
 A new Outthentic entities are passed back to parser and executed immediately.
@@ -723,34 +723,34 @@ Updated check list:
 
 Here is more complicated example using Perl language.
 
-DSL code:
-
-    # this generator generates
-    # comment lines
+    # this generator creates
+    # comments
     # and plain string check expressions:
 
-    use v6;
-    
     use Outthentic::DSL;
     
-    my $otx = Outthentic::DSL.new( text => q:to/HERE/, debug-mode => 0 );
+    my $otx = Outthentic::DSL->new(<<'HERE');
       foo value
       bar value
     HERE
     
-    $otx.validate(q:to/CHECK/);
+    $otx->validate(<<'CHECK');
     
         generator: <<CODE
-        my %d = 'foo' => 'foo value', 'bar' => 'bar value';
-        %d.keys.flatmap: -> $k { ["#$k",  %d{$k}]    }
+
+          my %d = ( 'foo' => 'foo value', 'bar' => 'bar value' );
+          join "\n", map { ( "# $_" , $d{$_} ) } keys %d;
     
-    CODE
+        CODE
+
     CHECK
     
-    say $otx.results;
+    for my $r (@{$otx->results}) {
+        print $r->{status} ? 'true' : 'false', "\t", $r->{message}, "\n";
+    }
     
 
-Updated check list:
+A check list being generated:
 
     # foo
     foo value
@@ -759,7 +759,9 @@ Updated check list:
 
 Output:
 
-    [{message => text match 'bar value ...', status => True, type => check-expression} {message => text match 'foo value ...', status => True, type => check-expression}]
+    true    text has 'foo value'
+    true    text has 'bar value'
+
 
 Generators could produce not only check expressions but code expressions and ... another generators.
 
@@ -778,14 +780,15 @@ Input Text:
 DSL code:
 
     generator:  <<CODE
-    !perl
 
     sub next_number {                       
         my $i = shift;                       
         $i++;                               
         return if $i>=5;                 
-            print 'regexp: ^'.('A' x $i).'$',"\n";      
-            print "generator: next_number($i)","\n";     
+        [
+          'regexp: ^'.('A' x $i).'$',      
+          "generator: next_number(".$i.")"
+        ]
     }
     CODE
 
