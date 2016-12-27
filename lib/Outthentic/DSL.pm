@@ -2,7 +2,7 @@ package Outthentic::DSL;
 
 use strict;
 
-our $VERSION = '0.2.7';
+our $VERSION = '0.2.8';
 
 use Carp;
 use Data::Dumper;
@@ -271,7 +271,8 @@ sub check_line {
     # update context
     if ( $self->{within_mode} and $status ){
         $self->{current_context} = [@context_new];
-        $self->debug('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
+        $self->debug("[WITH] within mode: modify search context to: $context_new[0][0]") 
+          if $self->{debug_mod} >= 2 
     }elsif ( $self->{within_mode} and ! $status ){
         $self->{current_context} = []; # empty context if within expression has not passed 
         $self->debug('within mode: modify search context to: '.(Dumper([@context_new]))) if $self->{debug_mod} >= 2 
@@ -677,8 +678,6 @@ sub handle_simple {
       $self->{within_mode} = 0;
 
       $reset_context = 1;
-
-      my $msg;
 
       if ($self->{last_check_status}){
         if ($check_type eq 'regexp'){
