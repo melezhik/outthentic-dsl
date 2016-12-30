@@ -1,3 +1,7 @@
+0.2.9
+
+* restore ./inc in Git scm to allow `cpanm` install via git url
+
 0.2.8 2016-12-27
 
 * fixed bug empty message in within expressions
