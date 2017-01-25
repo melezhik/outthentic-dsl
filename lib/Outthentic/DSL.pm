@@ -607,7 +607,7 @@ sub handle_code {
             my $st = system("$ext_runner 2>$source_file.err 1>$source_file.out");  
 
             if ($st != 0){
-              confess "$ext_runner failed, see $source_file.err for detailes";
+              confess "$ext_runner failed, see $source_file.err for details";
             }
 
             $self->debug("code OK. inline. $ext_runner") if $self->{debug_mod} >= 2;
