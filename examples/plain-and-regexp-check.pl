@@ -6,7 +6,7 @@ my $otx = Outthentic::DSL->new(<<'HERE');
   My birth day is: 1977-04-16
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
   HELLO
   regexp: \d\d\d\d-\d\d-\d\d
 CHECK

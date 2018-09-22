@@ -7,7 +7,7 @@ my $otx = Outthentic::DSL->new(<<'HERE');
     3 - for three
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
 
 regexp: (\d+)\s+-\s+for\s+(\w+)
 

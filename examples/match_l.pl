@@ -2,7 +2,7 @@ use Outthentic::DSL;
 
 my $otx = Outthentic::DSL->new( 'A'x99 , { match_l  => 9 });
 
-$otx->validate('A'x99);
+$otx->validate(from_string => 'A'x99);
 
 print "status\tcheck\n";
 print "==========================\n";

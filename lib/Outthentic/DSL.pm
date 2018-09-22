@@ -295,7 +295,6 @@ sub check_line {
 sub validate {
 
     my $self        = shift;
-    my $check_list  = shift;
 
     my $block_type;
     my @multiline_block;
@@ -303,14 +302,34 @@ sub validate {
     my $here_str_marker;
 
     my @lines;
-    if (  -f $check_list ){
-      open my $ff, $check_list or die "can't open file check_list to read: $!";
-      while (my $ii = <$ff>){
-        push @lines, $ii;
-      }
-      close $ff;
+
+    # Handle old-style arguments deprecation and convert to new-style arguments
+    my %args;
+    if (@_ == 1) {
+        my $check_list = shift;
+        if (-f $check_list) {
+            warn "(DEPRECATED) " . __PACKAGE__ . "->validate: use from_file => <value>";
+            %args = (from_file => $check_list);
+        } else {
+            warn "(DEPRECATED) " . __PACKAGE__ . "->validate: use from_string => <value>";
+            %args = (from_string => $check_list);
+        }
     } else {
-     @lines = ( ref $check_list  ) ? @{$check_list} : ( split "\n", $check_list ); 
+        %args = @_;
+    }
+
+    if (defined $args{from_file}) {
+        open my $ff, $args{from_file} or die "can't open file check_list to read: $!";
+        while (my $ii = <$ff>) {
+            push @lines, $ii;
+        }
+        close $ff;
+    } elsif (defined $args{from_string}) {
+        @lines = ( ref $args{from_string}  ) ?
+            @{$args{from_string}} :
+            ( split "\n", $args{from_string} );
+    } else {
+        die "neither 'from_string' nor 'from_file' were provided";
     }
 
     LINE: for my $l ( @lines ) {
@@ -655,10 +674,12 @@ sub handle_generator {
     my $self = shift;
     my $code = shift;
 
-    $self->validate(
-      $self->handle_code($code)
-    )
-
+    my $res = $self->handle_code($code);
+    if (ref($res) eq "HASH") {
+        $self->validate(%$res);
+    } else {
+        $self->validate(from_string => $res);
+    }
 }
 
 sub handle_simple {
@@ -967,7 +988,7 @@ This is example of verification some text against 2 lines;
         My name is Outthentic!
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
         Hello
         regexp: My\s+name\s+is\s+\S+
     CHECK
@@ -1025,7 +1046,7 @@ This is useful when debugging long check expressions:
     
     my $otx = Outthentic::DSL->new( 'A'x99 , { match_l  => 9 });
     
-    $otx->validate('A'x99);
+    $otx->validate(from_string => 'A'x99);
     
     print "status\tcheck\n";
     print "==========================\n";
@@ -1047,6 +1068,7 @@ Default value is C<40>.
 =item *
 
 debug_mod - enable debug mode
+
 
 =over
 
@@ -1098,7 +1120,7 @@ a string with DSL code
 
 Example:
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
       # there should be digits
       regexp: \d
@@ -1156,6 +1178,7 @@ Blank lines
 =item *
 
 Check expressions:
+
 
 =over
 
@@ -1227,7 +1250,7 @@ Here is a simple example:
       My birth day is: 1977-04-16
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       HELLO
       regexp: \d\d\d\d-\d\d-\d\d
     CHECK
@@ -1276,7 +1299,7 @@ Plain text expressions define a lines an input text to contain.
       HELLO Outthentic !!!
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       I am ok
       HELLO Outthentic
     CHECK
@@ -1303,7 +1326,7 @@ Plain text expressions are case sensitive:
       I am ok
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       I am OK
     CHECK
     
@@ -1337,7 +1360,7 @@ Example:
       App Version Number: 1.1.10
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
       regexp: Name:\s+\w+ # name
       regexp: App Version Number:\s+\d+\.\d+\.\d+ # version number
@@ -1389,7 +1412,7 @@ Example:
         3 - for three
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
     regexp: (\d+)\s+-\s+for\s+(\w+)
     
@@ -1478,7 +1501,7 @@ Sometimes you need to match a text against a I<sequence of lines> like in code b
       at the very end.
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
       # this text block
       # consists of 5 strings
@@ -1519,7 +1542,7 @@ A negative example:
         at the very end.
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
       # this text block
       # consists of 5 strings
@@ -1579,7 +1602,7 @@ By default, if I<language> is no set Perl language is assumed. Here is example:
     
     my $otx = Outthentic::DSL->new('hello');
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       hello
       code: print "hi there!\n";
     CHECK
@@ -1710,7 +1733,7 @@ Here is simple example.
     
     my $otx = Outthentic::DSL->new('HELLO');
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       generator: [ 'H', 'E', 'L', 'O' ];
     CHECK
     
@@ -1772,7 +1795,7 @@ Here is more complicated example using Perl language.
       bar value
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
         generator: <<CODE
     

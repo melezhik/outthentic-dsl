@@ -102,7 +102,7 @@ This is example of verification some text against 2 lines;
         My name is Outthentic!
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
         Hello
         regexp: My\s+name\s+is\s+\S+
     CHECK
@@ -146,7 +146,7 @@ This is useful when debugging long check expressions:
     
     my $otx = Outthentic::DSL->new( 'A'x99 , { match_l  => 9 });
     
-    $otx->validate('A'x99);
+    $otx->validate(from_string => 'A'x99);
     
     print "status\tcheck\n";
     print "==========================\n";
@@ -183,7 +183,7 @@ Obligatory parameter is:
 
 Example:
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
 
       # there should be digits
       regexp: \d
@@ -241,7 +241,7 @@ Here is a simple example:
       My birth day is: 1977-04-16
     HERE
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       HELLO
       regexp: \d\d\d\d-\d\d-\d\d
     CHECK
@@ -279,7 +279,7 @@ Plain text expressions define a lines an input text to contain.
       HELLO Outthentic !!!
     HERE
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       I am ok
       HELLO Outthentic
     CHECK
@@ -307,7 +307,7 @@ Plain text expressions are case sensitive:
       I am ok
     HERE
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       I am OK
     CHECK
 
@@ -341,7 +341,7 @@ Example:
       App Version Number: 1.1.10
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
       regexp: Name:\s+\w+ # name
       regexp: App Version Number:\s+\d+\.\d+\.\d+ # version number
@@ -376,7 +376,7 @@ Example:
         3 - for three
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
     regexp: (\d+)\s+-\s+for\s+(\w+)
     
@@ -462,7 +462,7 @@ Sometimes you need to match a text against a _sequence of lines_ like in code be
       at the very end.
     HERE
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
 
       # this text block
       # consists of 5 strings
@@ -507,7 +507,7 @@ A negative example:
         at the very end.
     HERE
 
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
 
       # this text block
       # consists of 5 strings
@@ -568,7 +568,7 @@ By default, if *language* is no set Perl language is assumed. Here is example:
     
     my $otx = Outthentic::DSL->new('hello');
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       hello
       code: print "hi there!\n";
     CHECK
@@ -668,7 +668,7 @@ Here is simple example.
     
     my $otx = Outthentic::DSL->new('HELLO');
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
       generator: [ 'H', 'E', 'L', 'O' ];
     CHECK
 
@@ -734,7 +734,7 @@ Here is more complicated example using Perl language.
       bar value
     HERE
     
-    $otx->validate(<<'CHECK');
+    $otx->validate(from_string => <<'CHECK');
     
         generator: <<CODE
 

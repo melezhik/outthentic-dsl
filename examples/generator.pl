@@ -2,7 +2,7 @@ use Outthentic::DSL;
 
 my $otx = Outthentic::DSL->new('HELLO');
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
   generator: [ 'H', 'E', 'L', 'O' ];
 CHECK
 

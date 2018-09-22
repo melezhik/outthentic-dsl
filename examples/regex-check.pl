@@ -6,7 +6,7 @@ my $otx = Outthentic::DSL->new(<<'HERE');
   App Version Number: 1.1.10
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
   regexp: \d\d\d\d-\d\d-\d\d # date in format of YYYY-MM-DD
   regexp: Name:\s+\w+ # name
   regexp: App Version Number:\s+\d+\.\d+\.\d+ # version number

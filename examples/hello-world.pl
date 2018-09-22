@@ -5,7 +5,7 @@ my $otx = Outthentic::DSL->new(<<HERE, { debug_mod => 0 });
     My name is Outthentic!
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
     Hello
     regexp: My\s+name\s+is\s+\S+
 CHECK
