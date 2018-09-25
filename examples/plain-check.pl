@@ -5,7 +5,7 @@ my $otx = Outthentic::DSL->new(<<'HERE');
   HELLO Outthentic !!!
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
   I am ok
   HELLO Outthentic
 CHECK

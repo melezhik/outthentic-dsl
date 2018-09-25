@@ -9,7 +9,7 @@ my $otx = Outthentic::DSL->new(<<'HERE', { debug_mod => 0 });
   bar value
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
 
     generator: <<CODE
 

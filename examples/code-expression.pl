@@ -2,7 +2,7 @@ use Outthentic::DSL;
 
 my $otx = Outthentic::DSL->new('hello');
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
   hello
   code: print "hi there!\n";
 CHECK

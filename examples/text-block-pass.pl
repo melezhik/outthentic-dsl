@@ -8,7 +8,7 @@ my $otx = Outthentic::DSL->new(<<'HERE');
   at the very end.
 HERE
 
-$otx->validate(<<'CHECK');
+$otx->validate(from_string => <<'CHECK');
 
   # this text block
   # consists of 5 strings
