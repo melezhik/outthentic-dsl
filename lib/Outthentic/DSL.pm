@@ -645,8 +645,14 @@ sub handle_validator {
 
     my $self = shift;
     my $code = shift;
-    my $r = $self->handle_code($code);
-    $self->add_result({ status => $r->[0] , message => $r->[1] });
+
+    if (! defined ($self->{last_check_status}) or $self->{last_check_status}){
+      my $r = $self->handle_code($code);
+      $self->add_result({ status => $r->[0] , message => $r->[1] });
+    } else {
+      $self->debug("skip validator step because last check has been failed") if $self->{debug_mod} >= 1;
+    }
+
 
 }
 
