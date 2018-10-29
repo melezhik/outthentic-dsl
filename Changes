@@ -1,5 +1,6 @@
 0.2.9
 
+* skip generator step if last check has been failed
 * typo fixed detailes -> details
 * restore ./inc in Git scm to allow `cpanm` install via git url
 

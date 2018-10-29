@@ -655,9 +655,14 @@ sub handle_generator {
     my $self = shift;
     my $code = shift;
 
-    $self->validate(
-      $self->handle_code($code)
-    )
+    if (! defined ($self->{last_check_status}) or $self->{last_check_status}){
+      $self->validate(
+        $self->handle_code($code)
+      )
+    } else {
+      $self->debug("skip generator step because last check has been failed") if $self->{debug_mod} >= 1;
+    }
+
 
 }
 
