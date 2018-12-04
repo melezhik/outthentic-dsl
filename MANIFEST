@@ -28,9 +28,9 @@ lib/Outthentic/DSL/Context/TextBlock.pm
 LICENSE
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README.md
 README.pod
 t/00.t
 t/01-plain-text.t
-updatepod.bash
+utils/install.pl6
+utils/make-dist.pl6
